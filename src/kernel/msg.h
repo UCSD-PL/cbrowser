@@ -28,10 +28,7 @@ typedef enum {
 
 typedef struct {
     mtypes type;
-    char uri[MAX_URI_LEN];
     char *content;
-    int shmid;  //shm
-    int size;   //shm
 } message;
 
 
@@ -46,7 +43,7 @@ void create_get_cookie(message *m, void *cookie);
 
 void read_message_soc(int soc, message *m);
 void recv_exact(int soc, int size, char *buf);
-void read_lstr(int soc, char *dst); // message *m);
+void read_lstr(int soc, char **dst); // message *m);
 void read_message_len(int soc, message *m);
 void write_message_len(int soc, message *m);
 char * payload(message *m, char *buf);

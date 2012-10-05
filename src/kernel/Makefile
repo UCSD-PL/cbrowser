@@ -22,6 +22,9 @@ opt.o: opt.c opt.h
 msg.o: msg.c msg.h opt.h str.h
 	${CC} ${CFLAGS} -c msg.c
 
+cookie.o: cookie.c cookie.h
+	${CC} ${CFLAGS} -c cookie.c
+
 
 clean:
 	-rm -f *.o *~ kernel

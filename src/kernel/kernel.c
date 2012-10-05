@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include "str.h"
 #include "proc.h"
 #include "kernel.h"
 #include "assert.h"
+#include "cookie.h"
 
 // socket includes
 #include <sys/types.h>
@@ -32,6 +34,8 @@ struct uiproc {
 struct tab tabs[MAX_NUM_TABS];  // array of tabs
 int curr = 0;                   // current tab
 int num_tabs = 0;               // number of open tabs
+
+struct cookie_jar *cookies;
 
 struct uiproc ui;
 
@@ -210,12 +214,12 @@ process_message(int tab_idx, message *m)
   }
   switch (m->type) {
   case NAVIGATE:
-    init_tab_process(curr, m->uri);
+    init_tab_process(curr, m->content);
     curr = num_tabs - 1;
     break;
   case REQ_URI_FOLLOW:
     write_message(UI_PROC_ID, m);
-    char *content = get_uri_follow(m->uri);
+    char *content = get_uri_follow(m->content);
     create_res_uri(m, content);
     write_message(tab_idx, m);
     free(content);
@@ -227,10 +231,8 @@ process_message(int tab_idx, message *m)
       write_message(UI_PROC_ID, m);
     }
     break;
-    //case REQ_SOCKET:
-    //message status_msg;
-    //create_set_status(&status_msg, 
-    //break;
+  case SET_COOKIE:
+    //do things like check domain... 
   default:
     printf("Uhoh! We don't process that message type!\n");
     return;
@@ -364,8 +366,7 @@ kexit()
   }
 
   kill(ui.proc, 9);
-
-  exit(0);
+  _exit(0);
 }
 
 
@@ -422,6 +423,12 @@ get_tabidx_to_read(fd_set *readfds)
   return -1;
 }
 
+void
+handler(int s)
+{
+  fprintf(stderr, "Interrupt caught, cleaning up...\n");
+  exit(0);
+}
 
 int
 main(int argc, char *argv[])
@@ -435,36 +442,24 @@ main(int argc, char *argv[])
   make_command_args_global(argc, argv);
   parse_options(argc, argv);
   init_ui_process();
+
+  signal(SIGINT, handler);
+  atexit(kexit);
+  
+  
   while (1) {
     print_text_display();
-    //printf("determining input to handle....\n");
     max_fd = set_readfds(&readfds);
     if( select(max_fd+1, &readfds, NULL, NULL, NULL) > 0 ) {
-      //printf("determined input to handle\n");
       if ( FD_ISSET(0, &readfds) ) { //stdin
-        /* printf("handling stdin\n"); */
-        //c = getchar();
         scanf("%1s", &c);
         process_input_char(c);
-        //printf("got input char %c\n", c);
       } else {
-        //TODO: read message from one of the processes
-        /* printf("message received from process\n"); */
         if ( (tab_idx = get_tabidx_to_read(&readfds)) != -1 ) {
           read_message(tab_idx, &m);
-          //printf("message type: %d\nmessage: %s\n", m.type, m.uri);
-          //printf("message read\n");
           process_message(tab_idx, &m);
-          //printf("message processed\n");
-          //return;
         }
       }
     }
   }
-  /*char buf[64];
-    FILE *f = get_uri_follow("");
-    fscanf(f, "%s", buf);
-    int e = pclose(f);
-    printf("%s\n", buf);
-    printf("%d\n", e);*/
 }
