@@ -1,0 +1,117 @@
+#!/usr/bin/env python2
+
+# Quark is Copyright (C) 2012-2015, Quark Team.
+#
+# You can redistribute and modify it under the terms of the GNU GPL,
+# version 2 or later, but it is made available WITHOUT ANY WARRANTY.
+#
+# For more information about Quark, see our web site at:
+# http://goto.ucsd.edu/quark/
+
+
+import os
+import stat
+import urllib
+import inspect
+import time
+import string
+import cStringIO as StringIO
+import cPickle as pickle
+import time
+import sys
+import os
+import tempfile
+import threading
+import urlparse
+import msg
+import ctypes
+import socket
+import random
+import opt
+import re
+import struct
+import signal
+import threading
+import select
+import shm
+
+urls = ['www.google.com', 'www.facebook.com', 'www.yahoo.com']
+delay = 2
+
+def tlog(str):
+    tlog_nonl(str + "\n")
+
+def tlog2(str):
+    tlog_nonl(str + "\n")
+
+def tlog_nonl(str):
+    sys.stderr.write("T: " + str)
+    sys.stderr.flush()
+
+# mostly copied from shm_wrapper.py
+def create_memory(size, permissions = 0600):
+    """ Creates a new shared memory segment. One can destroy it either
+    by calling the module-level method remove_memory() or by calling
+    the .remove() method of a handle to said memory.
+    """
+    memory = None
+
+    while not memory:
+        key = random.randint(1, sys.maxint - 1)
+        try:
+            memory = shm.create_memory(key, size, permissions)
+            # for output process
+#            memory.setuid(quarkexec.quark_output_uid)
+        except shm.error, ExtraData:
+            tlog("unexpected error:" + str(sys.exc_info()))
+            if shm.memory_haskey(key):
+                pass
+            else:
+                raise shm.error, ExtraData
+    return memory
+
+class Tab:
+    soc = None
+    shm_obj = None
+
+    def __init__(self, s):
+        self.soc = s
+        self.shm_obj = create_memory(5000000)
+        self.shm_obj.attach()
+
+    def test_loop(self):
+        while True:
+            #Types, hah
+            next_url = random.randrange(len(urls))
+            next_url = urls[next_url]
+
+            m = msg.create_req_uri_follow(next_url)
+            tlog("Writing message: %s" % str(m))
+            msg.write_message_soc(m, self.soc)
+
+            m = msg.read_message_soc(self.soc)
+            tlog("Received message: %s" % str(m))
+            #tlog(m.content)
+
+            time.sleep(5)
+
+            m = msg.create_display_shm(self.shm_obj.shmid, 0)
+            tlog("display_shm(%d, %d)" % (self.shm_obj.shmid, 0))
+            tlog("Writing message: %s" % str(m))
+            msg.write_message_soc(m, self.soc)
+
+            time.sleep(5)
+
+
+def main():
+    try:
+        soc_fd = int(sys.argv[1])
+        soc = socket.fromfd(soc_fd, socket.AF_UNIX, socket.SOCK_STREAM)
+        tlog("New tab listening on socket fd %d" % int(sys.argv[1]))
+        tab = Tab(soc)
+        tab.test_loop()
+    except Exception as e:
+        tlog("New tab died: %s" % e)
+    tlog("DONE")
+
+main()
