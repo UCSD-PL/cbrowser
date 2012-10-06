@@ -2,17 +2,20 @@
 #include "opt.h"
 
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <endian.h>
 
+//Sigh
+#ifdef __APPLE__
+  #define htobe32 htonl
+  #define be32toh ntohl
+#endif
 
 extern struct opt_args opt;
 
-
 #define MSG_CHUNK_SIZE 64
-
 
 void
 create_navigate(message *m, char *s)

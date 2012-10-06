@@ -59,11 +59,13 @@ get_uri_follow(char *uri)
   size_t len = 0;
   size_t csize = 2048;
   char *content;
+  char *command;
   FILE *p;
   assert(strlen(uri) <= MAX_URI_LEN);
 
-  char *command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
+  command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
   snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s", uri);
+
   p = popen(command, "r");
   if (p == NULL) {
     fprintf(stderr, "K: Error running wget\n");
@@ -328,8 +330,8 @@ print_text_display()
 int
 get_tab_idx(char ascii)
 {
-  if (ascii >=1 && ascii <=4) {
-    return ascii - 1;
+  if (ascii >= '0' && ascii <= '9') {
+    return ascii - '0';
   } else {
     return -1;
   }

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # Quark is Copyright (C) 2012-2015, Quark Team.
 #

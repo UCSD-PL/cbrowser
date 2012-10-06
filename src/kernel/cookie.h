@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 struct cookie {
-  char *scheme;
+  char *attrs;
   char *domain;
   char *path;
   int  httpOnly;
