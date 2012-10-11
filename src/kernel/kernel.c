@@ -69,6 +69,7 @@ get_uri_follow(char *uri)
   p = popen(command, "r");
   if (p == NULL) {
     fprintf(stderr, "K: Error running wget\n");
+    exit(1);
   }
 
   content = calloc(csize, 1);
@@ -78,6 +79,7 @@ get_uri_follow(char *uri)
     len += n;
     if (content == NULL) {
       fprintf(stderr, "K: Error reading wget result");
+      exit(1);
     }
   }
 
@@ -92,7 +94,6 @@ get_uri_follow(char *uri)
   free(command);
 
   return content;
-  // TODO: don't forget that calling function needs to close file stream
 }
 
 ///////////////////////////
