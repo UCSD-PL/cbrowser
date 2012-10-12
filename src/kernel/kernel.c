@@ -7,6 +7,7 @@
 #include "kernel.h"
 #include "assert.h"
 #include "cookie.h"
+#include "ownership.h"
 
 // socket includes
 #include <sys/types.h>
@@ -64,9 +65,12 @@ get_uri_follow(char *uri)
   assert(strlen(uri) <= MAX_URI_LEN);
 
   command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
+
   snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s", uri);
+  add_readers(get_readers(uri), command);
 
   p = popen(command, "r");
+  add_readers(get_readers(command), (void *)p);
   if (p == NULL) {
     fprintf(stderr, "K: Error running wget\n");
     exit(1);
@@ -76,6 +80,8 @@ get_uri_follow(char *uri)
   while ((n = fread(content + len, 1, csize - len, p)) == csize - len) {
     csize *= 2;
     content = realloc(content, csize);
+    add_readers(get_readers(p), content);
+    add_readers(get_readers(content), content);
     len += n;
     if (content == NULL) {
       fprintf(stderr, "K: Error reading wget result");
@@ -96,9 +102,6 @@ get_uri_follow(char *uri)
   return content;
 }
 
-///////////////////////////
-// from PipedProcess class
-
 void
 init_piped_process(int tab_idx, const char *procfile, char * args[])
 {
@@ -117,14 +120,6 @@ init_piped_process(int tab_idx, const char *procfile, char * args[])
   sprintf(child, "%d", socs[1]);
   args[1] = child;
     
-  ///////
-  //int i = 0;
-  //while (args[i]) {
-  //    printf("%d: %s\n", i, args[i]);
-  //    i++;
-  //}
-  ///////
-    
   if (tab_idx == UI_PROC_ID) { //UI Process init
     ui.proc = run_proc(procfile, args);
     ui.soc = socs[0];
@@ -140,6 +135,7 @@ write_message(int tab_idx, message *m)
   if (tab_idx == UI_PROC_ID) {
     write_message_soc(ui.soc, m);
   } else {
+    assert (is_reader(tabs[tab_idx].soc, m->content));
     write_message_soc(tabs[tab_idx].soc, m);
   }
 }
@@ -152,12 +148,10 @@ read_message(int tab_idx, message *m)
     read_message_soc(ui.soc, m);
   } else {
     read_message_soc(tabs[tab_idx].soc, m);
+    add_reader(tabs[tab_idx].soc, m->content);
   }
   //TODO: klog m
 }
-
-/////////////////
-// from UIProcess
 
 void
 init_ui_process()
@@ -167,9 +161,6 @@ init_ui_process()
   add_kargv(args, 2);
   init_piped_process(UI_PROC_ID, UI_PROC, args);
 }
-
-/////////////////////////
-// from TabProcess class
 
 void
 add_kargv(char *args[], int pos)
@@ -259,9 +250,6 @@ render(int tab_idx)
   create_render(&m);
   write_message(tab_idx, &m);
 }
-
-/////////////////////
-// from Kernel class
 
 void
 add_tab()

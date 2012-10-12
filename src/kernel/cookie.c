@@ -1,6 +1,8 @@
-#include "cookie.h"
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
+
+#include "cookie.h"
 
 int
 parse_field(struct cookie *c, const char *keyval_str, size_t n)
@@ -137,6 +139,7 @@ print_cookie_jar(struct cookie_jar *cookies)
   }
 }
 
+#if 0
 int
 main(int argc, char **argv)
 {
@@ -151,3 +154,4 @@ main(int argc, char **argv)
     print_cookie_jar(cj);
   }
 }
+#endif

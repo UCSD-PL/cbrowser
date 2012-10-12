@@ -2,28 +2,43 @@
 # CFLAGS=-g
 include ../Makefile.inc
 
+OBJS=kernel.o \
+	str.o \
+	proc.o \
+	opt.o \
+	msg.o \
+	cookie.o \
+	ownership.o
+
 all : kernel
 
-kernel: kernel.o str.o proc.o msg.o opt.o
-	${CC} ${CFLAGS} -o kernel kernel.o str.o proc.o msg.o opt.o
+kernel: $(OBJS)
 
-kernel.o: kernel.c kernel.h str.h proc.h
-	${CC} ${CFLAGS} -c kernel.c
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
-str.o: str.c str.h
-	${CC} ${CFLAGS} -c str.c
+# kernel: kernel.o str.o proc.o msg.o opt.o
+# 	${CC} ${CFLAGS} -o kernel kernel.o str.o proc.o msg.o opt.o
 
-proc.o: proc.c proc.h
-	${CC} ${CFLAGS} -c proc.c
+# kernel.o: kernel.c kernel.h str.h proc.h
+# 	${CC} ${CFLAGS} -c kernel.c
 
-opt.o: opt.c opt.h
-	${CC} ${CFLAGS} -c opt.c
+# str.o: str.c str.h
+# 	${CC} ${CFLAGS} -c str.c
 
-msg.o: msg.c msg.h opt.h str.h
-	${CC} ${CFLAGS} -c msg.c
+# proc.o: proc.c proc.h
+# 	${CC} ${CFLAGS} -c proc.c
 
-cookie.o: cookie.c cookie.h
-	${CC} ${CFLAGS} -c cookie.c
+# opt.o: opt.c opt.h
+# 	${CC} ${CFLAGS} -c opt.c
+
+# msg.o: msg.c msg.h opt.h str.h
+# 	${CC} ${CFLAGS} -c msg.c
+
+# cookie.o: cookie.c cookie.h
+# 	${CC} ${CFLAGS} -c cookie.c
+
+# ownership.o: 
 
 
 clean:
