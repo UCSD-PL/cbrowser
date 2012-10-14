@@ -29,8 +29,7 @@ void
 create_req_uri_follow(message *m, char *s)
 {
   m->type = REQ_URI_FOLLOW;
-  if (s)
-    strncpy(m->content, s, MAX_URI_LEN);
+  m->content = s;
 }
 
 void

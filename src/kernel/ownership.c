@@ -56,11 +56,11 @@ void
 add_readers(reader_list_t *readers, void *p)
 {
   data_list_t *cur_data, *new_data;
-  reader_list_t *cur_reader, *new_reader;
+  reader_list_t *cur_reader, *new_readers;
 
   if (readers == NULL) return;
 
-  readers = dup_readers(readers);
+  new_readers = dup_readers(readers);
 
   if (data == NULL) {
     data = malloc(sizeof(*data));
@@ -73,12 +73,13 @@ add_readers(reader_list_t *readers, void *p)
   while (cur_data) {
     if (p == cur_data->v) {
       if (cur_data->readers) {
-        insque(readers, cur_data->readers);
+        insque(new_readers, cur_data->readers);
       } else {
         cur_data->readers = readers;
       }
+      return;
     }
-    if (cur_data->f == NULL) {
+    else if (cur_data->f == NULL) {
       new_data = malloc(sizeof(*new_data));
       new_data->v = p;
       /* new_reader = malloc(sizeof(*new_reader)); */
@@ -119,6 +120,7 @@ add_reader(int reader, void *p)
           new_reader = malloc(sizeof(*new_reader));
           new_reader->r = reader;
           insque(new_reader, cur_reader);
+          return;
         }
         cur_reader = cur_reader->f;
       }
@@ -130,6 +132,8 @@ add_reader(int reader, void *p)
       new_reader->r = reader;
 
       new_data->readers = new_reader;
+      insque(new_data->readers, NULL);
+      insque(new_data, cur_data);
     }
     cur_data = cur_data->f;
   }
