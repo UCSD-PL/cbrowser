@@ -54,7 +54,7 @@ mtypes = enum(
               "SWITCH_TAB",        # 11: I -> K
 
               "SET_STATUS",        # 15: K -> O
-              "SET_COOKIE",        # 16: T -> K
+#              "SET_COOKIE",        # 16: T -> K
               "GET_COOKIES",       # 17: T -> K
               "RES_COOKIES",       # 18: K -> T
               "EXIT",
@@ -592,7 +592,7 @@ def payload(m):
     elif m.type == mtypes.GET_COOKIE:
         return m.uri
     elif m.type == mtypes.SET_COOKIE:
-        return m.cookie
+        return str(m.cookie)
     elif m.type == mtypes.RES_COOKIES:
         return m.cookie
     elif m.type == mtypes.K2C_SET_COOKIE:

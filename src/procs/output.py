@@ -22,6 +22,7 @@ import struct
 import array
 import traceback
 import cPickle as pickle
+import signal
 
 def olog(str):
     olog_nonl(str + "\n")
@@ -35,7 +36,11 @@ def test_loop(soc):
         m = msg.read_message_soc(soc)
         olog("Received message: %s" % str(m))
 
+def signal_handler(signal, frame):
+    sys.exit(0)
+
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         soc_fd = int(sys.argv[1])
         soc = socket.fromfd(soc_fd, socket.AF_UNIX, socket.SOCK_STREAM)

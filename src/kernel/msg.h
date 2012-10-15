@@ -22,7 +22,8 @@ typedef enum {
     K2C_SET_COOKIE,
     K2C_GET_COOKIE,
     C2K_RES_COOKIE,
-    INVALIDATE_COOKIE
+    K2T_SET_COOKIE,
+    C2K_SET_COOKIE
 } mtypes;
 
 

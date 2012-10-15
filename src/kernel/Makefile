@@ -1,6 +1,7 @@
 # CC=gcc
 # CFLAGS=-g
 include ../Makefile.inc
+CFLAGS += -O0
 
 OBJS=kernel.o \
 	str.o \

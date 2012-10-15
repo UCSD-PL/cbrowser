@@ -139,16 +139,14 @@ read_message_len(int soc, message *m)
   case REQ_URI_FOLLOW:
   case RENDER:
   case K2G_DISPLAY_SHM:
+  case C2K_SET_COOKIE:
   case DISPLAY_SHM:
   case SET_COOKIE:
     m->type = msg_id;
     read_lstr(soc, &m->content);
     break;
-  case KEY_PRESS:
-  case MOUSE_CLICK:
-  case REQ_SOCKET:
   default:
-    printf("Uhoh! We don't read that kind of message yet.\n");
+    m->type = -1;
     return;
   }
   //printf("read_message_len m.uri: %s\n", m->uri);

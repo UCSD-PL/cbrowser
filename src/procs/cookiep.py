@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # Quark is Copyright (C) 2012-2015, Quark Team.
 #
@@ -77,6 +77,7 @@ class CookieManager:
             return cookies
 
     def add_cookie(self, cookie_str):        
+        clog("Adding %s" % cookie_str)
         def get_domain(cookie_str):
             c = Cookie.SimpleCookie()
             c.load(cookie_str)
@@ -136,6 +137,7 @@ class CookieManager:
 
         opt.parse_options(sys.argv[3:])
 
+        clog("cookie process(%s) started" % self.name)
         try:
             f = open("cookies/" + self.name)
             self.cookie_db = pickle.load(f)

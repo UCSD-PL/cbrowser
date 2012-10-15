@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,7 +45,7 @@ int curr = 0;                   // current tab
 int num_tabs = 0;               // number of open tabs
 
 //struct cookie_jar *cookies;
-void *cookie_proc_tree;
+void *cookie_proc_tree = NULL;
 
 struct uiproc ui;
 
@@ -145,14 +146,14 @@ write_message(int tab_idx, message *m)
 }
 
 void
-read_message(int tab_idx, message *m)
+read_message(int fd, message *m)
 {
   //printf("read_message tab %d\n", tab_idx);
-  if (tab_idx == UI_PROC_ID) {
+  if (fd == UI_PROC_ID) {
     read_message_soc(ui.soc, m);
   } else {
-    read_message_soc(tabs[tab_idx].soc, m);
-    add_reader(tabs[tab_idx].soc, m->content);
+    read_message_soc(fd, m);
+    add_reader(fd, m->content);
   }
   //TODO: klog m
 }
@@ -183,14 +184,21 @@ int
 cookie_proc_compare(const void *cp1,
                     const void *cp2)
 {
-  return strncmp(((struct cookie_proc *)cp1)->cookie_origin,
-                 ((struct cookie_proc *)cp2)->cookie_origin, MAX_URI_LEN);
+  struct cookie_proc *c1 = (struct cookie_proc *)cp1;
+  struct cookie_proc *c2 = (struct cookie_proc *)cp2;
+  return strcmp(c1->cookie_origin, c2->cookie_origin);
 }
 
 struct cookie_proc *
 get_cookie_process(char *domain)
 {
-  return tfind(domain, &cookie_proc_tree, cookie_proc_compare);
+  struct cookie_proc key;
+  struct cookie_proc **retval;
+
+  strcpy(key.cookie_origin, domain);
+  retval = tfind(&key, &cookie_proc_tree, cookie_proc_compare);
+  assert (retval);
+  return *retval;
 }
 
 void
@@ -200,16 +208,18 @@ init_cookie_process(char *origin)
   //add struct into hash search table
   int soc;
   struct cookie_proc *cookie_proc;
-  char *args[4+MAX_NUM_ARGS];
+  char *args[3+MAX_NUM_ARGS];
   assert (origin != NULL);
 
   cookie_proc = malloc(sizeof(*cookie_proc));
-  strncpy(cookie_proc->cookie_origin, origin, MAX_URI_LEN);
+  cookie_proc->proc = 0;
+  cookie_proc->soc = -1;
+  strcpy(cookie_proc->cookie_origin, origin);
 
   args[0] = COOKIE_PROC;
   //args[1] will be filled in later
   args[2] = origin;
-  add_kargv(args, 4);
+  add_kargv(args, 3);
   init_piped_process(COOKIE_PROC,
                      args,
                      &cookie_proc->proc,
@@ -254,6 +264,9 @@ init_tab_process(int tab_idx, char *init_url)
 void
 process_message(int tab_idx, message *m)
 {
+  struct cookie c;
+  struct cookie_proc *cookie_proc;
+
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
   if (tab_idx == UI_PROC_ID) {
     return;
@@ -279,7 +292,16 @@ process_message(int tab_idx, message *m)
     }
     break;
   case SET_COOKIE:
-  case GET_COOKIE:
+    cookie_proc = get_cookie_process(tabs[tab_idx].tab_origin);
+    assert (cookie_proc);
+    parse_cookie(&c, m->content, strlen(m->content));
+    //Just forward the set-cookie request for now
+    print_cookie(&c);
+    m->type = K2C_SET_COOKIE;
+    write_message_soc(cookie_proc->soc, m);
+    break;
+  case C2K_SET_COOKIE:
+    break;
   default:
     printf("Uhoh! We don't process that message type!\n");
     return;
@@ -311,6 +333,7 @@ add_tab()
     curr = num_tabs;
     num_tabs++;
     init_tab_process(curr, "None"); //TODO: arguments
+    init_cookie_process(tabs[curr].tab_origin);
   } else {
     //TODO: print some error
   }
@@ -404,12 +427,17 @@ void
 kexit()
 {
   int i;
+  struct cookie_proc *cp;
   //TODO
   for (i = 0; i < num_tabs; i++) {
-    kill(tabs[i].proc, 9);
+    kill(tabs[i].proc, SIGINT);
+    cp = get_cookie_process(tabs[i].tab_origin);
+    if (cp) {
+      kill(cp->proc, SIGINT);
+    }
   }
 
-  kill(ui.proc, 9);
+  kill(ui.proc, SIGINT);
   _exit(0);
 }
 
@@ -457,16 +485,16 @@ get_tabidx_to_read(fd_set *readfds)
 {
   int i, soc;
     
-  //check UI process
-  soc = ui.soc;
-  if ( FD_ISSET(soc, readfds) ) {
-    return UI_PROC_ID;
-  }
+  /* //check UI process */
+  /* soc = ui.soc; */
+  /* if  (FD_ISSET(soc, readfds)) { */
+  /*   return UI_PROC_ID; */
+  /* } */
     
   //check tabs
   for (i=0; i<num_tabs; i++) {
     soc = tabs[i].soc;
-    if ( FD_ISSET(soc, readfds) ) {
+    if (FD_ISSET(soc, readfds)) {
       return i;
     }
   }
@@ -489,6 +517,7 @@ main(int argc, char *argv[])
   int ready_tab;
   message m;
   int tab_idx;
+  int fd;
   make_command_args_global(argc, argv);
   parse_options(argc, argv);
   init_ui_process();
@@ -497,19 +526,24 @@ main(int argc, char *argv[])
   atexit(kexit);
   
   
+  print_text_display();
   while (1) {
-    print_text_display();
     max_fd = set_readfds(&readfds);
-    if( select(max_fd+1, &readfds, NULL, NULL, NULL) > 0 ) {
-      if ( FD_ISSET(0, &readfds) ) { //stdin
+    if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
+      if (FD_ISSET(0, &readfds)) { //stdin
         scanf("%1s", &c);
         process_input_char(c);
       } else {
-        if ( (tab_idx = get_tabidx_to_read(&readfds)) != -1 ) {
-          read_message(tab_idx, &m);
-          process_message(tab_idx, &m);
+        for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)
+          ;
+        read_message_soc(fd, &m);
+        if ((tab_idx = get_tabidx_to_read(&readfds)) != -1) {
+          add_reader(fd, m.content);
         }
+        if (fd != ui.soc)
+          process_message(tab_idx, &m);
       }
+      print_text_display();
     }
   }
 }

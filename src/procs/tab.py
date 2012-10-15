@@ -34,10 +34,14 @@ import signal
 import threading
 import select
 import shm
+import Cookie
 
 domain = ""
 urls = ['/', '/bogus.html', '/index.html']
 delay = 2
+
+def signal_handler(signal, frame):
+    sys.exit(0)
 
 def tlog(str):
     tlog_nonl(str + "\n")
@@ -96,8 +100,15 @@ class Tab:
 
             time.sleep(5)
 
-            m = msg.create_display_shm(self.shm_obj.shmid, 0)
-            tlog("display_shm(%d, %d)" % (self.shm_obj.shmid, 0))
+            if (random.randrange(10) == 0):
+                m = msg.create_display_shm(self.shm_obj.shmid, 0)
+                tlog("display_shm(%d, %d)" % (self.shm_obj.shmid, 0))
+                tlog("Writing message: %s" % str(m))
+                msg.write_message_soc(m, self.soc)
+
+            c = Cookie.SimpleCookie()
+            c.load("Set-Cookie: Foo=Bar; Domain="+domain+"; Path=/; HttpOnly")
+            m = msg.create_set_cookie(c)
             tlog("Writing message: %s" % str(m))
             msg.write_message_soc(m, self.soc)
 
@@ -106,6 +117,7 @@ class Tab:
 
 def main():
     global domain
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         soc_fd = int(sys.argv[1])
         soc = socket.fromfd(soc_fd, socket.AF_UNIX, socket.SOCK_STREAM)
@@ -114,7 +126,7 @@ def main():
         tab = Tab(soc)
         tab.test_loop()
     except Exception as e:
-        tlog("New tab died: %s" % e)
+        tlog("Tab died: %s" % e)
     tlog("DONE")
 
 main()
