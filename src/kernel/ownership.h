@@ -15,11 +15,13 @@ int is_reader(int owner, void *p);
 
 //sets the reader for p, elevating the
 //security level
-void set_reader(int owner, void *p);
+void add_reader(int owner, void *p);
+
+void rm_data(void *p);
 
 //sets the reader for p, elevating the
 //security level
-void set_readers(reader_list_t *os, void *p);
+void add_readers(reader_list_t *os, void *p);
 
 //gets the reader for p, elevating the
 //security level

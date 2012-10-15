@@ -139,6 +139,20 @@ add_reader(int reader, void *p)
   }
 }
 
+void
+rm_data(void *p)
+{
+  data_list_t *cur_data;
+
+  cur_data = data;
+  while (cur_data) {
+    if (cur_data->v == p) {
+      remque(cur_data);
+    }
+    cur_data = cur_data->f;
+  }
+}
+
 reader_list_t *
 get_reader_list(void *p)
 {

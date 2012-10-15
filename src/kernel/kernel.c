@@ -104,6 +104,7 @@ get_uri_follow(char *uri)
   }
 
   fclose(p);
+  rm_data(command);
   free(command);
 
   return content;
@@ -281,6 +282,7 @@ process_message(int tab_idx, message *m)
     char *content = get_uri_follow(m->content);
     create_res_uri(m, content);
     write_message(tab_idx, m);
+    rm_data(content);
     free(content);
     m->content = NULL;
     break;
