@@ -5,6 +5,7 @@
 
 #define UI_PROC  "../procs/output.py"
 #define TAB_PROC "../procs/tab.py"
+#define COOKIE_PROC "../procs/cookie.py"
 
 void call(const char *path, char *const argv[]);
 pid_t run_proc(const char *file, char *const argv[]);

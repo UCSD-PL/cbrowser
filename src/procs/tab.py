@@ -35,7 +35,8 @@ import threading
 import select
 import shm
 
-urls = ['www.google.com', 'www.facebook.com', 'www.yahoo.com']
+domain = ""
+urls = ['/', '/bogus.html', '/index.html']
 delay = 2
 
 def tlog(str):
@@ -83,7 +84,7 @@ class Tab:
         while True:
             #Types, hah
             next_url = random.randrange(len(urls))
-            next_url = urls[next_url]
+            next_url = domain + urls[next_url]
 
             m = msg.create_req_uri_follow(next_url)
             tlog("Writing message: %s" % str(m))
@@ -104,10 +105,12 @@ class Tab:
 
 
 def main():
+    global domain
     try:
         soc_fd = int(sys.argv[1])
         soc = socket.fromfd(soc_fd, socket.AF_UNIX, socket.SOCK_STREAM)
-        tlog("New tab listening on socket fd %d" % int(sys.argv[1]))
+        domain = sys.argv[2]
+        tlog("New tab(%s) listening on socket fd %d" % (sys.argv[2], int(sys.argv[1])))
         tab = Tab(soc)
         tab.test_loop()
     except Exception as e:

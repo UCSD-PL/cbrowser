@@ -9,7 +9,10 @@ char *get_uri_follow(char *uri);
 
 
 // Piped Process
-void init_piped_process(int tab_idx, const char *procfile, char * args[]);
+void init_piped_process(const char *procfile,
+                        char  *args[],
+                        pid_t *proc,
+                        int   *soc);
 void write_message(int tab_idx, message *m);
 void read_message(int tab_idx, message *m);
 

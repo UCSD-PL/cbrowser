@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <search.h>
 #include "str.h"
 #include "proc.h"
 #include "kernel.h"
@@ -22,21 +23,28 @@ extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
 
 struct tab {
-    char tab_origin[MAX_ORIGIN_LEN];
-    pid_t proc;             //PID of tab process
-    int soc;                //socket
+  char tab_origin[MAX_ORIGIN_LEN];
+  pid_t proc;             //PID of tab process
+  int soc;                //socket
 };
 
 struct uiproc {
-    pid_t proc;
-    int soc;
+  pid_t proc;
+  int soc;
+};
+
+struct cookie_proc {
+  char cookie_origin[MAX_ORIGIN_LEN];
+  pid_t proc;
+  int soc;
 };
 
 struct tab tabs[MAX_NUM_TABS];  // array of tabs
 int curr = 0;                   // current tab
 int num_tabs = 0;               // number of open tabs
 
-struct cookie_jar *cookies;
+//struct cookie_jar *cookies;
+void *cookie_proc_tree;
 
 struct uiproc ui;
 
@@ -51,7 +59,6 @@ klog(char *str)
 {
   fprintf(stderr, "K: %s\n", str);
 }
-
 
 char *
 get_uri_follow(char *uri)
@@ -80,8 +87,6 @@ get_uri_follow(char *uri)
   while ((n = fread(content + len, 1, csize - len, p)) == csize - len) {
     csize *= 2;
     content = realloc(content, csize);
-    add_readers(get_readers(p), content);
-    add_readers(get_readers(content), content);
     len += n;
     if (content == NULL) {
       fprintf(stderr, "K: Error reading wget result");
@@ -91,6 +96,7 @@ get_uri_follow(char *uri)
 
   len += n;
   if (content != NULL) {
+    add_readers(get_readers(p), content);
     //Make sure the string is null
     //terminated
     content[len] = 0;
@@ -103,7 +109,10 @@ get_uri_follow(char *uri)
 }
 
 void
-init_piped_process(int tab_idx, const char *procfile, char * args[])
+init_piped_process(const char *procfile,
+                   char  *args[],
+                   pid_t *proc,
+                   int   *soc)
 {
   int socs[2];
   char child[16];
@@ -119,14 +128,9 @@ init_piped_process(int tab_idx, const char *procfile, char * args[])
   //      - NULL
   sprintf(child, "%d", socs[1]);
   args[1] = child;
-    
-  if (tab_idx == UI_PROC_ID) { //UI Process init
-    ui.proc = run_proc(procfile, args);
-    ui.soc = socs[0];
-  } else { // tab init
-    tabs[tab_idx].proc = run_proc(procfile, args);
-    tabs[tab_idx].soc = socs[0];
-  }
+
+  *proc = run_proc(procfile, args);
+  *soc  = socs[0];
 }
 
 void
@@ -159,7 +163,10 @@ init_ui_process()
   char * args[2+MAX_NUM_ARGS]; //args for exec
   args[0] = UI_PROC;
   add_kargv(args, 2);
-  init_piped_process(UI_PROC_ID, UI_PROC, args);
+  init_piped_process(UI_PROC,
+                     args,
+                     &ui.proc,
+                     &ui.soc);
 }
 
 void
@@ -170,6 +177,48 @@ add_kargv(char *args[], int pos)
     args[pos+i-1] = kargv[i];
   }
   args[pos+kargc-1] = NULL;
+}
+
+int
+cookie_proc_compare(const void *cp1,
+                    const void *cp2)
+{
+  return strncmp(((struct cookie_proc *)cp1)->cookie_origin,
+                 ((struct cookie_proc *)cp2)->cookie_origin, MAX_URI_LEN);
+}
+
+struct cookie_proc *
+get_cookie_process(char *domain)
+{
+  return tfind(domain, &cookie_proc_tree, cookie_proc_compare);
+}
+
+void
+init_cookie_process(char *origin)
+{
+  //Open a socket for this process
+  //add struct into hash search table
+  int soc;
+  struct cookie_proc *cookie_proc;
+  char *args[4+MAX_NUM_ARGS];
+  assert (origin != NULL);
+
+  cookie_proc = malloc(sizeof(*cookie_proc));
+  strncpy(cookie_proc->cookie_origin, origin, MAX_URI_LEN);
+
+  args[0] = COOKIE_PROC;
+  //args[1] will be filled in later
+  args[2] = origin;
+  add_kargv(args, 4);
+  init_piped_process(COOKIE_PROC,
+                     args,
+                     &cookie_proc->proc,
+                     &cookie_proc->soc);
+
+  //Should check the return value here
+  tsearch((void *)cookie_proc,
+          &cookie_proc_tree,
+          cookie_proc_compare);
 }
 
 void
@@ -193,10 +242,13 @@ init_tab_process(int tab_idx, char *init_url)
   }
   //setup args for exec
   args[0] = TAB_PROC;
-  //args[2] = tabs[tab_idx].tab_origin;
+  args[2] = tabs[tab_idx].tab_origin;
   args[3] = init_url;
   add_kargv(args, 4);
-  init_piped_process(tab_idx, TAB_PROC, args);
+  init_piped_process(TAB_PROC,
+                     args,
+                     &tabs[tab_idx].proc,
+                     &tabs[tab_idx].soc);
 }
 
 void
@@ -217,6 +269,7 @@ process_message(int tab_idx, message *m)
     create_res_uri(m, content);
     write_message(tab_idx, m);
     free(content);
+    m->content = NULL;
     break;
   case DISPLAY_SHM:
     if (tab_idx == curr) {
@@ -226,7 +279,7 @@ process_message(int tab_idx, message *m)
     }
     break;
   case SET_COOKIE:
-    //do things like check domain... 
+  case GET_COOKIE:
   default:
     printf("Uhoh! We don't process that message type!\n");
     return;
@@ -360,7 +413,6 @@ kexit()
   _exit(0);
 }
 
-
 void
 make_command_args_global(int argc, char *argv[])
 {
@@ -374,13 +426,12 @@ make_command_args_global(int argc, char *argv[])
   }
 }
 
-
-
 int
 set_readfds(fd_set *readfds)
 {
   int i, soc;
   int max = 0; //stdin
+  struct cookie_proc *cookie_proc;
   FD_ZERO(readfds);
   FD_SET(0, readfds);
   for (i=0; i<num_tabs; i++) {
@@ -388,6 +439,14 @@ set_readfds(fd_set *readfds)
     FD_SET(soc, readfds);
     if (soc > max) {
       max = soc;
+    }
+    cookie_proc = get_cookie_process(tabs[i].tab_origin);
+    if (cookie_proc) {
+      soc = cookie_proc->soc;
+      FD_SET(soc, readfds);
+      if (soc > max) {
+        max = soc;
+      }
     }
   }
   return max;
