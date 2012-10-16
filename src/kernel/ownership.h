@@ -9,20 +9,18 @@ typedef struct reader_list {
 } reader_list_t;
 
 
-//!= 0 iff p points to data that 'owner'
-//can read, or data that is 'low' security
+//iff p points to data that 'owner'
+// can read
 int is_reader(int owner, void *p);
 
-//sets the reader for p, elevating the
-//security level
+//after add_reader(o, p), is_reader(o, p) != 0
 void add_reader(int owner, void *p);
 
+//stop tracking p
 void rm_data(void *p);
 
-//sets the reader for p, elevating the
-//security level
+//same as add_reader for each reader in os
 void add_readers(reader_list_t *os, void *p);
 
-//gets the reader for p, elevating the
-//security level
+//gets the readers of p
 reader_list_t *get_readers(void *p);
