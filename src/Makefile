@@ -6,9 +6,9 @@ EXE  = kernel
 all : $(EXE)
 
 $(EXE) : force_look
-	cd kernel; make
+	make -C kernel
 
-.PHONY: cscope
+.PHONY: cscope 
 
 cscope : 
 	echo "Building cscope database"
@@ -16,10 +16,10 @@ cscope :
 	find $(PWD) -iname "*.[ch]" > ./cscope/cscope.files
 	cd cscope; cscope -b -q
 
-test_kernel: kernel
+run: kernel
 	cd kernel; ./kernel -l
 
-debug_kernel: kernel
+debug: kernel
 	cd kernel; gdb ./kernel
 
 force_look:

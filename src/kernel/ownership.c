@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <search.h>
 #include <assert.h>
+#include <string.h>
 #include "ownership.h"
 
 typedef struct data_reader_list {
@@ -11,6 +12,44 @@ typedef struct data_reader_list {
 } data_list_t;
 
 data_list_t *data;
+
+void
+r_memcpy(void *dst, void *src, size_t n)
+{
+  add_readers(get_readers(src), dst);
+  memcpy(dst, src, n);
+}
+
+void
+r_free(void *p)
+{
+  rm_data(p);
+  free(p);
+}
+
+FILE *
+r_popen(char *command, char *mode)
+{
+  FILE *p;
+
+  p = popen(command, mode);
+  r_xfer(p, command);
+  r_xfer(p, mode);
+
+  return p;
+}
+
+FILE *
+r_pclose(FILE *stream)
+{
+  rm_data(stream);
+}
+
+void
+r_xfer(void *dst, void *src)
+{
+  add_readers(get_readers(dst), src);
+}
 
 int
 is_reader(int reader, void *p)

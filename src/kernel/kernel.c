@@ -103,7 +103,7 @@ get_uri_follow(char *uri)
     content[len] = 0;
   }
 
-  fclose(p);
+  pclose(p);
   rm_data(command);
   free(command);
 
@@ -141,6 +141,7 @@ write_message(int tab_idx, message *m)
   if (tab_idx == UI_PROC_ID) {
     write_message_soc(ui.soc, m);
   } else {
+    assert (is_reader(tabs[tab_idx].soc, &(m->type)));
     assert (is_reader(tabs[tab_idx].soc, m->content));
     write_message_soc(tabs[tab_idx].soc, m);
   }
@@ -154,6 +155,7 @@ read_message(int fd, message *m)
     read_message_soc(ui.soc, m);
   } else {
     read_message_soc(fd, m);
+    add_reader(fd, &(m->type));
     add_reader(fd, m->content);
   }
   //TODO: klog m
@@ -265,13 +267,19 @@ init_tab_process(int tab_idx, char *init_url)
 void
 process_message(int tab_idx, message *m)
 {
+  char *content;
   struct cookie c;
   struct cookie_proc *cookie_proc;
+  reader_list_t *readers;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
   if (tab_idx == UI_PROC_ID) {
     return;
   }
+  /* There's a control flow dependency on &m->type, so propagate
+     that information to all data below */
+  readers = get_readers(&(m->type));
+  r_xfer(m->content, &(m->type));
   switch (m->type) {
   case NAVIGATE:
     init_tab_process(curr, m->content);
@@ -279,11 +287,15 @@ process_message(int tab_idx, message *m)
     break;
   case REQ_URI_FOLLOW:
     write_message(UI_PROC_ID, m);
-    char *content = get_uri_follow(m->content);
+    content = get_uri_follow(m->content);
     create_res_uri(m, content);
+    /* The function create_res_uri should know about the context under
+       which it performs any assignments.
+       The following reflect the control dependency on m->type. */
+    add_readers(readers, m->content);
+    add_readers(readers, &(m->type));
     write_message(tab_idx, m);
-    rm_data(content);
-    free(content);
+    r_free(content);
     m->content = NULL;
     break;
   case DISPLAY_SHM:
