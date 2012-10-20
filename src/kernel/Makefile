@@ -1,5 +1,5 @@
 include ../Makefile.inc
-CFLAGS += -O0
+CFLAGS += -O0 
 
 OBJS=kernel.o \
 	str.o \
