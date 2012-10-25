@@ -1,10 +1,2 @@
-// qualif PtrTagged(v:ptr, p:int): TAG([v]) = p
-// qualif IntTagged(v:int, p:int): TAG([v]) = p
-qualif TagFor(v:int, p:ptr): TAGP([p; v]) = 1
-qualif IntTagged(v:int, p:int): TAGP([v; p]) = 1
-qualif PtrTagged(v:ptr, p:int): TAGP([v; p]) = 1
-qualif IntTaggedGrd(v:int, p:int, g:int): (g = 0) => TAGP([v; p]) = 1
-qualif IntTaggedNegGrd(v:int, p:int, g:int): (g != 0) => TAGP([v; p]) = 1
-qualif PtrTaggedGrd(v:ptr, p:int, g:int): (g = 0) => TAGP([v; p]) = 1
-qualif PtrTaggedNegGrd(v:ptr, p:int, g:int): (g != 0) => TAGP([v; p]) = 1
-qualif PtrTagXfer(v:ptr, p:ptr, x:int): TAGP([p; x]) = 1 => TAGP([v; x]) = 1
+qualif GrdTag(v:ptr, p:int, g:int): (g = 0) => ? Set_mem([p;TAGSET([v])])
+qualif NegGrdTag(v:ptr, p:int, g:int): (g != 0) => ? Set_mem([p;TAGSET([v])])

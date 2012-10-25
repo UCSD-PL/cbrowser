@@ -23,10 +23,10 @@ FILE *r_pclose(FILE *stream);
 /*Ownership manipulation      */
 /*----------------------------*/
 /* iff p points to data that 'owner' can read */
-int is_reader(int owner, void *p);
-
+void is_reader(int owner, void * REF(TAG([V]) = owner) p) OKEXTERN;
+void is_reader_int(int owner, int REF(TAG([V]) = owner) p) OKEXTERN;
 /* after add_reader(o, p), is_reader(o, p) != 0 */
-void add_reader(int owner, void *p);
+void add_reader(int owner, void * REF(TAG([V]) = TAG([owner])) p) OKEXTERN;
 
 /* stop tracking p */
 void rm_data(void *p);
@@ -38,5 +38,6 @@ void add_readers(reader_list_t *os, void *p);
 reader_list_t *get_readers(void *p);
 
 /* convenient */
-void r_xfer(void *dst, void *src);
+void r_xfer(void * REF(TAG([V]) = TAG([src])) dst,
+            void * REF(TAG([V]) = TAG([dst])) src) OKEXTERN;
 

@@ -1,9 +1,11 @@
 #ifndef MSG_H
 #define MSG_H
 
-#include "str.h"
-#include <stdio.h>
 #include <csolve.h>
+#include <stdio.h>
+
+#include "str.h"
+#include "tags.h"
 
 
 typedef enum {
@@ -29,27 +31,32 @@ typedef enum {
 
 
 typedef struct {
-    mtypes type;
-    char NULLTERMSTR * NNSTRINGPTR NNSTART content;
+  mtypes type;
+  int FINAL src_fd;
+  char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) FINAL content;
 } message;
 
+#define msg_start(_l) START INST(L,_l) VALIDPTR ROOM_FOR(message)
 
-void create_navigate(message *m, char *s);
-//void create_navigate(int soc, message *m);
-void create_req_uri_follow(message *m, char *s);
-void create_res_uri(message *m, char NULLTERMSTR * STRINGPTR content) OKEXTERN;
-void create_render(message *m);
-void create_display_shm(message *m, int shmid, int size);
-void create_k2g_display_shm(message *m, int shmid, int size);
-void create_get_cookie(message *m, void *cookie); 
+message*
+msg_start(S) TagsEq(Field(V,4), content) TagsEq(V, content)
+create_msg(mtypes type, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
-void write_message_soc(int soc, message *m) OKEXTERN;
-void read_message_soc(int soc, message *m) OKEXTERN;
+void write_message_soc(int soc, message FINAL *m) OKEXTERN;
+
+message*
+msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc)
+REF(TAGSET([V]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF(TAGSET([Field(V,4)]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF(TAGSET([Field(V,8)]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF((DEREF([V + 4]) : int) = soc)
+read_message_soc(int soc) OKEXTERN;
+
 void recv_exact(int soc, int size, char *buf);
 void read_lstr(int soc, char **dst); // message *m);
 void read_message_len(int soc, message *m) OKEXTERN;
 void write_message_len(int soc, message *m) OKEXTERN;
-char * payload(message *m, char *buf);
+char *payload(message *m, char *buf);
 
 
 #endif

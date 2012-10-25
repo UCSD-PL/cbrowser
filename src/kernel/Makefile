@@ -1,5 +1,5 @@
 include ../Makefile.inc
-CFLAGS += -O0 
+CFLAGS += -O0 -I /home/abakst/csolve/lib
 
 OBJS=kernel.o \
 	str.o \

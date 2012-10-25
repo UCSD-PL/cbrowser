@@ -8,7 +8,8 @@
 #define COOKIE_PROC "../procs/cookiep.py"
 
 void call(const char *path, char *const argv[]);
-pid_t run_proc(const char *file, char *const argv[]);
+pid_t run_proc(const char NULLTERMSTR * STRINGPTR file,
+               char NULLTERMSTR * NNSTRINGPTR * START ARRAY argv) OKEXTERN;
 
 
 #endif

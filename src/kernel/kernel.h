@@ -14,7 +14,7 @@ void init_piped_process(const char *procfile,
                         pid_t *proc,
                         int   *soc);
 void write_message(int tab_idx, message *m);
-void read_message(int tab_idx, message *m);
+message *read_message(int tab_idx);
 
 
 // UI Process

@@ -30,14 +30,13 @@ main(int fd1, int fd2, int b, message *m, message *m2) CHECK_TYPE
     assert_tagged(fd2, m->content);
   }
 
+  m2 = xfer_tags(m2, m);
+
   if (b) {
-    t = get_tag(m);
-    m2 = xfer_tag(fd1, m2, m);
-    m2 = xfer_tag(fd2, m2, m);
     assert_tagged(fd1, m);
     assert_tagged(fd1, m2);
     //UNSAFE
-    //assert_tagged(fd2, m2);
+    //    assert_tagged(fd2, m2);
   }
 
   send_msg(fd1, fd2, b, m);
