@@ -65,8 +65,8 @@ klog(kstr str)
   fprintf(stderr, "K: %s\n", str);
 }
 
-kstr
-get_uri_follow(kstr uri)
+kstr NNREF(TAGS(V) = TAGS(uri))
+get_uri_follow(kstr uri) CHECK_TYPE
 {
   size_t n = 0;
   size_t len = 0;
@@ -78,23 +78,25 @@ get_uri_follow(kstr uri)
   command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
 
   snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s", uri);
-  command = xfer_tags(command, uri);
+  /* command = xfer_tags(command, uri); */
 
   p = popen(command, "r");
-  if (p == NULL) {
+  if (p == NULL) { //Fix spec of popen
     fprintf(stderr, "K: Error running wget\n");
     exit(1);
+    return NULL; //exit
   }
 
-  //p = xfer_tags(p, command);
   content = calloc(csize, 1);
+
   while ((n = fread(content + len, 1, csize - len, p)) == csize - len) {
     csize *= 2;
     content = realloc(content, csize);
     len += n;
     if (content == NULL) {
-      fprintf(stderr, "K: Error reading wget result");
+      fprintf(stderr, "k: error reading wget result");
       exit(1);
+      return NULL; //exit
     }
   }
 
@@ -104,11 +106,11 @@ get_uri_follow(kstr uri)
     //terminated
     content[len] = 0;
   }
-  //content = xfer_tags(content, p);
 
   pclose(p);
   free(command);
 
+  content = xfer_tags(content, uri);
   return content;
 }
 
@@ -140,15 +142,16 @@ init_piped_process(const kstr procfile,
 }
 
 void
-write_message(int REF(&& [0 <= V; V <= MAX_NUM_TABS]) tab_idx, message *m) CHECK_TYPE
+write_message(int REF(&& [0 <= V; V <= MAX_NUM_TABS]) tab_idx, message *m)
 {
   int soc;
   if (tab_idx == UI_PROC_ID) {
     write_message_soc(ui.soc, m);
   } else {
     /* assert (is_reader(tabs[tab_idx].soc, &(m->type))); */
-    soc = tabs[tab_idx].soc;
-    write_message_soc(tabs[tab_idx].soc, m);
+    /* soc = tabs[tab_idx].soc; */
+    /* write_message_soc(tabs[tab_idx].soc, m); */
+    write_message_soc(m->src_fd, m);
   }
 }
 
@@ -298,29 +301,36 @@ process_message(int tab_idx, message *m)
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->content == NULL) return; //error
-    assert_tagged(m->src_fd, m->content);
     write_message(UI_PROC_ID, m);
     content = get_uri_follow(m->content);
+
+    if (!content) {
+      return; //error?
+    }
+
+    //    assert_tagged(m->src_fd, m->content);
+    /* assert_tagged(m->src_fd, content); */
     response = create_msg(RES_URI, content);
 
-    assert_tagged(response->src_fd, response);
-    assert_tagged(response->src_fd, &(response->type));
-    assert_tagged(response->src_fd, response->content);
+    /* assert_tagged(response->src_fd, response); */
+    /* assert_tagged(response->src_fd, &(response->type)); */
+    /* assert_tagged(response->src_fd, response->content); */
 
     /* The function create_res_uri should know about the context under
        which it performs any assignments.
        The following reflect the control dependency on m->type. */
     //assert_tagged(tabs[tab_idx].soc, m->content);
+    assert_tagged(m->src_fd, m->content);
     write_message(tab_idx, m);
     /* r_free(content); */
     break;
-  case DISPLAY_SHM:
-    if (tab_idx == curr) {
-      //create_k2g_display_shm(m, m->shmid, m->size);
-      m->type = K2G_DISPLAY_SHM;
-      write_message(UI_PROC_ID, m);
-    }
-    break;
+  /* case DISPLAY_SHM: */
+  /*   if (tab_idx == curr) { */
+  /*     //create_k2g_display_shm(m, m->shmid, m->size); */
+  /*     m->type = K2G_DISPLAY_SHM; */
+  /*     write_message(UI_PROC_ID, m); */
+  /*   } */
+  /*   break; */
   /* case SET_COOKIE: */
   /*   cookie_proc = get_cookie_process(tabs[tab_idx].tab_origin); */
   /*   assert (cookie_proc); */
@@ -571,12 +581,7 @@ main (int REF(V > 0) argc,
           ;
         tab_idx = tab_of_fd(fd);
         m = read_message(fd);
-        csolve_assert(fd == m->src_fd);
         if (tab_idx != -1) {
-          assert_tagged(m->src_fd, m->content);
-          /* assert_tagged(fd, m); */
-          /* assert_tagged(fd, &(m->type)); */
-          /* assert_tagged(fd, m->content); */
           process_message(tab_idx, m);
         }
       }

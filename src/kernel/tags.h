@@ -13,8 +13,8 @@ void *LOC(L) START REF(V = p) TAGGED(V, x)
 tag(int x, void * START LOC(L) p)
 OKEXTERN;
 
-void * START REF(V = dst) REF(TAGS(V) = (Set_cup([TAGS(src);TAGS(dst)])))
-xfer_tags(void * START dst, void * START src)
+void * START LOC(L) REF(V = dest) REF(TAGS(V) = TAGS(from))
+xfer_tags(void * START LOC(L) dest, void * START from)
 OKEXTERN;
 
 void
