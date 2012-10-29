@@ -39,16 +39,18 @@ typedef struct {
 #define msg_start(_l) START INST(L,_l) VALIDPTR ROOM_FOR(message)
 
 message*
-msg_start(S) TagsEq(Field(V,4), content) TagsEq(V, content)
+msg_start(S)
+TagsEq(V, content)
+TagsEq(Field(V,8), content)
 create_msg(mtypes type, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
 void write_message_soc(int soc, message FINAL *m) OKEXTERN;
 
 message*
 msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc)
-REF(TAGSET([V]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
-REF(TAGSET([Field(V,4)]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
-REF(TAGSET([Field(V,8)]) = Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF(TAGSET([V]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF(TAGSET([Field(V,4)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
+REF(TAGSET([Field(V,8)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
 REF((DEREF([V + 4]) : int) = soc)
 read_message_soc(int soc) OKEXTERN;
 

@@ -1,6 +1,8 @@
 #ifndef OPT_H
 #define OPT_H
 
+#include <csolve.h>
+
 struct opt_args {
     int use_length_encoding;
     int use_shm;
@@ -10,7 +12,8 @@ struct opt_args {
 extern struct opt_args opt;
 
 
-void parse_options(int argc, char *argv[]);
+void parse_options(int argc, char NULLTERMSTR * NNSTRINGPTR SIZE_GE(1) * START ARRAY SIZE_GE(4*argc) argv)
+  OKEXTERN ;
 
 
 #endif

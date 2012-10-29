@@ -2,7 +2,7 @@
 #define KERNEL_H
 
 #include "msg.h"
-
+#define kstr char NULLTERMSTR * NNSTRINGPTR NNSTART
 
 void klog(char *str);
 char *get_uri_follow(char *uri);

@@ -12,6 +12,8 @@
 #include "assert.h"
 #include "cookie.h"
 #include "tags.h"
+#include "wget.h"
+#include "opt.h"
 
 // socket includes
 #include <sys/types.h>
@@ -54,7 +56,7 @@ void *cookie_proc_tree = NULL;
 struct uiproc ui;
 
 int kargc;
-kstr LOC(PROGRAM_NAME_LOC) *ARRAY kargv;
+char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv;
 
 #define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30'"
 
@@ -63,55 +65,6 @@ void
 klog(kstr str)
 {
   fprintf(stderr, "K: %s\n", str);
-}
-
-kstr NNREF(TAGS(V) = TAGS(uri))
-get_uri_follow(kstr uri) CHECK_TYPE
-{
-  size_t n = 0;
-  size_t len = 0;
-  size_t csize = 2048;
-  char * content;
-  char * command;
-  FILE *p;
-
-  command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
-
-  snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s", uri);
-  /* command = xfer_tags(command, uri); */
-
-  p = popen(command, "r");
-  if (p == NULL) { //Fix spec of popen
-    fprintf(stderr, "K: Error running wget\n");
-    exit(1);
-    return NULL; //exit
-  }
-
-  content = calloc(csize, 1);
-
-  while ((n = fread(content + len, 1, csize - len, p)) == csize - len) {
-    csize *= 2;
-    content = realloc(content, csize);
-    len += n;
-    if (content == NULL) {
-      fprintf(stderr, "k: error reading wget result");
-      exit(1);
-      return NULL; //exit
-    }
-  }
-
-  len += n;
-  if (content != NULL) {
-    //Make sure the string is null
-    //terminated
-    content[len] = 0;
-  }
-
-  pclose(p);
-  free(command);
-
-  content = xfer_tags(content, uri);
-  return content;
 }
 
 /*       char NULLTERMSTR * STRINGPTR SIZE_GE(1) LOC(PROGRAM_NAME_LOC) */
@@ -142,17 +95,18 @@ init_piped_process(const kstr procfile,
 }
 
 void
-write_message(int REF(&& [0 <= V; V <= MAX_NUM_TABS]) tab_idx, message *m)
+write_message(int REF(&& [0 <= V; V <= MAX_NUM_TABS]) tab_idx, message *m) CHECK_TYPE
 {
-  int soc;
-  if (tab_idx == UI_PROC_ID) {
-    write_message_soc(ui.soc, m);
-  } else {
-    /* assert (is_reader(tabs[tab_idx].soc, &(m->type))); */
-    /* soc = tabs[tab_idx].soc; */
-    /* write_message_soc(tabs[tab_idx].soc, m); */
-    write_message_soc(m->src_fd, m);
-  }
+  /* int soc; */
+  write_message_soc(m->src_fd, m);
+  /* if (tab_idx == UI_PROC_ID) { */
+  /*   write_message_soc(ui.soc, m); */
+  /* } else { */
+  /*   /\* assert (is_reader(tabs[tab_idx].soc, &(m->type))); *\/ */
+  /*   /\* soc = tabs[tab_idx].soc; *\/ */
+  /*   /\* write_message_soc(tabs[tab_idx].soc, m); *\/ */
+  /*   write_message_soc(m->src_fd, m); */
+  /* } */
 }
 
 message*
@@ -260,6 +214,7 @@ init_tab_process(int tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR
       }
     } else {
       kexit(); //Better error/message here.
+      return;
     }
   } else {
     get_trusted_origin_suffix(tab_idx);
@@ -302,27 +257,20 @@ process_message(int tab_idx, message *m)
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->content == NULL) return; //error
     write_message(UI_PROC_ID, m);
-    content = get_uri_follow(m->content);
-
+    content = wget(m->content);
     if (!content) {
       return; //error?
     }
 
-    //    assert_tagged(m->src_fd, m->content);
-    /* assert_tagged(m->src_fd, content); */
-    response = create_msg(RES_URI, content);
-
-    /* assert_tagged(response->src_fd, response); */
-    /* assert_tagged(response->src_fd, &(response->type)); */
-    /* assert_tagged(response->src_fd, response->content); */
-
-    /* The function create_res_uri should know about the context under
+    /* The function create_msg should know about the context under
        which it performs any assignments.
        The following reflect the control dependency on m->type. */
-    //assert_tagged(tabs[tab_idx].soc, m->content);
-    assert_tagged(m->src_fd, m->content);
-    write_message(tab_idx, m);
-    /* r_free(content); */
+    response = create_msg(RES_URI, content);
+
+    assert_tagged(m->src_fd, response);
+    assert_tagged(m->src_fd, response->content);
+    write_message(tab_idx, response);
+    free(content);
     break;
   /* case DISPLAY_SHM: */
   /*   if (tab_idx == curr) { */
@@ -450,6 +398,7 @@ process_input_char(char c)
     switch_tab(tab_idx);
   } else if (c == 'e' /*15*/) {   // F9
     kexit();
+    return;
   } else if (c == 'a' /*16*/) {   // F10
     add_tab();
   } else if (c == 17) {   // F11
@@ -481,18 +430,21 @@ kexit()
   _exit(0);
 }
 
-/* void */
-/* make_command_args_global(int argc, char *argv[]) */
-/* { */
-/*   int i; */
-/*   if (argc > MAX_NUM_ARGS) { */
-/*     //TODO: print some error */
-/*   } */
-/*   kargc = argc; */
-/*   for (i=0; i<argc; i++) { */
-/*     kargv[i] = argv[i]; */
-/*   } */
-/* } */
+void
+make_command_args_global(int argc,
+                         char NULLTERMSTR *NNSTRINGPTR LOC(PROGRAM_NAME_LOC)
+                                          *START ARRAY SIZE_GE(4*argc) argv)
+  GLOBAL(PROGRAM_NAME_LOC)
+{
+  int i;
+  if (argc > MAX_NUM_ARGS) {
+    //TODO: print some error
+  }
+  kargc = argc;
+  for (i=0; i<argc; i++) {
+    kargv[i] = argv[i];
+  }
+}
 
 int
 set_readfds(fd_set *readfds)
@@ -552,7 +504,7 @@ int
 main (int REF(V > 0) argc,
       char NULLTERMSTR * NNSTRINGPTR SIZE_GE(1) LOC(PROGRAM_NAME_LOC)
                        * START NONNULL ARRAY SIZE(argc * 4) argv)
-  CHECK_TYPE GLOBAL(PROGRAM_NAME_LOC) 
+  GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
 {
   char c;
   fd_set readfds;
