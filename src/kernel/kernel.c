@@ -69,8 +69,64 @@ klog(kstr str)
   fprintf(stderr, "K: %s\n", str);
 }
 
-/*       char NULLTERMSTR * STRINGPTR SIZE_GE(1) LOC(PROGRAM_NAME_LOC) */
-/*                        * START NONNULL ARRAY SIZE(argc * 4) argv) */
+void
+process_input_char(char c)
+{
+  int tab_idx = get_tab_idx(c);
+  if (tab_idx >= 0) {
+    switch_tab(tab_idx);
+  } else if (c == 'e' /*15*/) {   // F9
+    exit(0);
+    return;
+  } else if (c == 'a' /*16*/) {   // F10
+    add_tab();
+  } else if (c == 17) {   // F11
+    add_tab();
+  } else if (c == 18) {   // F12
+    //TODO: mouse_click();
+    fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
+  } else {
+    fprintf(stderr, "Ooops! We don't handle that character yet.\n");
+    //TODO write message to current tab
+  }
+}
+
+int
+current_tab()
+{
+  return curr;
+}
+
+int
+num_tabs()
+{
+  return num_tab;
+}
+
+int
+tab_fd(int VALID_TAB tab_idx) CHECK_TYPE
+{
+  return tabs[tab_idx].soc;
+}
+
+char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(PROGRAM_NAME_LOC)
+tab_title(int VALID_TAB tab_idx) GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
+{
+  return tabs[tab_idx].tab_origin;
+}
+
+void
+kill_tab(int VALID_TAB tab_idx, int sig) CHECK_TYPE
+{
+  kill(tabs[tab_idx].proc, sig);
+}
+
+void
+kill_ui(int sig)
+{
+  kill(ui.proc, sig);
+}
+
 void
 init_piped_process(const kstr procfile,
                    char NULLTERMSTR * STRINGPTR * START ARRAY VALIDPTR SIZE_GE(8) args,
@@ -97,7 +153,7 @@ init_piped_process(const kstr procfile,
 }
 
 void
-write_message(message *m) CHECK_TYPE
+write_message(message *m)
 {
   write_message_soc(m->src_fd, m);
 }
@@ -187,8 +243,8 @@ add_kargv(char NULLTERMSTR *NNSTRINGPTR LOC(PROGRAM_NAME_LOC) *ARRAY args,
 /* } */
 
 void
-init_tab_process(int tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR init_url)
-  GLOBAL(PROGRAM_NAME_LOC)
+init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR init_url)
+  GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
 {
   //printf("init_tab_process\n");
   char * args[4+MAX_NUM_ARGS]; //args for exec
@@ -227,7 +283,7 @@ init_tab_process(int tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR
 }
 
 void
-process_message(int tab_idx, message *m) CHECK_TYPE
+process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLICY m) CHECK_TYPE
 {
   char *content;
   message *response;
@@ -252,6 +308,7 @@ process_message(int tab_idx, message *m) CHECK_TYPE
     if (m->content == NULL) return; //error
     //write_message(m); to UI
     content = wget(m->content);
+    content = xfer_tags(content, &(m->type));
     if (!content) {
       return; //error?
     }
@@ -259,8 +316,6 @@ process_message(int tab_idx, message *m) CHECK_TYPE
        which it performs any assignments.
        The following reflect the control dependency on m->type. */
     response = create_msg(RES_URI, m->src_fd, content);
-    assert_tagged(m->src_fd, response);
-    assert_tagged(m->src_fd, response->content);
     write_message(response);
     free(content);
     break;
@@ -288,6 +343,16 @@ process_message(int tab_idx, message *m) CHECK_TYPE
   }
 }
 
+/* Read a message from tab tab_idx */
+void
+kernel_process_tab_msg(int VALID_TAB tab_idx) CHECK_TYPE
+{
+  int soc;
+  message *m;
+
+  soc = tabs[tab_idx].soc;
+}
+
 void
 get_trusted_origin_suffix(int tab_idx)
 {
@@ -304,7 +369,7 @@ render(int tab_idx)
 {
   message *m;
   m = create_msg(RENDER, tab_fd(tab_idx), NULL);
-  write_message(m);
+  //write_message(m);
 }
 
 void
@@ -353,64 +418,3 @@ get_tab_idx(char ascii)
     return -1;
   }
 }
-
-void
-process_input_char(char c)
-{
-  int tab_idx = get_tab_idx(c);
-  if (tab_idx >= 0) {
-    switch_tab(tab_idx);
-  } else if (c == 'e' /*15*/) {   // F9
-    exit(0);
-    return;
-  } else if (c == 'a' /*16*/) {   // F10
-    add_tab();
-  } else if (c == 17) {   // F11
-    add_tab();
-  } else if (c == 18) {   // F12
-    //TODO: mouse_click();
-    fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
-  } else {
-    fprintf(stderr, "Ooops! We don't handle that character yet.\n");
-    //TODO write message to current tab
-  }
-}
-
-int
-current_tab()
-{
-  return curr;
-}
-
-int
-num_tabs()
-{
-  return num_tab;
-}
-
-int
-tab_fd(int VALID_TAB tab_idx) CHECK_TYPE
-{
-  return tabs[tab_idx].soc;
-}
-
-char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(PROGRAM_NAME_LOC)
-tab_title(int VALID_TAB tab_idx) GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
-{
-  return tabs[tab_idx].tab_origin;
-}
-
-void
-kill_tab(int VALID_TAB tab_idx, int sig) CHECK_TYPE
-{
-  kill(tabs[tab_idx].proc, sig);
-}
-
-void
-kill_ui(int sig)
-{
-  kill(ui.proc, sig);
-}
-  
-
-

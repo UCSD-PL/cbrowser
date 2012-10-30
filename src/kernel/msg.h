@@ -29,9 +29,19 @@ typedef enum {
     C2K_SET_COOKIE
 } mtypes;
 
+#define SINGLETON(_type)                                                \
+  ((DEREF([V]) : int) = _type) =>                                       \
+    && [TAGSET([V]) = Set_sng([(DEREF([V + 4]) : int)]);                \
+        TAGSET([(DEREF([V + 4]) : int)]) = Set_sng([(DEREF([V + 4]) : int)]); \
+        TAGSET([DEREF([V + 8])]) = Set_sng([(DEREF([V + 4]) : int)])]
+
+#define REQ_URI_FOLLOW_MSG_TYPE SINGLETON(2)
+#define RES_URI_MSG_TYPE SINGLETON(7)
+
+#define MSG_POLICY REF(REQ_URI_FOLLOW_MSG_TYPE) REF(RES_URI_MSG_TYPE)
 
 typedef struct {
-  mtypes type;
+  mtypes FINAL type;
   int FINAL src_fd;
   char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) FINAL content;
 } message;
@@ -41,10 +51,14 @@ typedef struct {
 message*
 msg_start(S)
 TagsEq(V, content)
+TagsEq((Field(V,4) : int), content)
 TagsEq(Field(V,8), content)
+REF((DEREF([V]) : int) = type)
+REF((DEREF([V + 4]) : int) = fd)
 create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
-void write_message_soc(int soc, message FINAL *m) OKEXTERN;
+void write_message_soc(int soc,
+                       message FINAL * REF(TAGSET([DEREF([V + 8])]) = TAGSET([soc])) m) OKEXTERN;
 
 message*
 msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc)

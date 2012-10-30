@@ -39,5 +39,6 @@ void print_tab_title(int tab_idx);
 void print_text_display();
 int get_tab_idx(char ascii);
 void process_input_char(char c);
+void kernel_process_tab_msg(int tab_idx);
 
 #endif
