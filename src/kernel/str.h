@@ -19,8 +19,8 @@ int endswith(char NULLTERMSTR *STRINGPTR str,
 // If these constants get changed, urlparse must be similarly modified
 #define SCHEME_SIZE 16
 #define NETLOC_SIZE 1024
-extern char scheme[SCHEME_SIZE] OKEXTERN;
-extern char netloc[NETLOC_SIZE] OKEXTERN;
+/* extern char scheme[SCHEME_SIZE] OKEXTERN; */
+/* extern char netloc[NETLOC_SIZE] OKEXTERN; */
 
 // urlparse
 //  Puts the scheme and netloc of the url in global scheme and netloc vars

@@ -15,29 +15,32 @@ qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
 
 // qualif NNTagsEq(v:ptr, p:ptr): (v != 0) => (TAGSET([v]) = TAGSET([p]))
 
-qualif ReqUriPolicyType(v:ptr):
-  (DEREF([v]) : int) = 2 =>
-   TAGSET([v]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ReqUriPolicyType(v:ptr):
+//   (DEREF([v]) : int) = 2 =>
+//    TAGSET([v]) = Set_sng([(DEREF([v + 4]) : int)])
 
-qualif ReqUriPolicySoc(v:ptr):
-  (DEREF([v]) : int) = 2 =>
-   TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ReqUriPolicySoc(v:ptr):
+//   (DEREF([v]) : int) = 2 =>
+//    TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([(DEREF([v + 4]) : int)])
 
-qualif ReqUriPolicyCont(v:ptr):
-  (DEREF([v]) : int) = 2 =>
-   TAGSET([DEREF([v + 8])]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ReqUriPolicyCont(v:ptr):
+//   (DEREF([v]) : int) = 2 =>
+//    TAGSET([DEREF([v + 8])]) = Set_sng([(DEREF([v + 4]) : int)])
 
-qualif ResUriPolicyType(v:ptr):
-  (DEREF([v]) : int) = 7 =>
-   TAGSET([v]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ResUriPolicyType(v:ptr):
+//   (DEREF([v]) : int) = 7 =>
+//    TAGSET([v]) = Set_sng([(DEREF([v + 4]) : int)])
 
-qualif ResUriPolicySoc(v:ptr):
-  (DEREF([v]) : int) = 7 =>
-   TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ResUriPolicySoc(v:ptr):
+//   (DEREF([v]) : int) = 7 =>
+//    TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([(DEREF([v + 4]) : int)])
 
-qualif ResUriPolicyCont(v:ptr):
-  (DEREF([v]) : int) = 7 =>
-   TAGSET([DEREF([v + 8])]) = Set_sng([(DEREF([v + 4]) : int)])
+// qualif ResUriPolicyCont(v:ptr):
+//   (DEREF([v]) : int) = 7 =>
+//    TAGSET([DEREF([v + 8])]) = Set_sng([(DEREF([v + 4]) : int)])
+
+qualif MsgPolicyType(v:ptr): TAGSET([v]) = TAGSET([(DEREF([V + 4]) : int)])
+qualif MsgPolicyContent(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([V + 4]) : int)])
 
 qualif TagsEq0(v:ptr, p:ptr): TAGSET([v]) = TAGSET([p])
 qualif TagsEq1(v:int, p:ptr): TAGSET([v]) = TAGSET([p])

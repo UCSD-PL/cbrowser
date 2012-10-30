@@ -25,9 +25,9 @@
 
 #define VALID_TAB REF(&& [V >= 0; V < MAX_NUM_TABS])
 
-// for use by str.h/urlparse(...)
-extern char scheme[SCHEME_SIZE];
-extern char netloc[NETLOC_SIZE];
+/* // for use by str.h/urlparse(...) */
+/* extern char scheme[SCHEME_SIZE]; */
+/* extern char netloc[NETLOC_SIZE]; */
 
 #define kstr char NULLTERMSTR * NNSTRINGPTR NNSTART
 
@@ -161,10 +161,7 @@ write_message(message *m)
 message*
 read_message(int fd)
 {
-  message *m;
-  m = read_message_soc(fd);
-  //assert_tagged(fd, m);
-  return m;
+  return read_message_soc(fd);
 }
 
 /* void */
@@ -253,22 +250,22 @@ init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC)
 
   //    call("/usr/bin/clear", NULL);
     
-  if ( strcmp(init_url, "None") != 0 ) {
-    printf("the tab is navigated to %s\n", init_url);
+  /* if ( strcmp(init_url, "None") != 0 ) { */
+  /*   printf("the tab is navigated to %s\n", init_url); */
+  /*   get_trusted_origin_suffix(tab_idx); */
+  /*   urlparse(init_url); //results placed in global scheme and netloc vars */
+  /*   if (tabs[tab_idx].tab_origin) { */
+  /*     while ( !endswith(netloc, tabs[tab_idx].tab_origin) ) { */
+  /*       printf("The origin suffix you typed is inconsistent with the visiting url\n"); */
+  /*       get_trusted_origin_suffix(tab_idx); */
+  /*     } */
+  /*   } else { */
+  /*     exit(1); //Better error/message here. */
+  /*     return; */
+  /*   } */
+  /* } else { */
     get_trusted_origin_suffix(tab_idx);
-    urlparse(init_url); //results placed in global scheme and netloc vars
-    if (tabs[tab_idx].tab_origin) {
-      while ( !endswith(netloc, tabs[tab_idx].tab_origin) ) {
-        printf("The origin suffix you typed is inconsistent with the visiting url\n");
-        get_trusted_origin_suffix(tab_idx);
-      }
-    } else {
-      exit(1); //Better error/message here.
-      return;
-    }
-  } else {
-    get_trusted_origin_suffix(tab_idx);
-  }
+  /* } */
   //setup args for exec
   args[0] = strdup(TAB_PROC);
   args[2] = tabs[tab_idx].tab_origin;

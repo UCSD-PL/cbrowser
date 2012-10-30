@@ -29,16 +29,20 @@ typedef enum {
     C2K_SET_COOKIE
 } mtypes;
 
-#define SINGLETON(_type)                                                \
-  ((DEREF([V]) : int) = _type) =>                                       \
-    && [TAGSET([V]) = Set_sng([(DEREF([V + 4]) : int)]);                \
+#define SINGLETON(_type)                                                      \
+  ((DEREF([V]) : int) = _type) =>                                             \
+    && [TAGSET([V]) = Set_sng([(DEREF([V + 4]) : int)]);                      \
         TAGSET([(DEREF([V + 4]) : int)]) = Set_sng([(DEREF([V + 4]) : int)]); \
         TAGSET([DEREF([V + 8])]) = Set_sng([(DEREF([V + 4]) : int)])]
 
 #define REQ_URI_FOLLOW_MSG_TYPE SINGLETON(2)
 #define RES_URI_MSG_TYPE SINGLETON(7)
 
-#define MSG_POLICY REF(REQ_URI_FOLLOW_MSG_TYPE) REF(RES_URI_MSG_TYPE)
+//#define MSG_POLICY REF(REQ_URI_FOLLOW_MSG_TYPE) REF(RES_URI_MSG_TYPE)
+
+#define MSG_POLICY                                                      \
+  REF(&& [TAGSET([V])              = TAGSET([(DEREF([V + 4]) : int)]);  \
+          TAGSET([DEREF([V + 8])]) = TAGSET([(DEREF([V + 4]) : int)])])
 
 typedef struct {
   mtypes FINAL type;
@@ -48,6 +52,8 @@ typedef struct {
 
 #define msg_start(_l) START INST(L,_l) VALIDPTR ROOM_FOR(message)
 
+/* The following should all take the union of content, fd, and type's tags.
+   Or intersection? */
 message*
 msg_start(S)
 TagsEq(V, content)
@@ -61,11 +67,13 @@ void write_message_soc(int soc,
                        message FINAL * REF(TAGSET([DEREF([V + 8])]) = TAGSET([soc])) m) OKEXTERN;
 
 message*
-msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc)
-REF(TAGSET([V]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
-REF(TAGSET([Field(V,4)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
-REF(TAGSET([Field(V,8)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])]))
+msg_start(L)
 REF((DEREF([V + 4]) : int) = soc)
+MSG_POLICY
+/* msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc) */
+/* REF(TAGSET([V]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
+/* REF(TAGSET([Field(V,4)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
+/* REF(TAGSET([Field(V,8)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
 read_message_soc(int soc) OKEXTERN;
 
 void recv_exact(int soc, int size, char *buf);
