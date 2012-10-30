@@ -42,7 +42,7 @@ message*
 msg_start(S)
 TagsEq(V, content)
 TagsEq(Field(V,8), content)
-create_msg(mtypes type, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
+create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
 void write_message_soc(int soc, message FINAL *m) OKEXTERN;
 

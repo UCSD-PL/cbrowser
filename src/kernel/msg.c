@@ -64,23 +64,35 @@ create_k2g_display_shm(message *m, int shmid, int size)
 //void create_set_status(message *m, char *status) {
 //    m->type = SET_STATUS;
 //}
-
-
-void
-read_message_soc(int soc, message *m)
+message *
+create_msg(mtypes type,
+           int fd,
+           char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content)
 {
+  message *m = malloc(sizeof(*m));
+
+  m->type = type;
+  m->src_fd = fd;
+  m->content = content;
+
+  return m;
+}
+
+
+message *
+read_message_soc(int soc)
+{
+  message *m = malloc(sizeof(*m));
   //printf("read_message_soc\n");
-  if (opt.use_length_encoding) {
-    read_message_len(soc, m);
-  }
+  read_message_len(soc, m);
+  m->src_fd = soc;
+  return m;
 }
 
 void
 write_message_soc(int soc, message *m)
 {
-  if (opt.use_length_encoding) {
-    write_message_len(soc, m);
-  }
+  write_message_len(soc, m);
 }
 
 void

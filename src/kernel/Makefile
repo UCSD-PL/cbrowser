@@ -1,13 +1,15 @@
 include ../Makefile.inc
 CFLAGS += -O0 -I /home/abakst/csolve/lib
 
-OBJS=kernel.o \
+OBJS= main.o \
+	kernel.o \
+	wget.o \
 	str.o \
 	proc.o \
 	opt.o \
 	msg.o \
-	cookie.o \
-	ownership.o
+        tags.o 
+#	cookie.o
 
 all : kernel
 
@@ -16,10 +18,15 @@ kernel: $(OBJS)
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-clean:
+clean: clean_src clean_cookies clean_csolve
+
+clean_src:
 	-rm -f *.o *~ kernel
 
-csolve_clean: clean
+clean_cookies:
+	-rm -rf cookies
+
+clean_csolve:
 	-rm -f *.c.ssa.c
 	-rm -f *.in.fq
 	-rm -f *.out.fq
@@ -32,3 +39,6 @@ csolve_clean: clean
 	-rm -f *.c.infspec
 	-rm -f *.c.log
 	-rm -f *.c.out
+	-rm -rf *.c.autospec
+	-rm -rf js
+	-rm -rf css

@@ -3,9 +3,8 @@
 #include <sys/wait.h>
 #include <stdio.h>
 
-
-
-void call(const char *path, char *const argv[]) {
+void call(const char *path, char *const argv[])
+{
     pid_t pid;
     int status;
     if ( (pid = fork()) == 0) { // child
@@ -17,18 +16,12 @@ void call(const char *path, char *const argv[]) {
     }
 }
 
-
-pid_t run_proc(const char *file, char *const argv[]) {
+pid_t run_proc(const char NULLTERMSTR FINAL *STRINGPTR file,
+               char NULLTERMSTR FINAL *NNSTRINGPTR FINAL
+                                      *START ARRAY argv)
+{
     pid_t pid;
     int status;
-    
-    ///////
-    //int i = 0;
-    //while (argv[i]) {
-    //    printf("%d: %s\n", i, argv[i]);
-    //    i++;
-    //}
-    ///////
     
     if ( (pid = fork()) == 0) { // child
         execvp(file, argv);

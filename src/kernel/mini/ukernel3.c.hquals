@@ -1,0 +1,7 @@
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([v + 4])]))
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([v + 8])]))
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([v])]))
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 4)])])]))
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 8)])])]))
+qualif FieldTag(v:ptr): (? Set_mem([0; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 4)])])]))
+qualif FieldTag(v:ptr): (? Set_mem([0; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 8)])])]))

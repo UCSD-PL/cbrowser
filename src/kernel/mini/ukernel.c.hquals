@@ -1,0 +1,2 @@
+qualif GrdTag(v:ptr, p:int, g:int): (g = 0) => ? Set_mem([p;TAGSET([v])])
+qualif NegGrdTag(v:ptr, p:int, g:int): (g != 0) => ? Set_mem([p;TAGSET([v])])

@@ -23,6 +23,8 @@
 #define MAX_NUM_ARGS 4
 #define UI_PROC_ID MAX_NUM_TABS
 
+#define VALID_TAB REF(&& [V >= 0; V < MAX_NUM_TABS])
+
 // for use by str.h/urlparse(...)
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
@@ -48,7 +50,7 @@ struct cookie_proc {
 
 struct tab INST(L, PROGRAM_NAME_LOC) (SHAPE_IGNORE_BOUND tabs)[MAX_NUM_TABS];  // array of tabs
 int curr = 0;                   // current tab
-int num_tabs = 0;               // number of open tabs
+int num_tab = 0;               // number of open tabs
 
 //struct cookie_jar *cookies;
 void *cookie_proc_tree = NULL;
@@ -56,7 +58,7 @@ void *cookie_proc_tree = NULL;
 struct uiproc ui;
 
 int kargc;
-char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv;
+char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv = NULL;
 
 #define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30'"
 
@@ -95,18 +97,9 @@ init_piped_process(const kstr procfile,
 }
 
 void
-write_message(int REF(&& [0 <= V; V <= MAX_NUM_TABS]) tab_idx, message *m) CHECK_TYPE
+write_message(message *m) CHECK_TYPE
 {
-  /* int soc; */
   write_message_soc(m->src_fd, m);
-  /* if (tab_idx == UI_PROC_ID) { */
-  /*   write_message_soc(ui.soc, m); */
-  /* } else { */
-  /*   /\* assert (is_reader(tabs[tab_idx].soc, &(m->type))); *\/ */
-  /*   /\* soc = tabs[tab_idx].soc; *\/ */
-  /*   /\* write_message_soc(tabs[tab_idx].soc, m); *\/ */
-  /*   write_message_soc(m->src_fd, m); */
-  /* } */
 }
 
 message*
@@ -130,6 +123,7 @@ read_message(int fd)
 /*                      &ui.soc); */
 /* } */
 
+//Get rid of this. options should be parsed & then written out as strings, rather than keeping the strings around.
 void
 add_kargv(char NULLTERMSTR *NNSTRINGPTR LOC(PROGRAM_NAME_LOC) *ARRAY args,
           int pos) GLOBAL(PROGRAM_NAME_LOC)
@@ -213,7 +207,7 @@ init_tab_process(int tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR
         get_trusted_origin_suffix(tab_idx);
       }
     } else {
-      kexit(); //Better error/message here.
+      exit(1); //Better error/message here.
       return;
     }
   } else {
@@ -233,7 +227,7 @@ init_tab_process(int tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR
 }
 
 void
-process_message(int tab_idx, message *m)
+process_message(int tab_idx, message *m) CHECK_TYPE
 {
   char *content;
   message *response;
@@ -256,20 +250,18 @@ process_message(int tab_idx, message *m)
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->content == NULL) return; //error
-    write_message(UI_PROC_ID, m);
+    //write_message(m); to UI
     content = wget(m->content);
     if (!content) {
       return; //error?
     }
-
     /* The function create_msg should know about the context under
        which it performs any assignments.
        The following reflect the control dependency on m->type. */
-    response = create_msg(RES_URI, content);
-
+    response = create_msg(RES_URI, m->src_fd, content);
     assert_tagged(m->src_fd, response);
     assert_tagged(m->src_fd, response->content);
-    write_message(tab_idx, response);
+    write_message(response);
     free(content);
     break;
   /* case DISPLAY_SHM: */
@@ -299,6 +291,7 @@ process_message(int tab_idx, message *m)
 void
 get_trusted_origin_suffix(int tab_idx)
 {
+  tabs[tab_idx].tab_origin = malloc(MAX_URI_LEN);
   printf("Enter trusted origin suffix(e.g, google.com): ");
   fflush(stdout);
   scanf("%63s", tabs[tab_idx].tab_origin); //stores a null terminator at end
@@ -310,16 +303,16 @@ void
 render(int tab_idx)
 {
   message *m;
-  m = create_msg(RENDER, NULL);
-  write_message(tab_idx, m);
+  m = create_msg(RENDER, tab_fd(tab_idx), NULL);
+  write_message(m);
 }
 
 void
 add_tab()
 {
-  if (num_tabs < MAX_NUM_TABS) {
-    curr = num_tabs;
-    num_tabs++;
+  if (num_tab < MAX_NUM_TABS) {
+    curr = num_tab;
+    num_tab++;
     init_tab_process(curr, "None"); //TODO: arguments
     /* init_cookie_process(tabs[curr].tab_origin); */
   } else {
@@ -330,7 +323,7 @@ add_tab()
 void
 switch_tab(int tab_idx)
 {
-  if (tab_idx < num_tabs) {
+  if (tab_idx < num_tab) {
     curr = tab_idx;
     render(tab_idx);
   }
@@ -351,35 +344,6 @@ switch_tab(int tab_idx)
 /*   return -1; */
 /* } */
 
-void
-print_tab_title(int tab_idx)
-{
-  if (tab_idx == curr) {
-    printf("*%s*", tabs[tab_idx].tab_origin);
-  } else {
-    printf("%s", tabs[tab_idx].tab_origin);
-  }
-}
-
-void
-print_text_display()
-{
-  int i;
-  //    call("/usr/bin/clear", NULL);
-  printf("--------------------------------------------------------------------"
-         "----------\n");
-  printf("| ");
-  for (i=0; i<num_tabs; i++) {
-    print_tab_title(i);
-    printf(" | ");
-  }
-  printf("\n");
-  printf("--------------------------------------------------------------------"
-         "----------\n");
-  printf("Enter command: ");
-  fflush(stdout);
-}
-
 int
 get_tab_idx(char ascii)
 {
@@ -397,7 +361,7 @@ process_input_char(char c)
   if (tab_idx >= 0) {
     switch_tab(tab_idx);
   } else if (c == 'e' /*15*/) {   // F9
-    kexit();
+    exit(0);
     return;
   } else if (c == 'a' /*16*/) {   // F10
     add_tab();
@@ -412,132 +376,41 @@ process_input_char(char c)
   }
 }
 
-void
-kexit()
+int
+current_tab()
 {
-  int i;
-  struct cookie_proc *cp;
-  //TODO
-  for (i = 0; i < num_tabs; i++) {
-    kill(tabs[i].proc, SIGINT);
-    /* cp = get_cookie_process(tabs[i].tab_origin); */
-    /* if (cp) { */
-    /*   kill(cp->proc, SIGINT); */
-    /* } */
-  }
-
-  kill(ui.proc, SIGINT);
-  _exit(0);
-}
-
-void
-make_command_args_global(int argc,
-                         char NULLTERMSTR *NNSTRINGPTR LOC(PROGRAM_NAME_LOC)
-                                          *START ARRAY SIZE_GE(4*argc) argv)
-  GLOBAL(PROGRAM_NAME_LOC)
-{
-  int i;
-  if (argc > MAX_NUM_ARGS) {
-    //TODO: print some error
-  }
-  kargc = argc;
-  for (i=0; i<argc; i++) {
-    kargv[i] = argv[i];
-  }
+  return curr;
 }
 
 int
-set_readfds(fd_set *readfds)
+num_tabs()
 {
-  int i, soc;
-  int max = 0; //stdin
-  struct cookie_proc *cookie_proc;
-  FD_ZERO(readfds);
-  FD_SET(0, readfds);
-  for (i=0; i<num_tabs; i++) {
-    soc = tabs[i].soc;
-    FD_SET(soc, readfds);
-    if (soc > max) {
-      max = soc;
-    }
-    /* cookie_proc = get_cookie_process(tabs[i].tab_origin); */
-    /* if (cookie_proc) { */
-    /*   soc = cookie_proc->soc; */
-    /*   FD_SET(soc, readfds); */
-    /*   if (soc > max) { */
-    /*     max = soc; */
-    /*   } */
-    /* } */
-  }
-  return max;
+  return num_tab;
 }
-
-int 
-tab_of_fd(int fd)
-{
-  int i, soc;
-    
-  /* //check UI process */
-  /* soc = ui.soc; */
-  /* if  (FD_ISSET(soc, readfds)) { */
-  /*   return UI_PROC_ID; */
-  /* } */
-  //check tabs
-  for (i=0; i<num_tabs; i++) {
-    soc = tabs[i].soc;
-    if (fd == soc) {
-      csolve_assert(i < MAX_NUM_TABS);
-      return i;
-    }
-  }
-  return -1;
-}
-
-/* void */
-/* handler(int s) */
-/* { */
-/*   fprintf(stderr, "Interrupt caught, cleaning up...\n"); */
-/*   exit(0); */
-/* } */
 
 int
-main (int REF(V > 0) argc,
-      char NULLTERMSTR * NNSTRINGPTR SIZE_GE(1) LOC(PROGRAM_NAME_LOC)
-                       * START NONNULL ARRAY SIZE(argc * 4) argv)
-  GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
+tab_fd(int VALID_TAB tab_idx) CHECK_TYPE
 {
-  char c;
-  fd_set readfds;
-  int max_fd;
-  int ready_tab;
-  message *m;
-  int tab_idx;
-  int fd;
-  /* make_command_args_global(argc, argv); */
-  /* parse_options(argc, argv); */
-  /* init_ui_process(); */
+  return tabs[tab_idx].soc;
+}
 
-  /* signal(SIGINT, handler); */
-  /* atexit(kexit); */
+char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(PROGRAM_NAME_LOC)
+tab_title(int VALID_TAB tab_idx) GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
+{
+  return tabs[tab_idx].tab_origin;
+}
+
+void
+kill_tab(int VALID_TAB tab_idx, int sig) CHECK_TYPE
+{
+  kill(tabs[tab_idx].proc, sig);
+}
+
+void
+kill_ui(int sig)
+{
+  kill(ui.proc, sig);
+}
   
-  print_text_display();
-  while (1) {
-    max_fd = set_readfds(&readfds);
-    if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
-      if (FD_ISSET(0, &readfds)) { //stdin
-        scanf("%1s", &c);
-        c = nondet();
-        process_input_char(c);
-      } else {
-        for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)
-          ;
-        tab_idx = tab_of_fd(fd);
-        m = read_message(fd);
-        if (tab_idx != -1) {
-          process_message(tab_idx, m);
-        }
-      }
-      print_text_display();
-    }
-  }
-}
+
+
