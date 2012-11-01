@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <stdio.h>
+#include <string.h>
 
 void call(const char *path, char *const argv[])
 {
