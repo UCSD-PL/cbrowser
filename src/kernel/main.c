@@ -8,12 +8,12 @@
 #include <search.h>
 #include "str.h"
 #include "proc.h"
+#include "ui.h"
 #include "kernel.h"
 #include "assert.h"
 #include "cookie.h"
 #include "tags.h"
 #include "wget.h"
-#include "opt.h"
 
 // socket includes
 #include <sys/types.h>
@@ -64,14 +64,14 @@ kexit()
   struct cookie_proc *cp;
   //TODO
   for (i = 0; i < num_tabs(); i++) {
-    kill_tab(i, SIGINT);
+    tab_kill(i, SIGINT);
     /* cp = get_cookie_process(tabs[i].tab_origin); */
     /* if (cp) { */
     /*   kill(cp->proc, SIGINT); */
     /* } */
   }
 
-  kill_ui(SIGINT);
+  ui_kill(SIGINT);
   _exit(0);
 }
 
@@ -106,11 +106,11 @@ tab_of_fd(int fd)
 {
   int i, soc;
     
-  /* //check UI process */
-  /* soc = ui.soc; */
-  /* if  (FD_ISSET(soc, readfds)) { */
-  /*   return UI_PROC_ID; */
-  /* } */
+  //check UI process
+  soc = ui_soc();
+  if  (soc == fd) {
+    return -1;//UI_PROC_ID;
+  }
   //check tabs
   for (i=0; i<num_tabs(); i++) {
     soc = tab_fd(i);
@@ -144,7 +144,7 @@ main (int REF(V > 0) argc,
   int fd;
   /* make_command_args_global(argc, argv); */
   /* parse_options(argc, argv); */
-  /* init_ui_process(); */
+  ui_init();
 
   signal(SIGINT, handler);
   atexit(kexit);
@@ -162,13 +162,11 @@ main (int REF(V > 0) argc,
           ;
         tab_idx = tab_of_fd(fd);
 
+        m = read_message(fd);
         if (tab_idx != -1) {
-          kernel_process_tab_msg(tab_idx);
+          process_message(tab_idx, m);
         }
-        /* m = read_message(fd); */
-        /* if (tab_idx != -1) { */
-        /*   process_message(tab_idx, m); */
-        /* } */
+
       }
       print_text_display();
     }

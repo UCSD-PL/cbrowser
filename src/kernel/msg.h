@@ -64,7 +64,8 @@ REF((DEREF([V + 4]) : int) = fd)
 create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
 void write_message_soc(int soc,
-                       message FINAL * REF(TAGSET([DEREF([V + 8])]) = TAGSET([soc])) m) OKEXTERN;
+                       message FINAL * REF(|| [(? Set_emp([TAGS(soc)]));
+                                               TAGS(Field(V, 8)) = TAGS(soc)]) m) OKEXTERN;
 
 message*
 msg_start(L)

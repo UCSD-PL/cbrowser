@@ -3,6 +3,7 @@ CFLAGS += -O0 -I /home/abakst/csolve/lib
 
 OBJS= main.o \
 	kernel.o \
+	ui.o \
 	wget.o \
 	str.o \
 	proc.o \

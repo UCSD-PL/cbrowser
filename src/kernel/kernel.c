@@ -8,6 +8,7 @@
 #include <search.h>
 #include "str.h"
 #include "proc.h"
+#include "ui.h"
 #include "kernel.h"
 #include "assert.h"
 #include "cookie.h"
@@ -21,7 +22,7 @@
 
 #define MAX_NUM_TABS 10
 #define MAX_NUM_ARGS 4
-#define UI_PROC_ID MAX_NUM_TABS
+/* #define UI_PROC_ID MAX_NUM_TABS */
 
 #define VALID_TAB REF(&& [V >= 0; V < MAX_NUM_TABS])
 
@@ -37,11 +38,6 @@ struct tab {
   int   REF(TAGSET([V]) = Set_sng([V])) FINAL soc; //socket
 };
 
-struct uiproc {
-  pid_t proc;
-  int soc;
-};
-
 struct cookie_proc {
   kstr cookie_origin;
   pid_t proc;
@@ -53,20 +49,26 @@ int curr = 0;                   // current tab
 int num_tab = 0;               // number of open tabs
 
 //struct cookie_jar *cookies;
-void *cookie_proc_tree = NULL;
-
-struct uiproc ui;
+/* void *cookie_proc_tree = NULL; */
 
 int kargc;
 char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv = NULL;
-
-#define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30'"
 
 // output string to stderr of kernel process
 void
 klog(kstr str)
 {
   fprintf(stderr, "K: %s\n", str);
+}
+
+int
+get_tab_idx(char ascii)
+{
+  if (ascii >= '0' && ascii <= '9') {
+    return ascii - '0';
+  } else {
+    return -1;
+  }
 }
 
 void
@@ -116,40 +118,9 @@ tab_title(int VALID_TAB tab_idx) GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
 }
 
 void
-kill_tab(int VALID_TAB tab_idx, int sig) CHECK_TYPE
+tab_kill(int VALID_TAB tab_idx, int sig) CHECK_TYPE
 {
   kill(tabs[tab_idx].proc, sig);
-}
-
-void
-kill_ui(int sig)
-{
-  kill(ui.proc, sig);
-}
-
-void
-init_piped_process(const kstr procfile,
-                   char NULLTERMSTR * STRINGPTR * START ARRAY VALIDPTR SIZE_GE(8) args,
-                   pid_t *proc,
-                   int   *soc) 
-{
-  int socs[2];
-  char child[16];
-  if (socketpair(AF_UNIX, SOCK_STREAM, 0, socs) < 0) {
-    //TODO: print some error
-  }
-
-  // Add the child socket to the args list
-  //  Note: the caller of this function must setup args appropriately
-  //      - leave the first space in args empty
-  //      - list any args specific to the process
-  //      - list the command line args
-  //      - NULL
-  sprintf(child, "%d", socs[1]);
-  args[1] = child;
-
-  *proc = run_proc(procfile, args);
-  *soc  = socs[0];
 }
 
 void
@@ -158,23 +129,15 @@ write_message(message *m)
   write_message_soc(m->src_fd, m);
 }
 
+/* void write_message_soc(int soc, */
+/*                        message FINAL * REF(|| [(? Set_emp([TAGS(soc)])); */
+/*                                                TAGS(Field(V, 8)) = TAGS(soc)]) m) OKEXTERN; */
+
 message*
 read_message(int fd)
 {
   return read_message_soc(fd);
 }
-
-/* void */
-/* init_ui_process() */
-/* { */
-/*   char * args[2+MAX_NUM_ARGS]; //args for exec */
-/*   args[0] = UI_PROC; */
-/*   add_kargv(args, 2); */
-/*   init_piped_process(UI_PROC, */
-/*                      args, */
-/*                      &ui.proc, */
-/*                      &ui.soc); */
-/* } */
 
 //Get rid of this. options should be parsed & then written out as strings, rather than keeping the strings around.
 void
@@ -244,7 +207,7 @@ init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC)
   GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
 {
   //printf("init_tab_process\n");
-  char * args[4+MAX_NUM_ARGS]; //args for exec
+  char *args[5]; //args for exec
   int proc;
   int soc;
 
@@ -267,10 +230,9 @@ init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC)
     get_trusted_origin_suffix(tab_idx);
   /* } */
   //setup args for exec
-  args[0] = strdup(TAB_PROC);
   args[2] = tabs[tab_idx].tab_origin;
   args[3] = init_url;
-  add_kargv(args, 4);
+  args[4] = NULL;
   init_piped_process(TAB_PROC,
                      args,
                      &proc,
@@ -280,15 +242,35 @@ init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC)
 }
 
 void
+handle_req_uri_follow(message *m)
+{
+  message *r;
+  char *content;
+
+  // Send message to the UI process 
+  r = create_msg(REQ_URI_FOLLOW, ui_soc(), m->content);
+  write_message(r);
+
+  // Retrieve contents of the URI stored in m->content
+  content = wget(m->content);
+  if (!content) {
+    return; //error?
+  }
+
+  // Send the result back
+  r = create_msg(RES_URI, m->src_fd, content);
+  write_message(r);
+  free(content);
+}
+
+void
 process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLICY m) CHECK_TYPE
 {
-  char *content;
-  message *response;
   struct cookie c;
   struct cookie_proc *cookie_proc;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
-  if (tab_idx == UI_PROC_ID) {
+  if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
     return;
   }
   /* There's a control flow dependency on &m->type, so propagate
@@ -303,18 +285,7 @@ process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLI
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->content == NULL) return; //error
-    //write_message(m); to UI
-    content = wget(m->content);
-    content = xfer_tags(content, &(m->type));
-    if (!content) {
-      return; //error?
-    }
-    /* The function create_msg should know about the context under
-       which it performs any assignments.
-       The following reflect the control dependency on m->type. */
-    response = create_msg(RES_URI, m->src_fd, content);
-    write_message(response);
-    free(content);
+    handle_req_uri_follow(m);
     break;
   /* case DISPLAY_SHM: */
   /*   if (tab_idx == curr) { */
@@ -366,7 +337,7 @@ render(int tab_idx)
 {
   message *m;
   m = create_msg(RENDER, tab_fd(tab_idx), NULL);
-  //write_message(m);
+  write_message(m);
 }
 
 void
@@ -405,13 +376,3 @@ switch_tab(int tab_idx)
 /*   } */
 /*   return -1; */
 /* } */
-
-int
-get_tab_idx(char ascii)
-{
-  if (ascii >= '0' && ascii <= '9') {
-    return ascii - '0';
-  } else {
-    return -1;
-  }
-}

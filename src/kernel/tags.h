@@ -26,3 +26,7 @@ OKEXTERN;
 void
 assert_uniq_tagged(int x, void FINAL * START UTAGGED(V, x) p)
 OKEXTERN;
+
+void
+assert_untagged_int(int REF(? Set_emp([TAGSET([V])])) x)
+OKEXTERN;
