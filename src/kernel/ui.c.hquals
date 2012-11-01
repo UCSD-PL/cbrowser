@@ -1,0 +1,2 @@
+qualif Tag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
+qualif Empty(v:int): ? Set_emp([TAGSET([v])])
