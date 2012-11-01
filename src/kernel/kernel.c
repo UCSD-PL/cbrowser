@@ -259,10 +259,24 @@ handle_req_uri_follow(message *m)
 }
 
 void
+handle_display_shm(message *m)
+{
+  int uisoc;
+  message *r;
+
+  uisoc = ui_soc();
+  if (uisoc > 0) {
+   r = create_msg(K2G_DISPLAY_SHM, uisoc, m->content);
+   write_message(r);
+  }
+}
+
+void
 process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLICY m) CHECK_TYPE
 {
   struct cookie c;
   struct cookie_proc *cookie_proc;
+  message *r;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
   if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
@@ -282,13 +296,11 @@ process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLI
     if (m->content == NULL) return; //error
     handle_req_uri_follow(m);
     break;
-  /* case DISPLAY_SHM: */
-  /*   if (tab_idx == curr) { */
-  /*     //create_k2g_display_shm(m, m->shmid, m->size); */
-  /*     m->type = K2G_DISPLAY_SHM; */
-  /*     write_message(UI_PROC_ID, m); */
-  /*   } */
-  /*   break; */
+  case DISPLAY_SHM:
+    if (tab_idx == curr) {
+      handle_display_shm(m);
+    }
+    break;
   /* case SET_COOKIE: */
   /*   cookie_proc = get_cookie_process(tabs[tab_idx].tab_origin); */
   /*   assert (cookie_proc); */

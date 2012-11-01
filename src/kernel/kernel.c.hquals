@@ -29,6 +29,7 @@ qualif TagsFieldEq0(v:ptr, p:ptr): TAGSET([v])                      = TAGSET([(D
 qualif TagsFieldEq1(v:ptr, p:ptr): TAGSET([(DEREF([v + 4]) : int)]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
 qualif TagsFieldEq2(v:ptr, p:ptr): TAGSET([DEREF([v + 8])])         = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
 
-qualif OkMessage(v:ptr, a:int): || [? Set_emp([TAGSET([a])]);
-                                    ? Set_emp([TAGSET([(DEREF([v + 4]): int)])]);
-                                    TAGSET([DEREF([v + 8])]) = TAGSET([a])]
+qualif OkMessage(v:ptr, a:int):
+  || [? Set_emp([TAGSET([a])]);
+      && [? Set_emp([TAGSET([v])]); ? Set_emp([TAGSET([DEREF([v+8])])])];
+      && [TAGSET([v]) = TAGSET([a]); TAGSET([DEREF([v + 8])]) = TAGSET([a])]]

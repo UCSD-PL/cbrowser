@@ -78,45 +78,6 @@ create_msg(mtypes type,
   return m;
 }
 
-
-message *
-read_message_soc(int soc)
-{
-  message *m = malloc(sizeof(*m));
-  //printf("read_message_soc\n");
-  read_message_len(soc, m);
-  m->src_fd = soc;
-  return m;
-}
-
-void
-write_message_soc(int soc, message *m)
-{
-  write_message_len(soc, m);
-}
-
-void
-recv_exact(int soc, int size, char *buf)
-{
-  //NOTE: buf needs to be at least size+1
-  
-  /* printf("recv_exact %d\n", size); */
-  int r = read(soc, buf, size);
-  buf[size] = '\0';
-  if (r != size) printf("read %d bytes, not %d\n", r, size);
-  //return;
-  
-  /*int s = 0;
-    while (s < size) {
-    s = recv(soc, &(buf[s]), size-s, 0);
-    //printf("s=%d\n", s);
-    //perror("recv");
-    //break;
-    }
-    buf[size] = '\0';
-  */
-}
-
 void
 read_lstr(int soc, char **dst) 
 {
@@ -164,6 +125,16 @@ read_message_len(int soc, message *m)
   //printf("read_message_len m.uri: %s\n", m->uri);
 }
 
+message *
+read_message_soc(int soc)
+{
+  message *m = malloc(sizeof(*m));
+  //printf("read_message_soc\n");
+  read_message_len(soc, m);
+  m->src_fd = soc;
+  return m;
+}
+
 void
 write_message_len(int soc, message *m)
 {
@@ -185,6 +156,34 @@ write_message_len(int soc, message *m)
     
   write(soc, header, 5);
   write(soc, m->content, len);
+}
+
+void
+write_message_soc(int soc, message *m)
+{
+  write_message_len(soc, m);
+}
+
+void
+recv_exact(int soc, int size, char *buf)
+{
+  //NOTE: buf needs to be at least size+1
+  
+  /* printf("recv_exact %d\n", size); */
+  int r = read(soc, buf, size);
+  buf[size] = '\0';
+  if (r != size) printf("read %d bytes, not %d\n", r, size);
+  //return;
+  
+  /*int s = 0;
+    while (s < size) {
+    s = recv(soc, &(buf[s]), size-s, 0);
+    //printf("s=%d\n", s);
+    //perror("recv");
+    //break;
+    }
+    buf[size] = '\0';
+  */
 }
 
 char *

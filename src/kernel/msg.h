@@ -38,8 +38,6 @@ typedef enum {
 #define REQ_URI_FOLLOW_MSG_TYPE SINGLETON(2)
 #define RES_URI_MSG_TYPE SINGLETON(7)
 
-//#define MSG_POLICY REF(REQ_URI_FOLLOW_MSG_TYPE) REF(RES_URI_MSG_TYPE)
-
 #define MSG_POLICY                                                      \
   REF(&& [TAGSET([V])              = TAGSET([(DEREF([V + 4]) : int)]);  \
           TAGSET([DEREF([V + 8])]) = TAGSET([(DEREF([V + 4]) : int)])])
@@ -51,6 +49,11 @@ typedef struct {
 } message;
 
 #define msg_start(_l) START INST(L,_l) VALIDPTR ROOM_FOR(message)
+
+#define writable_msg(soc)                                               \
+  REF(|| [? Set_emp([Tags(soc)]);                                       \
+          && [? Set_emp([Tags(V)]); ? Set_emp([FieldTags(V,8)])];       \
+          && [Tags(V) = Tags(soc); FieldTags(V,8) = Tags(soc)]])
 
 /* The following should all take the union of content, fd, and type's tags.
    Or intersection? */
@@ -64,25 +67,12 @@ REF((DEREF([V + 4]) : int) = fd)
 create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
 
 void write_message_soc(int soc,
-                       message FINAL * REF(|| [(? Set_emp([TAGS(soc)]));
-                                               (? Set_emp([TAGS(Field(V, 8))]));
-                                               TAGS(Field(V, 8)) = TAGS(soc)]) m) OKEXTERN;
+                       message FINAL * writable_msg(soc) m) OKEXTERN;
 
 message*
 msg_start(L)
 REF((DEREF([V + 4]) : int) = soc)
 MSG_POLICY
-/* msg_start(L) //TagsEq(V, soc) TagsEq(Field(V, 4), soc) */
-/* REF(TAGSET([V]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
-/* REF(TAGSET([Field(V,4)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
-/* REF(TAGSET([Field(V,8)]) = Set_sng([soc]))//Set_cup([TAGSET([soc]); Set_sng([soc])])) */
 read_message_soc(int soc) OKEXTERN;
-
-void recv_exact(int soc, int size, char *buf);
-void read_lstr(int soc, char **dst); // message *m);
-void read_message_len(int soc, message *m) OKEXTERN;
-void write_message_len(int soc, message *m) OKEXTERN;
-char *payload(message *m, char *buf);
-
 
 #endif
