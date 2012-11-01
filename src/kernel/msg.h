@@ -65,6 +65,7 @@ create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) co
 
 void write_message_soc(int soc,
                        message FINAL * REF(|| [(? Set_emp([TAGS(soc)]));
+                                               (? Set_emp([TAGS(Field(V, 8))]));
                                                TAGS(Field(V, 8)) = TAGS(soc)]) m) OKEXTERN;
 
 message*

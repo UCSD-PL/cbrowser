@@ -139,18 +139,6 @@ read_message(int fd)
   return read_message_soc(fd);
 }
 
-//Get rid of this. options should be parsed & then written out as strings, rather than keeping the strings around.
-void
-add_kargv(char NULLTERMSTR *NNSTRINGPTR LOC(PROGRAM_NAME_LOC) *ARRAY args,
-          int pos) GLOBAL(PROGRAM_NAME_LOC)
-{
-  int i;
-  for (i=1; i<kargc; i++) {
-    args[pos+i-1] = kargv[i];
-  }
-  args[pos+kargc-1] = NULL;
-}
-
 /* int */
 /* cookie_proc_compare(const void *cp1, */
 /*                     const void *cp2) */
@@ -246,10 +234,17 @@ handle_req_uri_follow(message *m)
 {
   message *r;
   char *content;
+  int uisoc;
 
-  // Send message to the UI process 
-  r = create_msg(REQ_URI_FOLLOW, ui_soc(), m->content);
-  write_message(r);
+  uisoc = ui_soc();
+
+  if (uisoc > 0) {
+    // Send message to the UI process 
+    assert_untagged_int(uisoc);
+    r = create_msg(REQ_URI_FOLLOW, uisoc, m->content);
+    assert_untagged_int(r->src_fd);
+    write_message(r);
+  }
 
   // Retrieve contents of the URI stored in m->content
   content = wget(m->content);
@@ -337,7 +332,7 @@ render(int tab_idx)
 {
   message *m;
   m = create_msg(RENDER, tab_fd(tab_idx), NULL);
-  write_message(m);
+  //write_message(m);
 }
 
 void

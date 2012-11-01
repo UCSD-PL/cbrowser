@@ -11,7 +11,6 @@ void write_message(message *m);
 message *read_message(int fd);
 
 // Tab Process
-void add_kargv(char *args[], int pos);
 void init_tab_process(int tab_idx, char *init_url);
 void get_trusted_origin_suffix(int tab_idx);
 void render(int tab_idx);

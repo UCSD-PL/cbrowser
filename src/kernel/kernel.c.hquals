@@ -23,7 +23,12 @@ qualif TagsEq0(v:ptr, p:ptr): TAGSET([v]) = TAGSET([p])
 
 qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
 qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
+qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 
 qualif TagsFieldEq0(v:ptr, p:ptr): TAGSET([v])                      = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
 qualif TagsFieldEq1(v:ptr, p:ptr): TAGSET([(DEREF([v + 4]) : int)]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
 qualif TagsFieldEq2(v:ptr, p:ptr): TAGSET([DEREF([v + 8])])         = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
+
+qualif OkMessage(v:ptr, a:int): || [? Set_emp([TAGSET([a])]);
+                                    ? Set_emp([TAGSET([(DEREF([v + 4]): int)])]);
+                                    TAGSET([DEREF([v + 8])]) = TAGSET([a])]
