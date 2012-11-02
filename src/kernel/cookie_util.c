@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "cookie.h"
+#include "cookie_util.h"
 
 int
 parse_field(struct cookie *c, const char *keyval_str, size_t n)

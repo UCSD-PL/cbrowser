@@ -1,0 +1,3 @@
+qualif LtTen(v:int): v < 10
+qualif EqPtr(v:ptr, q:ptr): DEREF([v]) = DEREF([q + 4])
+qualif NNTabFound(v:ptr, a:int): v != 0 => (DEREF([v]) : int) = a
