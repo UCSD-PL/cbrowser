@@ -1,13 +1,20 @@
 // Some function definitions
 constant DOMAIN: func(1, [@(0); @(1); bool])
+constant DOMAIN_FN: func(1, [@(0); @(1)])
 
 // Quals
 qualif LtTen(v:int): v < 10
 qualif EqPtr(v:ptr, q:ptr): DEREF([v]) = DEREF([q + 4])
 qualif NNTabFound(v:ptr, a:int): v != 0 => (DEREF([v]) : int) = a
-qualif DomainField(v:ptr, p:ptr): ? DOMAIN([v; DEREF([p])])
-qualif DomainField(v:ptr): ? DOMAIN([v; DEREF([v + 4])])
+//qualif DomainField(v:ptr, p:ptr): ? DOMAIN([v; DEREF([p])])
+//qualif DomainField(v:ptr): ? DOMAIN([v; DEREF([v + 4])])
 
-qualif Domain1(v:ptr): ? DOMAIN([v;v])
-qualif Domain1(v:int): ? DOMAIN([v;v])
-qualif Domain1(v:int,a:int): ? DOMAIN([v;a])
+//qualif Domain1(v:ptr): ? DOMAIN([v;v])
+//qualif Domain1(v:int): ? DOMAIN([v;v])
+//qualif Domain1(v:int,a:int): ? DOMAIN([v;a])
+
+qualif Tabs(v:ptr): (v != 0) => ((v + 40) <= BLOCK_END([v]))
+
+qualif DomainF(v:int, p:ptr): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainF(v:ptr, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainF(v:int, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
