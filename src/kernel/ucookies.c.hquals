@@ -1,3 +1,9 @@
+// Some function definitions
+constant DOMAIN: func(1, [@(0); @(1); bool])
+
+// Quals
 qualif LtTen(v:int): v < 10
 qualif EqPtr(v:ptr, q:ptr): DEREF([v]) = DEREF([q + 4])
 qualif NNTabFound(v:ptr, a:int): v != 0 => (DEREF([v]) : int) = a
+qualif DomainField(v:ptr, p:ptr): ? DOMAIN([v; DEREF([p])])
+qualif DomainField(v:ptr): ? DOMAIN([v; DEREF([v + 4])])

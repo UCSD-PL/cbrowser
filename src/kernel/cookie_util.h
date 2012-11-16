@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
 struct cookie {
-  char *attrs;
-  char *domain;
-  char *path;
+  char NULLTERMSTR * NNSTRINGPTR attrs;
+  char NULLTERMSTR * NNSTRINGPTR domain;
+  char NULLTERMSTR * NNSTRINGPTR path;
   int  httpOnly;
 };
 
@@ -13,10 +13,10 @@ struct cookie_jar {
 };
 
 int
-parse_cookie(struct cookie *c, const char *cooke_str, size_t n);
+parse_cookie(struct cookie *c, const char NULLTERMSTR FINAL * STRINGPTR cooke_str, size_t n) OKEXTERN;
 
 void
-print_cookie(struct cookie *c);
+print_cookie(struct cookie *c) OKEXTERN;
 
 char *
 serialize_cookie(struct cookie *s);

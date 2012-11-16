@@ -8,10 +8,11 @@
 #include <search.h>
 #include "str.h"
 #include "proc.h"
+#include "cookie_util.h"
+#include "cookie_proc.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
-#include "cookie.h"
 #include "tags.h"
 #include "wget.h"
 #include "opt.h"
@@ -33,26 +34,20 @@
 #define kstr char NULLTERMSTR * NNSTRINGPTR NNSTART
 
 struct tab {
-  kstr  LOC(L) tab_origin;
+  char NULLTERMSTR /* CSOLVE_DOMAIN_STR */ *
+       LOC(L) NNSTART NNSTRINGPTR NNREF(DOMAIN([V]) = THE_STRING([V])) FINAL tab_origin;
   pid_t proc;                //PID of tab process
-  int   REF(TAGSET([V]) = Set_sng([V])) FINAL soc; //socket
+  int   REF(TAGSET([V]) = Set_sng([V])) REF(DOMAIN([V]) = DOMAIN([tab_origin])) FINAL soc; //socket
 };
 
-struct cookie_proc {
-  kstr cookie_origin;
-  pid_t proc;
-  int soc;
-};
-
-struct tab INST(L, PROGRAM_NAME_LOC) (SHAPE_IGNORE_BOUND tabs)[MAX_NUM_TABS];  // array of tabs
+struct tab INST(L,TAB_STR_LOC) (SHAPE_IGNORE_BOUND tabs)[MAX_NUM_TABS];  // array of tabs
 int curr = 0;                   // current tab
 int num_tab = 0;               // number of open tabs
 
 //struct cookie_jar *cookies;
-/* void *cookie_proc_tree = NULL; */
 
-int kargc;
-char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv = NULL;
+/* int kargc; */
+/* char NULLTERMSTR * NNSTRINGPTR LOC(PROGRAM_NAME_LOC) SIZE_GE(1) * NNSTRINGPTR NNSIZE_GE(4*kargc) NNSTART kargv = NULL; */
 
 // output string to stderr of kernel process
 void
@@ -111,8 +106,8 @@ tab_fd(int VALID_TAB tab_idx) CHECK_TYPE
   return tabs[tab_idx].soc;
 }
 
-char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(PROGRAM_NAME_LOC)
-tab_title(int VALID_TAB tab_idx) GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
+char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(TAB_STR_LOC)
+tab_title(int VALID_TAB tab_idx) GLOBAL(TAB_STR_LOC) CHECK_TYPE
 {
   return tabs[tab_idx].tab_origin;
 }
@@ -129,70 +124,15 @@ write_message(message *m)
   write_message_soc(m->src_fd, m);
 }
 
-/* void write_message_soc(int soc, */
-/*                        message FINAL * REF(|| [(? Set_emp([TAGS(soc)])); */
-/*                                                TAGS(Field(V, 8)) = TAGS(soc)]) m) OKEXTERN; */
-
 message*
 read_message(int fd)
 {
   return read_message_soc(fd);
 }
 
-/* int */
-/* cookie_proc_compare(const void *cp1, */
-/*                     const void *cp2) */
-/* { */
-/*   struct cookie_proc *c1 = (struct cookie_proc *)cp1; */
-/*   struct cookie_proc *c2 = (struct cookie_proc *)cp2; */
-/*   return strcmp(c1->cookie_origin, c2->cookie_origin); */
-/* } */
-
-/* struct cookie_proc * */
-/* get_cookie_process(char *domain) */
-/* { */
-/*   struct cookie_proc key; */
-/*   struct cookie_proc **retval; */
-
-/*   strcpy(key.cookie_origin, domain); */
-/*   retval = tfind(&key, &cookie_proc_tree, cookie_proc_compare); */
-/*   assert (retval); */
-/*   return *retval; */
-/* } */
-
-/* void */
-/* init_cookie_process(char *origin) */
-/* { */
-/*   //Open a socket for this process */
-/*   //add struct into hash search table */
-/*   int soc; */
-/*   struct cookie_proc *cookie_proc; */
-/*   char *args[3+MAX_NUM_ARGS]; */
-/*   assert (origin != NULL); */
-
-/*   cookie_proc = malloc(sizeof(*cookie_proc)); */
-/*   cookie_proc->proc = 0; */
-/*   cookie_proc->soc = -1; */
-/*   strcpy(cookie_proc->cookie_origin, origin); */
-
-/*   args[0] = COOKIE_PROC; */
-/*   //args[1] will be filled in later */
-/*   args[2] = origin; */
-/*   add_kargv(args, 3); */
-/*   init_piped_process(COOKIE_PROC, */
-/*                      args, */
-/*                      &cookie_proc->proc, */
-/*                      &cookie_proc->soc); */
-
-/*   //Should check the return value here */
-/*   tsearch((void *)cookie_proc, */
-/*           &cookie_proc_tree, */
-/*           cookie_proc_compare); */
-/* } */
-
 void
-init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC) STRINGPTR init_url)
-  GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
+init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR *STRINGPTR init_url)
+  CHECK_TYPE
 {
   //printf("init_tab_process\n");
   char *args[5]; //args for exec
@@ -219,7 +159,7 @@ init_tab_process(int VALID_TAB tab_idx, char NULLTERMSTR * LOC(PROGRAM_NAME_LOC)
   /* } */
   //setup args for exec
   args[2] = tabs[tab_idx].tab_origin;
-  args[3] = init_url;
+  args[3] = strdup(init_url);
   args[4] = NULL;
   init_piped_process(TAB_PROC,
                      args,
@@ -239,7 +179,7 @@ handle_req_uri_follow(message *m)
   uisoc = ui_soc();
 
   if (uisoc > 0) {
-    // Send message to the UI process 
+    // Send message to the UI process
     assert_untagged_int(uisoc);
     r = create_msg(REQ_URI_FOLLOW, uisoc, m->content);
     assert_untagged_int(r->src_fd);
@@ -272,10 +212,46 @@ handle_display_shm(message *m)
 }
 
 void
-process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLICY m) CHECK_TYPE
+handle_set_cookie(message *m)
 {
+  int tab_idx;
+  int soc;
   struct cookie c;
   struct cookie_proc *cookie_proc;
+  char *tab_origin; //tab_origin keeps getting folded
+
+  c.attrs = NULL;
+  c.domain = NULL;
+  c.path = NULL;
+
+  if (m->content) { 
+    parse_cookie(&c, m->content, strlen(m->content));
+  }
+
+  if (!c.domain) return;
+
+  for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
+    tab_origin = tabs[tab_idx].tab_origin;
+    if (tab_origin && !strcmp(tab_origin, c.domain)) {
+      assert_same_domain(tab_origin, c.domain);
+    }
+  }
+
+  cookie_proc = get_cookie_process(c.domain);
+  if (cookie_proc) {
+    //m = create_msg(K2C_SET_COOKIE, cookie_proc->soc, m->content);
+    //write_message(m);
+  }
+  /* //Just forward the set-cookie request for now */
+  /* print_cookie(&c); */
+
+}
+
+void
+process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m) CHECK_TYPE
+{
+  /* struct cookie c; */
+  /* struct cookie_proc *cookie_proc; */
   message *r;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
@@ -301,15 +277,9 @@ process_message(int tab_idx, message * START VALIDPTR ROOM_FOR(message) MSG_POLI
       handle_display_shm(m);
     }
     break;
-  /* case SET_COOKIE: */
-  /*   cookie_proc = get_cookie_process(tabs[tab_idx].tab_origin); */
-  /*   assert (cookie_proc); */
-  /*   parse_cookie(&c, m->content, strlen(m->content)); */
-  /*   //Just forward the set-cookie request for now */
-  /*   print_cookie(&c); */
-  /*   m->type = K2C_SET_COOKIE; */
-  /*   write_message_soc(cookie_proc->soc, m); */
-  /*   break; */
+  case SET_COOKIE:
+    handle_set_cookie(m);
+    break;
   /* case C2K_SET_COOKIE: */
   /*   break; */
   default:
@@ -344,7 +314,7 @@ render(int tab_idx)
 {
   message *m;
   m = create_msg(RENDER, tab_fd(tab_idx), NULL);
-  //write_message(m);
+  write_message(m);
 }
 
 void

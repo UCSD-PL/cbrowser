@@ -11,7 +11,6 @@
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
-#include "cookie.h"
 #include "tags.h"
 #include "wget.h"
 
@@ -26,7 +25,6 @@
 // for use by str.h/urlparse(...)
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
-
 
 void
 print_tab_title(int tab_idx)

@@ -15,6 +15,10 @@ qualif NNTabFound(v:ptr, a:int): v != 0 => (DEREF([v]) : int) = a
 
 qualif Tabs(v:ptr): (v != 0) => ((v + 40) <= BLOCK_END([v]))
 
-qualif DomainF(v:int, p:ptr): DOMAIN_FN([v]) = DOMAIN_FN([p])
-qualif DomainF(v:ptr, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
-qualif DomainF(v:int, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainEq1(v:int, p:ptr): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainEq2(v:ptr, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainEq3(v:ptr, p:ptr): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainEq4(v:int, p:int): DOMAIN_FN([v]) = DOMAIN_FN([p])
+qualif DomainEq5(v:int, p:int): DOMAIN_FN([v]) = DOMAIN_FN([(DEREF([p+4]):int)])
+
+qualif GrdDomainEq(v:int, s:ptr, t:ptr): v = 0 => DOMAIN_FN([s]) = DOMAIN_FN([t])

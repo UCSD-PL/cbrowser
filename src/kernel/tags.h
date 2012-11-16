@@ -12,6 +12,8 @@
 #define Field(_v, _off) DEREF([BLOCK_BEGIN([_v]) + _off])
 #define FieldTags(_v, _off)  TAGSET([Field(V, _off)])
 
+#define Domain(_v) DOMAIN([_v])
+
 void *LOC(L) START REF(V = p) Tagged(V, x)  
 tag(int x, void * START LOC(L) p)
 OKEXTERN;
@@ -31,3 +33,7 @@ OKEXTERN;
 void
 assert_untagged_int(int REF(? Set_emp([Tags(V)])) x)
 OKEXTERN;
+
+void
+assert_same_domain(char NULLTERMSTR FINAL * STRINGPTR s1,
+                   char NULLTERMSTR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;

@@ -29,18 +29,44 @@ typedef enum {
     C2K_SET_COOKIE
 } mtypes;
 
-#define SINGLETON(_type)                                                      \
-  ((DEREF([V]) : int) = _type) =>                                             \
-    && [TAGSET([V]) = Set_sng([(DEREF([V + 4]) : int)]);                      \
-        TAGSET([(DEREF([V + 4]) : int)]) = Set_sng([(DEREF([V + 4]) : int)]); \
-        TAGSET([DEREF([V + 8])]) = Set_sng([(DEREF([V + 4]) : int)])]
+#define MsgPtr     V
+#define MsgFd      (Field(V, 4) : int)
+#define MsgContent Field(V, 8)
 
-#define REQ_URI_FOLLOW_MSG_TYPE SINGLETON(2)
-#define RES_URI_MSG_TYPE SINGLETON(7)
+#define MsgPtrF(_f)      _f(MsgPtr)
+#define MsgFdF(_f)       _f(MsgFd) 
+#define MsgContentF(_f)  _f(MsgContent)
 
-#define MSG_POLICY                                                      \
-  REF(&& [TAGSET([V])              = TAGSET([(DEREF([V + 4]) : int)]);  \
-          TAGSET([DEREF([V + 8])]) = TAGSET([(DEREF([V + 4]) : int)])])
+#define MsgPtrTags       MsgPtrF(Tags)
+#define MsgFdTags        MsgFdF(Tags)
+#define MsgContentTags   MsgContentF(Tags)
+
+#define MsgPtrDomain       MsgPtrF(Domain)
+#define MsgFdDomain        MsgFdF(Domain)
+#define MsgContentDomain   MsgContentF(Domain)
+
+#define MSG_TYPE(type) ((DEREF([V]) : int) = type)
+
+#define TAB_PRIVATE_MSG(_tags)             \
+    && [MsgPtrTags     = _tags;            \
+        MsgContentTags = _tags]          
+
+#define SAME_DOMAIN(_domain)                    \
+  && [MsgPtrDomain = _domain;                   \
+      MsgContentDomain = _domain]               \
+  
+
+#define READ_MSG_T                                  \
+  REF(&& [MsgPtrTags     = MsgFdTags;               \
+          MsgContentTags = MsgFdTags])
+
+#define WRITE_MSG_T(soc)                                            \
+  REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                 \
+          && [MSG_TYPE(2); TAB_PRIVATE_MSG(Tags(soc))];             \
+          && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                 \
+          && [MSG_TYPE(4)];                                         \
+          && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];             \
+          (? Set_emp([Tags(MsgContent)]))]) 
 
 typedef struct {
   mtypes FINAL type;
@@ -48,31 +74,28 @@ typedef struct {
   char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) FINAL content;
 } message;
 
-#define msg_start(_l) START INST(L,_l) VALIDPTR ROOM_FOR(message)
+#define msg_start START VALIDPTR ROOM_FOR(message)
 
-#define writable_msg(soc)                                               \
-  REF(|| [? Set_emp([Tags(soc)]);                                       \
-          && [? Set_emp([Tags(V)]); ? Set_emp([FieldTags(V,8)])];       \
-          && [Tags(V) = Tags(soc); FieldTags(V,8) = Tags(soc)]])
-
-/* The following should all take the union of content, fd, and type's tags.
-   Or intersection? */
-message*
-msg_start(S)
-TagsEq(V, content)
-TagsEq((Field(V,4) : int), content)
-TagsEq(Field(V,8), content)
-REF((DEREF([V]) : int) = type)
-REF((DEREF([V + 4]) : int) = fd)
-create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content) OKEXTERN;
+message INST(L,L) *
+msg_start
+REF(Tags(V) = Set_cup([Tags(fd); Tags(c)]))
+REF(Tags(Field(V,4) : int) = Tags(fd))
+REF(Tags(Field(V,8)) = Tags(c))
+//TagsEq(V, content)
+//TagsEq((Field(V,4) : int), content)
+//TagsEq(Field(V,8), content)
+REF((Field(V,0): int) = type)
+//REF((Field(V,4) : int) = fd)
+create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
 
 void write_message_soc(int soc,
-                       message FINAL * writable_msg(soc) m) OKEXTERN;
+                       message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
 
-message*
-msg_start(L)
+message *
+msg_start
 REF((DEREF([V + 4]) : int) = soc)
-MSG_POLICY
+REF(Tags(MsgFd) = Set_sng([soc]))
+READ_MSG_T
 read_message_soc(int soc) OKEXTERN;
 
 #endif

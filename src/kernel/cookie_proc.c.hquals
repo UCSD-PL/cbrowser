@@ -1,0 +1,13 @@
+//Domain functions
+constant DOMAIN: func(1, [@(0); int])
+constant THE_STRING: func(1, [@(0); int])
+
+qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:int, p:ptr): && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:ptr, p:ptr): DOMAIN([v]) = DOMAIN([p])
+qualif StringDomainLit(v:ptr, p:ptr): DOMAIN([v]) = THE_STRING([p])
+
+//Empty tagset
+qualif UntaggedNZ(v:int): v > 0 => ? Set_emp([TAGSET([v])])
+qualif Untagged(v:int): ? Set_emp([TAGSET([v])])
