@@ -11,7 +11,7 @@ struct tab {
     fd;
 };
 
-struct tab INST(S,X) * NNSTART NNVALIDPTR NNSIZE_GE(8) * ARRAY NNSTART NNVALIDPTR NNSIZE_GE(40) tabs CHECK_TYPE;
+struct tab INST(S,X) * NNSTART NNVALIDPTR NNROOM_FOR(struct tab) * ARRAY NNSTART NNVALIDPTR NNSIZE_GE(40) tabs CHECK_TYPE;
 
 void test(int REF(V >= 0) REF(V < 10) i, char NULLTERMSTR * START ARRAY input)
 {
@@ -26,6 +26,26 @@ void test(int REF(V >= 0) REF(V < 10) i, char NULLTERMSTR * START ARRAY input)
     if (s && !strcmp(input, s)) {
       assert_same_domain(input, s);
     }
+  }
+}
+
+void bar() OKEXTERN;
+
+void
+foo(struct tab * NNSTART NNVALIDPTR NNROOM_FOR(struct tab) * ARRAY NNSTART NNVALIDPTR NNSIZE_GE(40) tabs) CHECK_TYPE
+{
+  struct tab *t;
+  char *tab_origin;
+  int tab_idx;
+
+  if (!tabs) return;
+
+  for (tab_idx = 0; tab_idx < 10; tab_idx++) {
+    validptr(tabs);
+    validptr(tabs + tab_idx);
+    if (!(t = tabs[tab_idx])) continue;
+    tab_origin = t->origin;
+    bar(); //comment to remove type errors
   }
 }
 

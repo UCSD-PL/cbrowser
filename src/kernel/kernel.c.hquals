@@ -1,21 +1,27 @@
+qualif TabIdx(v:int) : v >= 0
 qualif TabIdx(v:int) : v <= 10
 qualif TabIdx(v:int) : v < 10
+qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
+qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 
 qualif TagsetSng(v:ptr, t:int):     TAGSET([v])                      = Set_sng([t])
 qualif TagsetSngFld4(v:ptr, t:int): TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([t])
 qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])])         = Set_sng([t])
+qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([v])
 
 qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
+qualif FldEq(v:ptr, a:int): (DEREF([v + 8]) : int) = a
 
-qualif MsgTypeFdTags(v:ptr):    TAGSET([v])              = TAGSET([(DEREF([V + 4]) : int)])
-qualif MsgContentFdTags(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([V + 4]) : int)])
+qualif MsgTypeFdTags(v:ptr):    TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)])
+qualif MsgContentFdTags(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])
+//qualif MsgContentFdDomain(v:ptr): DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v + 4]) : int)])
 
 qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
 qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([(DEREF([v + 4]) : int)])])
 qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
 qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 
-qualif MsgTagsUnion(v:ptr, a:int, p:ptr): TAGSET([v]) = Set_cup([TAGSET([a]); TAGSET([p])])
+//qualif MsgTagsUnion(v:ptr, a:int, p:ptr): TAGSET([v]) = Set_cup([TAGSET([a]); TAGSET([p])])
 
 // Specific message type
 qualif MsgIsReqURIFollow(v:ptr):
@@ -26,6 +32,10 @@ qualif MsgIsResURI(v:ptr):
   ((DEREF([v]) :int) = 7) =>
     && [TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)]);
         TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])]
+
+
+//
+qualif CreatedMsgFd(v:ptr, x:int): (DEREF([v + 4]) : int) = x
 
 // qualif TagsFieldEq0(v:ptr, p:ptr):
 //   TAGSET([v]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
@@ -39,19 +49,31 @@ qualif OkMessage(v:ptr):
   || [&& [(DEREF([v]) : int) = 0; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
       && [(DEREF([v]) : int) = 2; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
       && [(DEREF([v]) : int) = 2; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
-      && [(DEREF([v]) : int) = 4
-];
+      && [(DEREF([v]) : int) = 4];
       && [(DEREF([v]) : int) = 7; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
+      && [(DEREF([v]) : int) = 13; DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v+4]) :int)])];
       (? Set_emp([TAGSET([DEREF([v + 8])])]))]
 
 //Domain functions
 constant DOMAIN: func(1, [@(0); int])
 constant THE_STRING: func(1, [@(0); int])
 qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:ptr): v != 0 => DOMAIN([v]) = THE_STRING([v])
 qualif StringDomain(v:int, p:ptr): && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
 qualif StringDomain(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
 qualif StringDomain(v:ptr, p:ptr): DOMAIN([v]) = DOMAIN([p])
 qualif DomainIsString(v:ptr, s:ptr): DOMAIN([v]) = THE_STRING([s])
+qualif StringEq(v:ptr, p:ptr): THE_STRING([v]) = THE_STRING([p])
+qualif StringEq(v:ptr, p:ptr): THE_STRING([DEREF([v])]) = THE_STRING([p])
+qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([v]) = THE_STRING([p])
+qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([DEREF([v])]) = THE_STRING([p])
+qualif DomainEqPtrs(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
+qualif DomainEqContent(v:ptr, p:ptr): DOMAIN([p]) = DOMAIN([DEREF([v + 8])])
+qualif DomainEqFd(v:ptr, i:int): DOMAIN([i]) = DOMAIN([(DEREF([v + 4]) :int)])
+qualif MsgDomainOk(v:ptr): DOMAIN([(DEREF([v + 4]) : int)]) = DOMAIN([DEREF([v + 8])])
+
+qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 4]) : int)
+qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 8]) : int)
 
 // Message Types      
 qualif K2G_DISPLAY_SHM(v:ptr): (DEREF([v]) : int) = 0        

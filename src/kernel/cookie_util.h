@@ -1,9 +1,10 @@
+#include <csolve.h>
 #include <stdlib.h>
 
 struct cookie {
-  char NULLTERMSTR * NNSTRINGPTR attrs;
-  char NULLTERMSTR * NNSTRINGPTR domain;
-  char NULLTERMSTR * NNSTRINGPTR path;
+  char NULLTERMSTR * NNSTRINGPTR NNREF(DOMAIN([V]) = THE_STRING([V])) domain; /*simplification*/
+  char NULLTERMSTR * NNSTRINGPTR /* NNREF(DOMAIN([V]) = DOMAIN([domain])) */ attrs;
+  char NULLTERMSTR * NNSTRINGPTR /* NNREF(DOMAIN([V]) = DOMAIN([domain])) */ path;
   int  httpOnly;
 };
 

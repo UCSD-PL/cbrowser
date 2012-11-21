@@ -55,10 +55,10 @@ typedef enum {
   && [MsgPtrDomain = _domain;                   \
       MsgContentDomain = _domain]               \
   
-
 #define READ_MSG_T                                  \
-  REF(&& [MsgPtrTags     = MsgFdTags;               \
-          MsgContentTags = MsgFdTags])
+  REF(&& [MsgPtrTags       = MsgFdTags;               \
+          MsgContentTags   = MsgFdTags;               \
+          MsgContentDomain = MsgFdDomain])
 
 #define WRITE_MSG_T(soc)                                            \
   REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                 \
@@ -66,27 +66,31 @@ typedef enum {
           && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                 \
           && [MSG_TYPE(4)];                                         \
           && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];             \
+         && [MSG_TYPE(13); DOMAIN([soc]) = MsgContentDomain];    \
           (? Set_emp([Tags(MsgContent)]))]) 
 
 typedef struct {
   mtypes FINAL type;
   int FINAL src_fd;
-  char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) FINAL content;
+  char NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
 } message;
 
 #define msg_start START VALIDPTR ROOM_FOR(message)
 
-message INST(L,L) *
+void
+check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;
+
+message INST(L,L) FINAL *
 msg_start
 REF(Tags(V) = Set_cup([Tags(fd); Tags(c)]))
 REF(Tags(Field(V,4) : int) = Tags(fd))
 REF(Tags(Field(V,8)) = Tags(c))
-//TagsEq(V, content)
-//TagsEq((Field(V,4) : int), content)
-//TagsEq(Field(V,8), content)
 REF((Field(V,0): int) = type)
-//REF((Field(V,4) : int) = fd)
-create_msg(mtypes type, int fd, char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
+REF(Domain(Field(V,4) : int) = Domain(fd))
+REF(Domain(Field(V,8)) = Domain(c))
+REF((Field(V, 4) : int) = fd)
+/* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
+create_msg(mtypes type, int fd, char FINAL NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
 
 void write_message_soc(int soc,
                        message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;

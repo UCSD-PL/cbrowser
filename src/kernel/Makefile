@@ -3,18 +3,23 @@ CFLAGS += -O0 -I /home/abakst/csolve/lib
 
 OBJS= main.o \
 	kernel.o \
+	tab.o 	\
 	ui.o \
 	wget.o \
 	str.o \
 	proc.o \
 	opt.o \
 	msg.o \
-        tags.o 
-#	cookie.o
+        tags.o  \
+	cookie_util.o \
+	cookie_proc.o	
 
 all : kernel
 
 kernel: $(OBJS)
+
+verify_%:
+	$(CSOLVE) $(CFLAGS) $*
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@

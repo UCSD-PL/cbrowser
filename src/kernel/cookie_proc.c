@@ -17,18 +17,20 @@ cookie_proc_compare(const void * LOC(L) LAYOUT(struct cookie_proc) cp1,
   return strcmp(c1->cookie_origin, c2->cookie_origin);
 }
 
-struct cookie_proc REF(DOMAIN([cookie_origin]) = THE_STRING([domain])) *
+struct cookie_proc FINAL * 
 NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_proc)
+NNREF(THE_STRING([DEREF([V])]) = THE_STRING([domain]))
   get_cookie_process(char NULLTERMSTR * STRINGPTR domain) CHECK_TYPE
 {
   struct cookie_proc key;
-  struct cookie_proc **retval;
+  struct cookie_proc **found;
+  struct cookie_proc  *retval;
 
   key.cookie_origin = strdup(domain);
   if (cookie_proc_tree) {
-    retval = tfind(&key, &cookie_proc_tree, cookie_proc_compare);
-    assert (retval);
-    return *retval;
+    found = tfind(&key, &cookie_proc_tree, cookie_proc_compare);
+    assert (found);
+    return *found;
   }
   return NULL;
 }

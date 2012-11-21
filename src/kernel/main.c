@@ -8,6 +8,7 @@
 #include <search.h>
 #include "str.h"
 #include "proc.h"
+#include "cookie_proc.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
@@ -26,13 +27,17 @@
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
 
+NNKERNEL_TABS tabs;
+
 void
 print_tab_title(int tab_idx)
 {
-  if (tab_idx == current_tab()) {
-    printf("*%s*", tab_title(tab_idx));
-  } else {
-    printf("%s", tab_title(tab_idx));
+  if (tabs) {
+    if (tab_idx == current_tab()) {
+      printf("*%s*", tab_title(tabs, tab_idx));
+    } else {
+      printf("%s", tab_title(tabs, tab_idx));
+    }
   }
 }
 
@@ -61,12 +66,14 @@ kexit()
   int i;
   struct cookie_proc *cp;
   //TODO
-  for (i = 0; i < num_tabs(); i++) {
-    tab_kill(i, SIGINT);
-    /* cp = get_cookie_process(tabs[i].tab_origin); */
-    /* if (cp) { */
-    /*   kill(cp->proc, SIGINT); */
-    /* } */
+  if (tabs) {
+    for (i = 0; i < num_tabs(); i++) {
+      tab_kill(tabs, i, SIGINT);
+      cp = get_cookie_process(tabs[i]->tab_origin);
+      if (cp) {
+        kill(cp->proc, SIGINT);
+      }
+    }
   }
 
   ui_kill(SIGINT);
@@ -82,7 +89,7 @@ set_readfds(fd_set *readfds)
   FD_ZERO(readfds);
   FD_SET(0, readfds);
   for (i=0; i<num_tabs(); i++) {
-    soc = tab_fd(i);
+    soc = tab_fd(tabs, i);
     FD_SET(soc, readfds);
     if (soc > max) {
       max = soc;
@@ -111,7 +118,7 @@ tab_of_fd(int fd)
   }
   //check tabs
   for (i=0; i<num_tabs(); i++) {
-    soc = tab_fd(i);
+    soc = tab_fd(tabs, i);
     if (fd == soc) {
       // csolve_assert(i < MAX_NUM_TABS);
       return i;
@@ -142,6 +149,7 @@ main (int REF(V > 0) argc,
   int fd;
   /* make_command_args_global(argc, argv); */
   /* parse_options(argc, argv); */
+  tabs = malloc(10*sizeof(*tabs));
   ui_init();
 
   signal(SIGINT, handler);
@@ -154,15 +162,15 @@ main (int REF(V > 0) argc,
       if (FD_ISSET(0, &readfds)) { //stdin
         scanf("%1s", &c);
         //        c = nondet();
-        process_input_char(c);
+        process_input_char(tabs, c);
       } else {
         for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)
           ;
         tab_idx = tab_of_fd(fd);
 
-        m = read_message(fd);
+        m = read_message_soc(fd);
         if (tab_idx != -1) {
-          process_message(tab_idx, m);
+          process_message(tabs,tab_idx, m);
         }
 
       }
