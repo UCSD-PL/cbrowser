@@ -72,6 +72,8 @@ qualif DomainEqContent(v:ptr, p:ptr): DOMAIN([p]) = DOMAIN([DEREF([v + 8])])
 qualif DomainEqFd(v:ptr, i:int): DOMAIN([i]) = DOMAIN([(DEREF([v + 4]) :int)])
 qualif MsgDomainOk(v:ptr): DOMAIN([(DEREF([v + 4]) : int)]) = DOMAIN([DEREF([v + 8])])
 
+qualif DomainStr(v:int): && [BLOCK_BEGIN([VVADDR]) <= VVADDR; VVADDR < BLOCK_END([VVADDR])] => DOMAIN([v]) = DOMAIN([VVADDR])
+
 qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 4]) : int)
 qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 8]) : int)
 

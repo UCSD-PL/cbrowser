@@ -201,7 +201,6 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
   struct cookie c;
   struct cookie_proc *cookie_proc;
   struct tab *t;
-  message *r;
   char *tab_origin;
 
   c.attrs = NULL;
@@ -222,14 +221,15 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
     tab_fd     = t->soc;
     message_fd = m->src_fd;
 
-    //Commenting out the following checks makes write_message unsafe.
-    //Good.
-    if (tab_fd == message_fd &&  !strcmp(tab_origin, c.domain )) {
+    //This line is unsafe
+    //if (tab_origin[4]) tab_origin[4] = 'x';
+
+    if (tab_fd == message_fd && !strcmp(tab_origin, c.domain )) {
       cookie_proc = get_cookie_process(c.domain);
       if (cookie_proc) {
         cp_fd = cookie_proc->soc;
-        r = create_msg(K2C_SET_COOKIE, cp_fd,  m->content);
-        write_message(r);
+        m = create_msg(K2C_SET_COOKIE, cp_fd,  m->content);
+        write_message(m);
       }
     }
   }
@@ -275,35 +275,3 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     return;
   }
 }
-
-/* Read a message from tab tab_idx */
-void
-kernel_process_tab_msg(int VALID_TAB tab_idx) CHECK_TYPE
-{
-  int soc;
-  message *m;
-
-  //soc = tabs[tab_idx]->soc;
-}
-
-
-/* void */
-/* initialize_tabs() */
-/* { */
-/*   tabs = malloc(MAX_NUM_TABS*sizeof(*tabs)); */
-/* } */
-
-/* int */
-/* find_process_from_chan(int chan) */
-/* { */
-/*   int i; */
-/*   if (ui.soc == chan) { */
-/*     return UI_PROC_ID; */
-/*   } */
-/*   for (i=0; i<num_tabs; i++) { */
-/*     if (tabs[i].soc == chan) { */
-/*       return i; */
-/*     } */
-/*   } */
-/*   return -1; */
-/* } */

@@ -91,7 +91,6 @@ REF(Domain(Field(V,8)) = Domain(c))
 REF((Field(V, 4) : int) = fd)
 /* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
 create_msg(mtypes type, int fd, char FINAL NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
-
 void write_message_soc(int soc,
                        message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
 

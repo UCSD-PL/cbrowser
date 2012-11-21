@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 struct cookie {
-  char NULLTERMSTR * NNSTRINGPTR NNREF(DOMAIN([V]) = THE_STRING([V])) domain; /*simplification*/
+  char NULLTERMSTR CSOLVE_DOMAIN_STR * NNSTRINGPTR NNREF(DOMAIN([V]) = THE_STRING([V])) domain; /*simplification*/
   char NULLTERMSTR * NNSTRINGPTR /* NNREF(DOMAIN([V]) = DOMAIN([domain])) */ attrs;
   char NULLTERMSTR * NNSTRINGPTR /* NNREF(DOMAIN([V]) = DOMAIN([domain])) */ path;
   int  httpOnly;
