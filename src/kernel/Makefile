@@ -19,7 +19,7 @@ all : kernel
 kernel: $(OBJS)
 
 verify_%:
-	$(CSOLVE) $(CFLAGS) --csolveprefix=$(PWD)/verify/$* $*
+	$(CSOLVE) $(CFLAGS) -c --csolveprefix=$(PWD)/verify/$* $*
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@

@@ -66,14 +66,18 @@ typedef enum {
           && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                 \
           && [MSG_TYPE(4)];                                         \
           && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];             \
-         && [MSG_TYPE(13); DOMAIN([soc]) = MsgContentDomain];    \
+          && [MSG_TYPE(13); ? COOKIE_DOMAIN_SET([MsgContentDomain; DOMAIN([soc])])]; \
+          && [MSG_TYPE(14); ? COOKIE_DOMAIN_GET([MsgContentDomain; DOMAIN([soc])])]; \
+          && [MSG_TYPE(15); DOMAIN([soc]) = MsgContentDomain];      \
           (? Set_emp([Tags(MsgContent)]))]) 
 
 typedef struct {
   mtypes FINAL type;
   int FINAL src_fd;
-  char NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
+  char CSOLVE_DOMAIN_STR NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
 } message;
+
+void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
 
 #define msg_start START VALIDPTR ROOM_FOR(message)
 
@@ -90,7 +94,7 @@ REF(Domain(Field(V,4) : int) = Domain(fd))
 REF(Domain(Field(V,8)) = Domain(c))
 REF((Field(V, 4) : int) = fd)
 /* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
-create_msg(mtypes type, int fd, char FINAL NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
+create_msg(mtypes type, int fd, char FINAL CSOLVE_DOMAIN_STR NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
 void write_message_soc(int soc,
                        message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
 

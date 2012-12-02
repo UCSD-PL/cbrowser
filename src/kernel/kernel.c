@@ -21,8 +21,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#define kstr char NULLTERMSTR * NNSTRINGPTR NNSTART
-
 #ifndef CIL
 # define validptr(x)
 # define assert_same_domain(x, y)
@@ -72,8 +70,8 @@ void
 render(KERNEL_TABS tabs, int tab_idx)
 {
   message *m;
-  m = create_msg(RENDER, tab_fd(tabs, tab_idx), "");
-  write_message(m);
+  //  m = create_msg(RENDER, tab_fd(tabs, tab_idx), "");
+  //  write_message(m);
 }
 
 void
@@ -179,29 +177,25 @@ handle_display_shm(message *m)
   }
 }
 
-void assert_eq_strings(char NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([V]) = THE_STRING([s2])) s1,
-                       char NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([s1]) = THE_STRING([V])) s2) OKEXTERN;
+void assert_eq_strings(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([V]) = THE_STRING([s2])) s1,
+                       char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([s1]) = THE_STRING([V])) s2) OKEXTERN;
 
-void valid_tab_origin_type(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = THE_STRING([V]))) OKEXTERN;
-void valid_tab(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s)
+/* void valid_tab_origin_type(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = THE_STRING([V]))) OKEXTERN; */
+/* void valid_tab(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s) */
   OKEXTERN;
 
-void same_domain_int(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s)
+void same_domain_int(int fd, char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s)
   OKEXTERN;
-void same_domain_eq(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s2])) s1,
-                    char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s1])) s2) OKEXTERN;
+void same_domain_eq(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s2])) s1,
+                    char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s1])) s2) OKEXTERN;
 
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
-  int tab_fd;
-  int message_fd;
-  int cp_fd;
   struct cookie c;
   struct cookie_proc *cookie_proc;
   struct tab *t;
-  char *tab_origin;
 
   c.attrs = NULL;
   c.domain = NULL;
@@ -217,22 +211,53 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    tab_origin = t->tab_origin;
-    tab_fd     = t->soc;
-    message_fd = m->src_fd;
-
-    //This line is unsafe
-    //if (tab_origin[4]) tab_origin[4] = 'x';
-
-    if (tab_fd == message_fd && !strcmp(tab_origin, c.domain )) {
+    if (t->soc == m->src_fd && may_set_cookies(t->tab_origin, c.domain)) {
       cookie_proc = get_cookie_process(c.domain);
       if (cookie_proc) {
-        cp_fd = cookie_proc->soc;
-        m = create_msg(K2C_SET_COOKIE, cp_fd,  m->content);
+        m = create_msg(K2C_SET_COOKIE, cookie_proc->soc,  m->content);
         write_message(m);
       }
+      return;
     }
   }
+}
+
+void
+handle_get_cookie(KERNEL_TABS tabs, message *m)
+{
+  int tab_idx;
+  struct get_cookie c;
+  struct cookie_proc *cookie_proc;
+  struct tab *t;
+
+  parse_get_cookie(&c, m->content, strlen(m->content));
+
+  if (!c.domain || !tabs) return;
+
+  for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
+    if (!(t = tabs[tab_idx]))
+      continue;
+
+    if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c.domain)) {
+      cookie_proc = get_cookie_process(c.domain);
+      if (cookie_proc) {
+        m = create_msg(K2C_GET_COOKIE, cookie_proc->soc, m->content);
+        write_message(m);
+      }
+      return;
+    }
+  }
+}
+
+void
+handle_res_cookie(KERNEL_TABS tabs, message *m)
+{
+  int tab_idx;
+  struct res_cookie c;
+
+  parse_res_cookie(&c, m->content, strlen(m->content));
+
+  /* if (!c->domain || !tabs) return; */
 }
 
 void
@@ -268,8 +293,12 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
   case SET_COOKIE:
     handle_set_cookie(tabs, m);
     break;
-  /* case C2K_SET_COOKIE: */
-  /*   break; */
+  case GET_COOKIE:
+    handle_get_cookie(tabs, m);
+    break;
+  case C2K_RES_COOKIE:
+    handle_res_cookie(tabs, m);
+    break;
   default:
     printf("Uhoh! We don't process that message type!\n");
     return;
