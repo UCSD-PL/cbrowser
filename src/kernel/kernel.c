@@ -146,9 +146,7 @@ handle_req_uri_follow(message *m)
 
   if (uisoc > 0) {
     // Send message to the UI process
-    assert_untagged_int(uisoc);
     r = create_msg(REQ_URI_FOLLOW, uisoc, m->content);
-    assert_untagged_int(r->src_fd);
     write_message(r);
   }
 
@@ -205,7 +203,7 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
     parse_cookie(&c, m->content, strlen(m->content));
   }
 
-  if (!c.domain || !tabs) return;
+  if (!c.domain) return;
 
   for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
     if (!(t = tabs[tab_idx]))
@@ -232,7 +230,7 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
 
   parse_get_cookie(&c, m->content, strlen(m->content));
 
-  if (!c.domain || !tabs) return;
+  if (!c.domain) return;
 
   for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
     if (!(t = tabs[tab_idx]))
@@ -253,11 +251,20 @@ void
 handle_res_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
-  struct res_cookie c;
+  char *s;
+  struct res_cookie *rc;
+  struct tab *t;
 
-  parse_res_cookie(&c, m->content, strlen(m->content));
+  rc = malloc(sizeof(*rc));
+  parse_res_cookie(rc, m->content, strlen(m->content));
 
-  /* if (!c->domain || !tabs) return; */
+  if ((t = tabs[rc->dest]) && rc->domain && rc->cookies) {
+    if (may_get_cookies(t->tab_origin, rc->domain)) {
+      s = serialize_cookie_list(rc->num_cookies, rc->cookies);
+      m = create_msg(RES_COOKIE, t->soc, s);
+      write_message(m);
+    }
+  }
 }
 
 void
