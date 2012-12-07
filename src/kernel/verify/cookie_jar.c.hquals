@@ -5,6 +5,7 @@ qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 
 qualif TagsetSng(v:ptr, t:int):     TAGSET([v])                      = Set_sng([t])
+qualif NNTagsetSng(v:ptr, t:int): v != 0 => TAGSET([v])                      = Set_sng([t])
 qualif TagsetSngFld4(v:ptr, t:int): TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([t])
 qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])])         = Set_sng([t])
 qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([v])
@@ -68,14 +69,18 @@ qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
 constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
 constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
 qualif   D1SubD2Set(v:ptr, d:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([d])])
+qualif   D1SubD2Set(d:int, v:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([d])])
 qualif   D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([d])])
-qualif   D1SubD2Set(v:ptr, d:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([THE_STRING([d])]);DOMAIN([DEREF([v + 4])])])
-qualif   NND1SubD2Set(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_SET([DOMAIN([THE_STRING([d])]);DOMAIN([DEREF([v + 4])])])
-qualif   NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([d]);DOMAIN([v])])
-qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
+qualif   NND1SubD2Set(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([d]);DOMAIN([v])])
 
 qualif MsgSet(v:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([DEREF([v + 8])]);DOMAIN([(DEREF([v+4]) :int)])])
 qualif MsgGet(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([DEREF([v + 8])]);DOMAIN([(DEREF([v+4]) :int)])])
 
 qualif ResCookieDomain(v:ptr, p:ptr): v != 0 => DOMAIN([DEREF([v])]) = DOMAIN([p])
 qualif ResCookieSize(v:ptr, a:int): v != 0 => v + (4*a) <= BLOCK_END([v])
+
+//qualif DDDD(v:ptr, l:ptr): DOMAIN([v]) = DOMAIN([DEREF([DEREF([l + 4])])])
+qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
+
+
+qualif ParseCookieDomain(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([DEREF([v])])

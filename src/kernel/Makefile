@@ -11,6 +11,7 @@ OBJS= main.o \
 	opt.o \
 	msg.o \
         tags.o  \
+	cookie_jar.o \
 	cookie_util.o \
 	cookie_proc.o	
 

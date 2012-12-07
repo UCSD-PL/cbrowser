@@ -3,9 +3,7 @@
 #include "constants.h"
 
 #define nnparse_string NULLTERMSTR CSOLVE_DOMAIN_STR * NNSTRINGPTR
-//NNREF(DOMAIN([V]) = THE_STRING([V]))
 #define parse_string NULLTERMSTR CSOLVE_DOMAIN_STR * STRINGPTR
-//REF(DOMAIN([V]) = THE_STRING([V]))
 
 struct cookie {
   char nnparse_string NNREF(DOMAIN([V]) = THE_STRING([V])) domain; /*simplification*/
@@ -38,8 +36,9 @@ struct cookie_jar {
   struct cookie_jar *next_jar;
 };
 
-int
-parse_cookie(struct cookie *c, const char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR cooke_str, size_t n) OKEXTERN;
+
+struct cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct cookie) NNREF(TAGSET([V]) = TAGSET([cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
+parse_cookie(const char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR cookie_str, size_t n) OKEXTERN;
 
 int
 parse_get_cookie(struct get_cookie *,
@@ -57,10 +56,10 @@ print_cookie(struct cookie *c) OKEXTERN;
 char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([DEREF([s])]))
 serialize_cookie(struct cookie FINAL *s) OKEXTERN;
 
-char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([DEREF([cookies])]))
-serialize_cookie_list(int REF(V >= 0) num_cookies,
-                      struct cookie FINAL * FINAL * ARRAY START VALIDPTR SIZE_GE(4*num_cookies) cookies)
-  OKEXTERN;
+/* char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([DEREF([cookies])])) */
+/* serialize_cookie_list(int REF(V >= 0) num_cookies, */
+/*                       struct cookie FINAL * FINAL * ARRAY START VALIDPTR SIZE_GE(4*num_cookies) cookies) */
+/*   OKEXTERN; */
 
 void
 set_cookie(struct cookie_jar **cookies, struct cookie *c);
@@ -78,5 +77,12 @@ assert_may_set(char FINAL parse_string REF(? COOKIE_DOMAIN_SET([DOMAIN([V]); DOM
                char FINAL parse_string REF(? COOKIE_DOMAIN_SET([DOMAIN([d1]); DOMAIN([V])])) d2) OKEXTERN;
 
 void
+assert_may_set2(int REF(? COOKIE_DOMAIN_SET([DOMAIN([V]); DOMAIN([d2])])) d1,
+               char FINAL parse_string REF(? COOKIE_DOMAIN_SET([DOMAIN([d1]); DOMAIN([V])])) d2) OKEXTERN;
+
+void
 assert_may_get(char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([V]); DOMAIN([d2])])) d1,
                char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([d1]); DOMAIN([V])])) d2) OKEXTERN;
+void
+assert_may_get2(char FINAL parse_string REF(? COOKIE_DOMAIN_GET([THE_STRING([V]); DOMAIN([d2])])) d1,
+               char FINAL parse_string REF(? COOKIE_DOMAIN_GET([THE_STRING([d1]); DOMAIN([V])])) d2) OKEXTERN;
