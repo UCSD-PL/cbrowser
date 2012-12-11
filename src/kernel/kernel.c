@@ -10,12 +10,15 @@
 #include "proc.h"
 #include "cookie_util.h"
 #include "cookie_proc.h"
+#include "cookie_jar.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
 #include "tags.h"
 #include "wget.h"
 #include "opt.h"
+
+#include "debug.h"
 
 // socket includes
 #include <sys/types.h>
@@ -175,46 +178,27 @@ handle_display_shm(message *m)
   }
 }
 
-void assert_eq_strings(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([V]) = THE_STRING([s2])) s1,
-                       char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(THE_STRING([s1]) = THE_STRING([V])) s2) OKEXTERN;
-
-/* void valid_tab_origin_type(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = THE_STRING([V]))) OKEXTERN; */
-/* void valid_tab(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s) */
-  OKEXTERN;
-
-void same_domain_int(int fd, char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s)
-  OKEXTERN;
-void same_domain_eq(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s2])) s1,
-                    char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s1])) s2) OKEXTERN;
-
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
-  struct cookie c;
-  struct cookie_proc *cookie_proc;
+  struct cookie *c;
   struct tab *t;
 
-  c.attrs = NULL;
-  c.domain = NULL;
-  c.path = NULL;
-
   if (m->content) {
-    parse_cookie(&c, m->content, strlen(m->content));
+    c = parse_cookie(m->content, strlen(m->content));
+  } else {
+    return;
   }
 
-  if (!c.domain) return;
+  if (!c) return;
 
   for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && may_set_cookies(t->tab_origin, c.domain)) {
-      cookie_proc = get_cookie_process(c.domain);
-      if (cookie_proc) {
-        m = create_msg(K2C_SET_COOKIE, cookie_proc->soc,  m->content);
-        write_message(m);
-      }
+    if (t->soc == m->src_fd && may_set_cookies(t->tab_origin, c->domain)) {
+      add_cookie(m->src_fd, c);
       return;
     }
   }
@@ -224,45 +208,28 @@ void
 handle_get_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
-  struct get_cookie c;
-  struct cookie_proc *cookie_proc;
+  struct get_cookie *c;
+  struct cookie_list *l;
   struct tab *t;
 
-  parse_get_cookie(&c, m->content, strlen(m->content));
+  c = parse_get_cookie(m->content, strlen(m->content));
 
-  if (!c.domain) return;
+  if (!c) return;
 
   for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c.domain)) {
-      cookie_proc = get_cookie_process(c.domain);
-      if (cookie_proc) {
-        m = create_msg(K2C_GET_COOKIE, cookie_proc->soc, m->content);
+    //Need transitivity here
+    //if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c->domain)) {
+    if (t->soc == m->src_fd && !strcmp(t->tab_origin, c->domain)) {
+      l = get_cookies(c->domain, c->path);
+      if (l) {
+        m = create_msg(RES_COOKIE, t->soc, serialize_cookie_list(l));
         write_message(m);
       }
+
       return;
-    }
-  }
-}
-
-void
-handle_res_cookie(KERNEL_TABS tabs, message *m)
-{
-  int tab_idx;
-  char *s;
-  struct res_cookie *rc;
-  struct tab *t;
-
-  rc = malloc(sizeof(*rc));
-  parse_res_cookie(rc, m->content, strlen(m->content));
-
-  if ((t = tabs[rc->dest]) && rc->domain && rc->cookies) {
-    if (may_get_cookies(t->tab_origin, rc->domain)) {
-      s = serialize_cookie_list(rc->num_cookies, rc->cookies);
-      m = create_msg(RES_COOKIE, t->soc, s);
-      write_message(m);
     }
   }
 }
@@ -302,9 +269,6 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     break;
   case GET_COOKIE:
     handle_get_cookie(tabs, m);
-    break;
-  case C2K_RES_COOKIE:
-    handle_res_cookie(tabs, m);
     break;
   default:
     printf("Uhoh! We don't process that message type!\n");

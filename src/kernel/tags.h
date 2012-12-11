@@ -35,5 +35,9 @@ assert_untagged_int(int REF(? Set_emp([Tags(V)])) x)
 OKEXTERN;
 
 void
+assert_same_tags(int REF(TAGSET([V]) = TAGSET([y])) x, int y)
+OKEXTERN;
+
+void
 assert_same_domain(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR s1,
                    char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
