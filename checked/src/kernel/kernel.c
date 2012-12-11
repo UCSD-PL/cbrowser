@@ -39,8 +39,6 @@ domainify(char NULLTERMSTR * STRINGPTR) OKEXTERN;
 int curr = 0;                   // current tab
 int num_tab = 0;               // number of open tabs
 
-//struct cookie_jar *cookies;
-
 void
 klog(kstr str)
 {

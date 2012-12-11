@@ -1,0 +1,31 @@
+qualif TabIdx(v:int) : v <= 10
+qualif TabIdx(v:int) : v < 10
+qualif TabOrNeg(v:int) : v != -1 => &&[v >= 0; v < 10]
+
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([v])]))
+//qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([v + 4])]))
+// qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 4)])])]))
+qualif FieldTag(v:ptr, t:int): (? Set_mem([t; TAGSET([DEREF([(BLOCK_BEGIN([v]) + 8)])])]))
+
+qualif TagsetAdd(v:ptr, t:int): TAGSET([v]) = Set_cup([TAGSET([t]); Set_sng([t])])
+//qualif TagsetAddFld4(v:ptr, t:int): TAGSET([DEREF([v + 4])]) = Set_cup([TAGSET([t]); Set_sng([t])])
+qualif TagsetAddFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])]) = Set_cup([TAGSET([t]); Set_sng([t])])
+
+qualif TagsetSng(v:ptr, t:int): TAGSET([v]) =  Set_sng([t])
+// qualif TagsetSngFld4(v:ptr, t:int): TAGSET([DEREF([v + 4])]) = Set_sng([t])
+qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])]) = Set_sng([t])
+
+qualif TabTag(v:ptr, idx:int, t:int): idx != 10 => (? Set_mem([t; TAGSET([v])]))
+
+qualif IdxOfFd(v:int, p:ptr): v = DEREF([p])
+
+qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
+
+qualif MsgSrcTag(v:ptr): ? Set_mem([(DEREF([v + 4]) : int); TAGSET([v])])
+qualif MsgSrcTag(v:ptr): ? Set_mem([(DEREF([v + 4]) : int); TAGSET([DEREF([v + 8])])])
+
+qualif TagUnion(v:ptr, a:ptr, b:ptr): TAGSET([v]) = Set_cup([TAGSET([a]);TAGSET([b])])
+qualif NNTagsEq(v:ptr, p:ptr): (v != 0) => (TAGSET([v]) = TAGSET([p]))
+
+
+qualif TagsEq(v:ptr, p:ptr): TAGSET([v]) = TAGSET([p])

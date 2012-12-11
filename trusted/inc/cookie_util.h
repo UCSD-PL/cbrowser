@@ -1,3 +1,6 @@
+#ifndef BROWSER_COOKIE_UTIL
+#define BROWSER_COOKIE_UTIL
+
 #include <csolve.h>
 #include <stdlib.h>
 #include "constants.h"
@@ -61,14 +64,6 @@ print_cookie(struct cookie *c) OKEXTERN;
 char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([DEREF([s])]))
 serialize_cookie(struct cookie FINAL *s) OKEXTERN;
 
-/* char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([DEREF([cookies])])) */
-/* serialize_cookie_list(int REF(V >= 0) num_cookies, */
-/*                       struct cookie FINAL * FINAL * ARRAY START VALIDPTR SIZE_GE(4*num_cookies) cookies) */
-/*   OKEXTERN; */
-
-void
-set_cookie(struct cookie_jar **cookies, struct cookie *c);
-
 //domain d1 may get cookies from d2
 int REF(V != 0 => ? COOKIE_DOMAIN_SET([DOMAIN([d1]);DOMAIN([d2])]))
 may_set_cookies(char FINAL parse_string d1, char FINAL parse_string d2) OKEXTERN;
@@ -91,3 +86,5 @@ assert_may_get(char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([V]); DOM
 void
 assert_may_get2(int REF(? COOKIE_DOMAIN_GET([DOMAIN([V]); DOMAIN([d2])])) d1,
                 char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([d1]); DOMAIN([V])])) d2) OKEXTERN;
+
+#endif

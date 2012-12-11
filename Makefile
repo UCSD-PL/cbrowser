@@ -6,7 +6,7 @@ EXE  = kernel
 all : $(EXE)
 
 $(EXE) : force_look
-	make -C kernel
+	make -C checked/src/kernel
 
 .PHONY: cscope 
 

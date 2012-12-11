@@ -1,3 +1,6 @@
+#ifndef BROWSER_COOKIE_JAR
+#define BROWSER_COOKIE_JAR
+
 #include <csolve.h>
 #include "cookie_util.h"
 
@@ -36,5 +39,4 @@ char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([l
 serialize_cookie_list(struct cookie_list FINAL *l)
 OKEXTERN;
 
-
-
+#endif

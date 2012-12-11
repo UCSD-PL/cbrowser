@@ -1,5 +1,5 @@
-include ../Makefile.inc
-CFLAGS += -O0 -I /home/abakst/csolve/lib
+include ../../../Makefile.inc
+CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(PWD)/../../inc -I $(PWD)/../../../trusted/inc
 
 OBJS= main.o \
 	kernel.o \
@@ -12,7 +12,6 @@ OBJS= main.o \
 	msg.o \
         tags.o  \
 	cookie_jar.o \
-	cookie_util.o \
 	cookie_proc.o	
 
 all : kernel
