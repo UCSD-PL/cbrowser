@@ -1,22 +1,14 @@
 include ../../../Makefile.inc
 CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(PWD)/../../inc -I $(PWD)/../../../trusted/inc
 
-OBJS= main.o \
-	kernel.o \
-	tab.o 	\
-	ui.o \
-	wget.o \
-	proc.o \
-        tags.o  \
-	cookie_jar.o \
-	cookie_proc.o	
+OBJS= msg.o \
+        tags.o \
+        cookie_util.o
 
-all : kernel
+all: libtrusted.a
 
-kernel: $(OBJS)
-
-verify_%:
-	$(CSOLVE) $(CFLAGS) -c --csolveprefix=$(PWD)/verify/$* $*
+libtrusted.a: $(OBJS)
+	ar -cvq libtrusted.a $(OBJS)
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -45,3 +37,4 @@ clean_csolve:
 	-rm -rf *.c.autospec
 	-rm -rf js
 	-rm -rf css
+	-rm -f *.a

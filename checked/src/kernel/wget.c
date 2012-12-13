@@ -16,7 +16,7 @@
 
 #define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30'"
 
-kstr NNREF(TAGS(V) = TAGS(uri))
+kstr NNREF(TAGSET([V]) = TAGSET([uri]))
 wget(kstr uri) CHECK_TYPE
 {
   size_t n = 0;
