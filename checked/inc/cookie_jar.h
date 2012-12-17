@@ -14,7 +14,9 @@ struct cookie_list {
 
 void
 add_cookie(int soc,
-           struct cookie FINAL * CookiePtr REF(TAGSET([V]) = TAGSET([soc]))
+           struct cookie FINAL *
+           CookiePtr REF(TAGSET([V]) = TAGSET([soc]))
+           REF(DOMAIN([V]) = THE_STRING([DEREF([V])]))
            REF(? COOKIE_DOMAIN_SET([DOMAIN([soc]);DOMAIN([V])])) cookie)
 OKEXTERN;
 

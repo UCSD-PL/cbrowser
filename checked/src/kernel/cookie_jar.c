@@ -2,7 +2,7 @@
 #include "cookie_jar.h"
 
 struct cookie_jar {
-  struct cookie *c;
+  struct cookie * START VALIDPTR ROOM_FOR(struct cookie) REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) c;
   struct cookie_jar * NNSTART NNVALIDPTR NNSIZE_GE(8) next_jar;
 };
 
@@ -13,8 +13,28 @@ extern char CSOLVE_DOMAIN_STR NULLTERMSTR * START VALIDPTR ARRAY  REF(DOMAIN([V]
 domain_strdup (CSOLVE_DOMAIN_STR NULLTERMSTR FINAL char * STRINGPTR __s)
   OKEXTERN;
 
+extern
+struct cookie * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([DEREF([V])]))
+domainify_cookie(struct cookie FINAL *c) OKEXTERN;
+
 extern void
 validcookie(struct cookie FINAL *) OKEXTERN;
+
+struct cookie *
+mk_cookie(char FINAL parse_string REF(DOMAIN([V]) = THE_STRING([V])) domain,
+          char FINAL parse_string attrs,
+          char FINAL parse_string path,
+          int httpOnly)
+{
+  struct cookie *ret = malloc(sizeof(*ret));
+
+  ret->domain = domain_strdup(domain);
+  ret->attrs  = domain_strdup(attrs);
+  ret->path   = domain_strdup(path);
+  ret->httpOnly = httpOnly;
+
+  return domainify_cookie(ret);
+}
 
 void
 add_cookie(int soc, struct cookie *cookie) CHECK_TYPE
@@ -23,7 +43,10 @@ add_cookie(int soc, struct cookie *cookie) CHECK_TYPE
   struct cookie_jar *new;
   struct cookie     *new_cookie;
 
-  new_cookie = mk_cookie(cookie->domain, cookie->attrs, cookie->path, cookie->httpOnly);
+  new_cookie = mk_cookie(cookie->domain,
+                         cookie->attrs,
+                         cookie->path,
+                         cookie->httpOnly);
 
   /* Set up the new node */
   new = malloc(sizeof(*new));
@@ -33,14 +56,6 @@ add_cookie(int soc, struct cookie *cookie) CHECK_TYPE
   /* Update cookie jar */
   jar = new;
 }
-
-struct cookie FINAL * START VALIDPTR ROOM_FOR(struct cookie) REF(DOMAIN([V]) = DOMAIN([DEREF([c])]))
-domainify(struct cookie FINAL *c) OKEXTERN;
-
-void
-valid_cookie_node(char FINAL parse_string domain,
-                  struct cookie_list FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
-                  NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([DEREF([V + 4])])]))) OKEXTERN;
 
 struct cookie_list *
 get_cookies(char *domain, char *path) CHECK_TYPE

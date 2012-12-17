@@ -17,10 +17,10 @@ cscope :
 	cd cscope; cscope -b -q
 
 run: kernel
-	cd kernel; ./kernel -l
+	cd checked/src/kernel; ./kernel -l
 
 debug: kernel
-	cd kernel; gdb ./kernel
+	cd checked/src/kernel; gdb ./kernel
 
 force_look:
 	true

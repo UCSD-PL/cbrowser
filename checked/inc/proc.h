@@ -4,8 +4,8 @@
 #include <csolve.h>
 #include <unistd.h>
 
-#define TAB_PROC "../procs/tab.py"
-#define COOKIE_PROC "../procs/cookiep.py"
+#define TAB_PROC "../../../trusted/src/procs/tab.py"
+#define COOKIE_PROC "../../../procs/cookiep.py"
 
 void
 call(const char *path, char *const argv[]);

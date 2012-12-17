@@ -1,5 +1,6 @@
 include ../../../Makefile.inc
 CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(PWD)/../../inc -I $(PWD)/../../../trusted/inc
+LFLAGS += -L$(PWD)/../../../trusted/src/kernel/ -ltrusted
 
 OBJS= main.o \
 	kernel.o \
@@ -7,13 +8,13 @@ OBJS= main.o \
 	ui.o \
 	wget.o \
 	proc.o \
-        tags.o  \
 	cookie_jar.o \
 	cookie_proc.o	
 
 all : kernel
 
 kernel: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LFLAGS) -o kernel
 
 verify_%:
 	$(CSOLVE) $(CFLAGS) -c --csolveprefix=$(PWD)/verify/$* $*

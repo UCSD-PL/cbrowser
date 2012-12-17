@@ -95,3 +95,7 @@ qualif LinkedListNode(v:ptr, p:ptr): p > 0 => v > 0
 
 //qualif CookieListDomain(v:ptr, s:ptr): (DEREF([v+4]) != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([DEREF([v+4])])]))
 qualif CookieListDomain(v:ptr, s:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([v])])
+
+qualif CookieString(v:ptr, s:ptr): THE_STRING([DEREF([v])]) = THE_STRING([s]) 
+qualif CookieString(v:ptr): DOMAIN([DEREF([v])]) = THE_STRING([DEREF([v])])
+qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
