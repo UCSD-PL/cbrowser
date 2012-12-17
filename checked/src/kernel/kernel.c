@@ -137,41 +137,53 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(message *m)
+handle_req_uri_follow(int tagctx, message *m)
 {
   message *r;
   char *content;
   int uisoc;
+  int tags_0;
+  int tags_1;
 
   uisoc = ui_soc();
 
+  tags_0 = tags_of_int(uisoc);
   if (uisoc > 0) {
     // Send message to the UI process
     r = create_msg(REQ_URI_FOLLOW, uisoc, m->content);
+    r = tags_xfer_msg(tags_0, r);
     write_message(r);
   }
 
   // Retrieve contents of the URI stored in m->content
   content = wget(m->content);
+  content = tags_xfer_ptr(tags_0, content);
+
+  tags_1 = tags_union(tags_0, tags_of_ptr(content));
   if (!content) {
     return; //error?
   }
 
   // Send the result back
   r = create_msg(RES_URI, m->src_fd, content);
+  r = tags_xfer_msg(tags_1, r);
   write_message(r);
   free(content);
 }
 
 void
-handle_display_shm(message *m)
+handle_display_shm(int tagctx, message *m)
 {
   int uisoc;
+  int tags_0;
   message *r;
 
   uisoc = ui_soc();
+
+  tags_0 = tags_union(tagctx, tags_of_int(uisoc));
   if (uisoc > 0) {
    r = create_msg(K2G_DISPLAY_SHM, uisoc, m->content);
+   r = tags_xfer_msg(tags_0, r);
    write_message(r);
   }
 }
@@ -235,31 +247,40 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
 void
 process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m) CHECK_TYPE
 {
+  int tags_0;
+  int tags_1;
+  int tags_2;
+  int tags_3;
+  int tags_4;
+  
   message *r;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
   
+  tags_0 = tags_of_int(tab_idx);
   if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
+    //tags_0
     return;
-  }
+  } //then
 
   /* There's a control flow dependency on &m->type, so propagate
      that information to all data below */
-  if (m->content == NULL) return; //error
+  tags_1 = tags_union(tags_of_ptr(m->content), tags_0);
+  if (m->content == NULL) {
+    //tags_1
+    return; //error
+  } //then
 
+  tags_2 = tags_union(tags_union(tags_of_int(m->type), tags_of_ptr(&m->type)), tags_1);
   switch (m->type) {
-  /* case NAVIGATE: */
-  /*   init_tab_process(curr, m->content); */
-  /*   curr = num_tabs - 1; */
-  /*   break; */
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->content == NULL) return; //error
-    handle_req_uri_follow(m);
+    handle_req_uri_follow(tags_2, m);
     break;
   case DISPLAY_SHM:
     if (tab_idx == curr) {
-      handle_display_shm(m);
+      handle_display_shm(tags_2, m);
     }
     break;
   case SET_COOKIE:

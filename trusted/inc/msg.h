@@ -106,4 +106,9 @@ REF(Tags(MsgFd) = Set_sng([soc]))
 READ_MSG_T
 read_message_soc(int soc) OKEXTERN;
 
+message * LOC(L)
+START
+REF(TAGSET([V]) = TAGSET([s]))
+REF(BLOCK_BEGIN([V]) = BLOCK_BEGIN([m]))
+tags_xfer_msg(int s, message FINAL * LOC(L) START m) OKEXTERN;
 #endif
