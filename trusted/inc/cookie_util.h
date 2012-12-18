@@ -25,6 +25,12 @@ void
 may_get_cookie(char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([V]);DOMAIN([c])])) domain,
                struct cookie FINAL *c) OKEXTERN;
 
+char NULLTERMSTR CSOLVE_DOMAIN_STR
+* ARRAY NNSTART NNVALIDPTR REF((V != 0) => ((VVADDR + 8) < BLOCK_END([VVADDR])))
+* ARRAY START VALIDPTR SIZE_GE(4)
+gettable_domains(char FINAL NULLTERMSTR CSOLVE_DOMAIN_STR *domain) OKEXTERN;
+
+
 struct cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct cookie) NNREF(TAGSET([V]) = TAGSET([cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
 parse_cookie(const char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR cookie_str, size_t n) OKEXTERN;
 
