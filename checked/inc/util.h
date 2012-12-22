@@ -1,0 +1,22 @@
+#ifndef UTIL
+#define UTIL
+#include <csolve.h>
+#include <string.h>
+#include <stdlib.h>
+#include "constants.h"
+
+char NULLTERMSTR DOMAIN_STR *
+LOC(S1)
+STRINGPTR
+REF(? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])]))
+strapp(char NULLTERMSTR DOMAIN_STR FINAL * STRINGPTR d,
+       char NULLTERMSTR DOMAIN_STR FINAL * LOC(S1) STRINGPTR REF(? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])])) s1,
+       char NULLTERMSTR DOMAIN_STR FINAL * STRINGPTR REF(? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])])) s2) OKEXTERN;
+
+extern char DOMAIN_STR NULLTERMSTR * START VALIDPTR ARRAY  REF(DOMAIN([V]) = DOMAIN([__s]))
+  REF(THE_STRING([V]) = THE_STRING([__s]))
+domain_strdup (DOMAIN_STR NULLTERMSTR FINAL char * STRINGPTR __s)
+  OKEXTERN;
+
+
+#endif

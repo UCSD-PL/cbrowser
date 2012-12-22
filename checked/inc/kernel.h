@@ -5,7 +5,8 @@
 #include "msg.h"
 #include "tab.h"
 
-#define kstr char CSOLVE_DOMAIN_STR NULLTERMSTR * NNSTRINGPTR NNSTART
+#define kstr char DOMAIN_STR NULLTERMSTR * NNSTRINGPTR NNSTART
+
 
 // Kernel
 int  current_tab();

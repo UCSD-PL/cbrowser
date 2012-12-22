@@ -90,6 +90,4 @@ qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
 qualif NullTermStringArray(v:ptr): v != 0 => ((VVADDR + 8) < BLOCK_END([VVADDR]))
 qualif NND1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([DEREF([v])])])
 
-//qualif DomainNonDet(v:ptr, s1:ptr, s2:ptr): ||[DOMAIN([v]) = DOMAIN([s1]); DOMAIN([v]) = DOMAIN([s2])]
-
-//qualif CookieBufSz(v:ptr): v + 204800 <= BLOCK_END([v])
+qualif DomainNonDet(v:ptr, s1:ptr, s2:ptr): ||[DOMAIN([v]) = DOMAIN([s1]); DOMAIN([v]) = DOMAIN([s2])]

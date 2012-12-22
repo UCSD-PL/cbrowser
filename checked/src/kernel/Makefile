@@ -1,5 +1,6 @@
 include ../../../Makefile.inc
 CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(PWD)/../../inc -I $(PWD)/../../../trusted/inc
+CFLAGS += --manual
 LFLAGS += -L$(PWD)/../../../trusted/src/kernel/ -ltrusted
 
 OBJS= main.o \
@@ -8,7 +9,7 @@ OBJS= main.o \
 	ui.o \
 	wget.o \
 	proc.o \
-	cookie_jar.o \
+	cookie_hash.o \
 	cookie_proc.o	
 
 all : kernel

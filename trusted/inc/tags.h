@@ -39,8 +39,8 @@ assert_same_tags(int REF(TAGSET([V]) = TAGSET([y])) x, int y)
 OKEXTERN;
 
 void
-assert_same_domain(char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR s1,
-                   char CSOLVE_DOMAIN_STR NULLTERMSTR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
+assert_same_domain(char DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR s1,
+                   char DOMAIN_STR NULLTERMSTR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
 
 int
 REF(TAGSET([V]) = TAGSET([s]))
@@ -54,11 +54,11 @@ int
 REF(TAGSET([V]) = Set_cup([TAGSET([s1]);TAGSET([s2])]))
 tags_union(int s1, int s2) OKEXTERN;
 
-char NULLTERMSTR CSOLVE_DOMAIN_STR * LOC(L)
+char NULLTERMSTR DOMAIN_STR * LOC(L)
 START
 REF(V = p)
 REF(TAGSET([V]) = TAGSET([s]))
-tags_xfer_ptr(int s, char NULLTERMSTR CSOLVE_DOMAIN_STR FINAL * START LOC(L) p) OKEXTERN;
+tags_xfer_ptr(int s, char NULLTERMSTR DOMAIN_STR FINAL * START LOC(L) p) OKEXTERN;
 
 int
 /* REF(V = d) */

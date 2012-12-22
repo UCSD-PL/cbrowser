@@ -75,7 +75,7 @@ typedef enum {
 typedef struct {
   mtypes FINAL type;
   int FINAL src_fd;
-  char CSOLVE_DOMAIN_STR NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
+  char DOMAIN_STR NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
 } message;
 
 void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
@@ -95,7 +95,7 @@ REF(Domain(Field(V,4) : int) = Domain(fd))
 REF(Domain(Field(V,8)) = Domain(c))
 REF((Field(V, 4) : int) = fd)
 /* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
-create_msg(mtypes type, int fd, char FINAL CSOLVE_DOMAIN_STR NULLTERMSTR * NNSTRINGPTR NNSTART LOC(L) c) OKEXTERN;
+create_msg(mtypes type, int fd, char FINAL DOMAIN_STR NULLTERMSTR * NNSTRINGPTR LOC(L) c) OKEXTERN;
 void write_message_soc(int soc,
                        message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
 

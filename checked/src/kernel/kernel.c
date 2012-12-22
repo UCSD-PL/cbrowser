@@ -10,13 +10,15 @@
 #include "proc.h"
 #include "cookie_util.h"
 #include "cookie_proc.h"
-#include "cookie_jar.h"
+//#include "cookie_jar.h"
+#include "cookie_hash.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
 #include "tags.h"
 #include "wget.h"
 #include "opt.h"
+#include "util.h"
 
 #include "debug.h"
 
@@ -34,7 +36,6 @@ char NULLTERMSTR * STRINGPTR START
 REF(DOMAIN([V]) = THE_STRING([V]))
 domainify(char NULLTERMSTR * STRINGPTR) OKEXTERN;
 #endif
-
 
 int curr = 0;                   // current tab
 int num_tab = 0;               // number of open tabs
@@ -219,8 +220,12 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
   struct get_cookie *c;
-  struct cookie_list *l;
+  struct cookie_list *l = NULL, *l2 = NULL;
   struct tab *t;
+  char **domains;
+  char *domain = NULL;
+  char *serial = NULL;
+  char *result = NULL;
 
   c = parse_get_cookie(m->content, strlen(m->content));
 
@@ -231,14 +236,26 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
       continue;
 
     //Need transitivity here
-    //if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c->domain)) {
-    if (t->soc == m->src_fd && !strcmp(t->tab_origin, c->domain)) {
-      l = get_cookies(c->domain, c->path);
-      if (l) {
-        m = create_msg(RES_COOKIE, t->soc, serialize_cookie_list(l));
-        write_message(m);
+    if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c->domain)) {
+      domains = gettable_domains(c->domain); 
+      while (domain = *domains) {
+        l = get_cookies(domain, c->path);
+        if (l) {
+          serial = serialize_cookie_list(l);
+          if (result) {
+            result = strapp(c->domain, result, serial);
+          } else {
+            result = domain_strdup(serial);
+          }
+        }
       }
-
+      if (result) {
+          /* <lame> */
+          result = read_is_transitive(t->tab_origin, c->domain, result);
+          /* </lame> */
+          m = create_msg(RES_COOKIE, t->soc, result);
+          write_message(m);
+      }
       return;
     }
   }

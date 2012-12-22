@@ -13,18 +13,38 @@ START VALIDPTR ROOM_FOR(struct cookie_list)
 REF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([V])]))
 mk_list_node(char FINAL parse_string domain, struct cookie FINAL *c) OKEXTERN;
 
-extern char CSOLVE_DOMAIN_STR NULLTERMSTR * START VALIDPTR ARRAY  REF(DOMAIN([V]) = DOMAIN([__s]))
-  REF(THE_STRING([V]) = THE_STRING([__s]))
-domain_strdup (CSOLVE_DOMAIN_STR NULLTERMSTR FINAL char * STRINGPTR __s)
-  OKEXTERN;
-
 extern
 struct cookie * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([DEREF([V])]))
 domainify_cookie(struct cookie FINAL *c) OKEXTERN;
 
 extern
-char NULLTERMSTR CSOLVE_DOMAIN_STR *
+char NULLTERMSTR DOMAIN_STR *
 domainify_string(char NULLTERMSTR *) OKEXTERN;
+
+int
+hash_fn(char *d, char *p)
+{
+  int hash = 0;
+
+  while (*d != 0)
+  {
+    hash += *d;
+    d++;
+  }
+  while (*p != 0)
+  {
+    hash += *p;
+    p++;
+  }
+
+  return hash % TABLE_SIZE;
+}
+
+int
+hash_cookie(struct cookie FINAL *c)
+{
+  return hash_fn(c->domain, c->path);
+}
 
 struct cookie *
 mk_cookie(char FINAL parse_string REF(DOMAIN([V]) = THE_STRING([V])) domain,
@@ -56,16 +76,13 @@ copy_cookie(struct cookie FINAL *c)
 }
 
 void
-insert_cookie(struct cookie *c) CHECK_TYPE
+add_cookie(int soc, struct cookie *c) CHECK_TYPE
 {
   int i;
   struct cookie_list *l;
   struct cookie *new_cookie;
 
-  /* Random for now */
-  i = nondetpos();
-  CSOLVE_ASSUME(i >= 0 && i < TABLE_SIZE);
-
+  i = hash_cookie(c);
   new_cookie = copy_cookie(c);
   l = table[i];
 
@@ -87,15 +104,10 @@ insert_cookie(struct cookie *c) CHECK_TYPE
 struct cookie_list *
 get_cookies(char *domain, char *path) CHECK_TYPE
 {
-  int i;
   struct cookie_list *l, *head, *curr, *new;
   struct cookie *c;
 
-  /* Random for now */
-  i = nondetpos();
-  CSOLVE_ASSUME(i >= 0 && i < TABLE_SIZE);
-
-  l = table[i];
+  l = table[hash_fn(domain, path)];
 
   if (l == NULL)
   {

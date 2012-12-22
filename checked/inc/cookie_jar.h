@@ -25,19 +25,17 @@ OKEXTERN;
 //of a cookie pointer is the same as the cookie's domain field etc etc?
 struct cookie_list * 
 NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
-NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([V])]))
-get_cookies(char CSOLVE_DOMAIN_STR NULLTERMSTR * LOC(L)
+get_cookies(char DOMAIN_STR NULLTERMSTR * LOC(L)
             STRINGPTR REF(DOMAIN([V]) = THE_STRING([V])) domain,
-            char CSOLVE_DOMAIN_STR NULLTERMSTR * LOC(L)
-            STRINGPTR path)
-OKEXTERN;
+            char DOMAIN_STR NULLTERMSTR * LOC(L)
+            STRINGPTR path) OKEXTERN;
 
 struct cookie_list * 
 START VALIDPTR ROOM_FOR(struct cookie_list)
 REF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([V])]))
 mk_list_node(char FINAL parse_string domain, struct cookie FINAL *c) OKEXTERN;
 
-char CSOLVE_DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([l]))
+char DOMAIN_STR NULLTERMSTR * START STRINGPTR REF(DOMAIN([V]) = DOMAIN([l]))
 serialize_cookie_list(struct cookie_list FINAL *l)
 OKEXTERN;
 

@@ -8,9 +8,9 @@ struct cookie_jar {
 
 struct cookie_jar * NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_jar) jar CHECK_TYPE;
 
-extern char CSOLVE_DOMAIN_STR NULLTERMSTR * START VALIDPTR ARRAY  REF(DOMAIN([V]) = DOMAIN([__s]))
+extern char DOMAIN_STR NULLTERMSTR * START VALIDPTR ARRAY  REF(DOMAIN([V]) = DOMAIN([__s]))
   REF(THE_STRING([V]) = THE_STRING([__s]))
-domain_strdup (CSOLVE_DOMAIN_STR NULLTERMSTR FINAL char * STRINGPTR __s)
+domain_strdup (DOMAIN_STR NULLTERMSTR FINAL char * STRINGPTR __s)
   OKEXTERN;
 
 extern
