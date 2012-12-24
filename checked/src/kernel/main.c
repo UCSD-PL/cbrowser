@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <signal.h>
 #include <search.h>
-#include "str.h"
+//#include "str.h"
 #include "proc.h"
-#include "cookie_proc.h"
+//#include "cookie_proc.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
@@ -64,15 +64,15 @@ void
 kexit()
 {
   int i;
-  struct cookie_proc *cp;
+//  struct cookie_proc *cp;
   //TODO
   if (tabs) {
     for (i = 0; i < num_tabs(); i++) {
       tab_kill(tabs, i, SIGINT);
-      cp = get_cookie_process(tabs[i]->tab_origin);
-      if (cp) {
-        kill(cp->proc, SIGINT);
-      }
+      //     cp = get_cookie_process(tabs[i]->tab_origin);
+      //if (cp) {
+      //  kill(cp->proc, SIGINT);
+      //}
     }
   }
 

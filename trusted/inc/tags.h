@@ -1,4 +1,5 @@
 #include <csolve.h>
+#include "constants.h"
 
 #define TAGGEDP(_v, _tag) (? Set_mem([_tag; TAGSET([_v])])) 
 #define UTAGGEDP(_v, _tag) (TAGS(_v) = Set_sng([_tag]))

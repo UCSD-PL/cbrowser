@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <search.h>
-#include "str.h"
+//#include "str.h"
 #include "proc.h"
 #include "cookie_util.h"
 #include "cookie_proc.h"
@@ -85,10 +85,10 @@ add_tab(KERNEL_TABS tabs)
     num_tab++;
     init_tab_process(tabs, curr, "None"); //TODO: arguments
     t = tabs[curr];
-    if (t) {
-      validptr(t);
-      init_cookie_process(t->tab_origin);
-    }
+    /* if (t) { */
+    /*   validptr(t); */
+    /*   init_cookie_process(t->tab_origin); */
+    /* } */
   } else {
     //TODO: print some error
   }

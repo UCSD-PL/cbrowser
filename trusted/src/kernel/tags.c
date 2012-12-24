@@ -18,6 +18,41 @@ assert_tagged(int x, void *p)
 }
 
 void
+assert_uniq_tagged(int x, void *p)
+{
+}
+
+void
 assert_untagged_int(int x)
+{
+}
+
+void
+assert_same_tags(int x, int y)
+{
+}
+
+void
+assert_same_domain(char *s1, char *s2)
+{
+}
+
+int
+tags_of_int(int s)
+{
+}
+
+int
+tags_of_ptr(void *p)
+{
+}
+
+char *
+tags_xfer_ptr(int s, char *p)
+{
+}
+
+int
+tags_union(int s1, int s2)
 {
 }

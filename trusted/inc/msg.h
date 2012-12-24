@@ -55,21 +55,22 @@ typedef enum {
   && [MsgPtrDomain = _domain;                   \
       MsgContentDomain = _domain]               \
   
-#define READ_MSG_T                                  \
+#define READ_MSG_T                                    \
   REF(&& [MsgPtrTags       = MsgFdTags;               \
+          MsgPtrDomain     = MsgFdDomain;             \
           MsgContentTags   = MsgFdTags;               \
           MsgContentDomain = MsgFdDomain])
 
-#define WRITE_MSG_T(soc)                                            \
-  REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                 \
-          && [MSG_TYPE(2); TAB_PRIVATE_MSG(Tags(soc))];             \
-          && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                 \
-          && [MSG_TYPE(4)];                                         \
-          && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];             \
+#define WRITE_MSG_T(soc)                                                \
+  REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                     \
+          && [MSG_TYPE(2); TAB_PRIVATE_MSG(Tags(soc))];                 \
+          && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                     \
+          && [MSG_TYPE(4)];                                             \
+          && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];                 \
           && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([soc]); MsgContentDomain])]; \
           && [MSG_TYPE(13); ? COOKIE_DOMAIN_SET([MsgContentDomain; DOMAIN([soc])])]; \
           && [MSG_TYPE(14); ? COOKIE_DOMAIN_GET([MsgContentDomain; DOMAIN([soc])])]; \
-          && [MSG_TYPE(15); DOMAIN([soc]) = MsgContentDomain];      \
+          && [MSG_TYPE(15); DOMAIN([soc]) = MsgContentDomain];          \
           (? Set_emp([Tags(MsgContent)]))]) 
 
 typedef struct {

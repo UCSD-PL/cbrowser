@@ -211,3 +211,8 @@ payload(message *m, char *buf)
     return "Whoops! We can't send that kind of message yet.";
   }
 }
+
+message *
+tags_xfer_msg(int s, message *m)
+{
+}

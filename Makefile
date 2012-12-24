@@ -1,11 +1,12 @@
 include Makefile.inc
 
-DIRS = kernel
+DIRS = trusted/src/kernel checked/src/kernel
 EXE  = kernel
 
 all : $(EXE)
 
 $(EXE) : force_look
+	make -C trusted/src/kernel
 	make -C checked/src/kernel
 
 .PHONY: cscope 

@@ -1,5 +1,5 @@
 include ../../../Makefile.inc
-CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(PWD)/../../inc -I $(PWD)/../../../trusted/inc
+CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(TRUSTED)/inc
 
 OBJS= msg.o \
         tags.o \
@@ -8,6 +8,7 @@ OBJS= msg.o \
 all: libtrusted.a
 
 libtrusted.a: $(OBJS)
+	-rm libstrusted.a
 	ar -cvq libtrusted.a $(OBJS)
 
 %.o: %.c
