@@ -68,9 +68,6 @@ typedef enum {
           && [MSG_TYPE(4)];                                             \
           && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];                 \
           && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([soc]); MsgContentDomain])]; \
-          && [MSG_TYPE(13); ? COOKIE_DOMAIN_SET([MsgContentDomain; DOMAIN([soc])])]; \
-          && [MSG_TYPE(14); ? COOKIE_DOMAIN_GET([MsgContentDomain; DOMAIN([soc])])]; \
-          && [MSG_TYPE(15); DOMAIN([soc]) = MsgContentDomain];          \
           (? Set_emp([Tags(MsgContent)]))]) 
 
 typedef struct {

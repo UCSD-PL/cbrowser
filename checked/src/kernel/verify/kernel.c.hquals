@@ -58,5 +58,4 @@ qualif OkMessage(v:ptr):
       && [(DEREF([v]) : int) = 7; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
       && [(DEREF([v]) : int) = 12; ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) :int)]);
                                                         DOMAIN([DEREF([v + 8])])])];
-      && [(DEREF([v]) : int) = 15; DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v+4]) :int)])];
       (? Set_emp([TAGSET([DEREF([v + 8])])]))]
