@@ -3,10 +3,9 @@
 
 #include <csolve.h>
 #include <stdio.h>
-
 #include "str.h"
 #include "tags.h"
-
+#include "constants.h"
 
 typedef enum {
     K2G_DISPLAY_SHM,
@@ -76,12 +75,26 @@ typedef struct {
   char DOMAIN_STR NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
 } message;
 
+struct get_cookie {
+  char parse_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain;
+  char parse_string scheme;
+  char parse_string path;
+  int  httpOnly;
+};
+
 void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
 
 #define msg_start START VALIDPTR ROOM_FOR(message)
 
 void
 check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;
+
+struct get_cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct get_cookie) NNREF(TAGSET([V]) = TAGSET([get_cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
+parse_get_cookie(char DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR get_cookie_str,
+                 size_t n) OKEXTERN;
+
+message *
+create_get_cookie(char *scheme, char *host, char *path, int for_http);
 
 message INST(L,L) FINAL *
 msg_start

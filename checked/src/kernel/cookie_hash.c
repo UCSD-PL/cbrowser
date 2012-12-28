@@ -137,3 +137,8 @@ get_cookies(char *domain, char *path) CHECK_TYPE
 
   return head;
 }
+
+char *
+serialize_cookie_list(struct cookie_list *l)
+{
+}

@@ -10,4 +10,8 @@
 #define DOMAIN_STR MEMPRED(DOMAIN)
 #define VALID_TAB  REF(&& [V >= 0; V < MAX_NUM_TABS])
 
+/* Handy */
+#define nnparse_string NULLTERMSTR DOMAIN_STR * NNSTRINGPTR
+#define parse_string NULLTERMSTR DOMAIN_STR * STRINGPTR
+
 

@@ -1,5 +1,5 @@
 #include "msg.h"
-#include "opt.h"
+//#include "opt.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -17,53 +17,36 @@ extern struct opt_args opt;
 
 #define MSG_CHUNK_SIZE 64
 
-void
-create_navigate(message *m, char *s)
+struct get_cookie *
+parse_get_cookie(char *get_cookie_str, size_t n)
 {
-  m->type = NAVIGATE;
-  if (s)
-    strncpy(m->content, s, MAX_URI_LEN);
+  struct get_cookie *req;
+  char *s;
+
+  req = malloc(sizeof(*req));
+
+  s = strtok(get_cookie_str, ";");
+  return NULL;
 }
 
-void
-create_req_uri_follow(message *m, char *s)
+char *
+get_cookie_str(char *scheme, char *host, char *path, int for_http)
 {
-  m->type = REQ_URI_FOLLOW;
-  m->content = s;
+  char *str;
+  if (asprintf(&str, "%s;%s;%s;%d", scheme, host, path, for_http) > 1)
+    exit(1);
+
+  return str;
 }
 
-void
-create_res_uri(message *m, char *content)
+message *
+create_get_cookie(char *scheme, char *host, char *path, int for_http)
 {
-  m->type = RES_URI;
-  m->content = content;
+  message *m = malloc(sizeof(*m));
+  m->type    = GET_COOKIE;
+  m->content = get_cookie_str(scheme, host, path, for_http); 
 }
 
-void
-create_render(message *m)
-{
-  m->type = RENDER;
-}
-
-void
-create_display_shm(message *m, int shmid, int size)
-{
-  m->type = DISPLAY_SHM;
-  //  m->shmid = shmid;
-  //m->size = size;
-}
-
-void
-create_k2g_display_shm(message *m, int shmid, int size)
-{
-  m->type = K2G_DISPLAY_SHM;
-  //m->shmid = shmid;
-  //m->size = size;
-}
-
-//void create_set_status(message *m, char *status) {
-//    m->type = SET_STATUS;
-//}
 message *
 create_msg(mtypes type,
            int fd,

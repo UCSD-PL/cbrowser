@@ -250,9 +250,6 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
         }
       }
       if (result) {
-          /* <lame> */
-          result = read_is_transitive(t->tab_origin, c->domain, result);
-          /* </lame> */
           m = create_msg(RES_COOKIE, t->soc, result);
           write_message(m);
       }

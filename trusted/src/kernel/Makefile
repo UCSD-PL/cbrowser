@@ -1,23 +1,22 @@
 include ../../../Makefile.inc
-CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(TRUSTED)/inc
+TRUSTED = $(CURDIR)/../..
+CFLAGS += -O0 -I /home/abakst/scratch/csolve/lib -I $(TRUSTED)/inc
 
-OBJS= msg.o \
-        tags.o \
-        cookie_util.o
+OBJS= tags.o \
+      cookie_util.o
 
-all: libtrusted.a
+all: libtrusted.so
 
-libtrusted.a: $(OBJS)
-	-rm libstrusted.a
-	ar -cvq libtrusted.a $(OBJS)
+libtrusted.so: $(OBJS)
+	gcc -shared -o libtrusted.so $(OBJS)	
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c -fPIC $(CFLAGS) $< -o $@
 
 clean: clean_src clean_cookies clean_csolve
 
 clean_src:
-	-rm -f *.o *~ kernel
+	-rm -f *.o *~ *.so
 
 clean_cookies:
 	-rm -rf cookies

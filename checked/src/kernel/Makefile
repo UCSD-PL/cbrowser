@@ -1,16 +1,17 @@
 include ../../../Makefile.inc
-CFLAGS += -O0 -I /home/abakst/csolve/lib -I $(CURDIR)/../../inc -I $(CURDIR)/../../../trusted/inc
+CFLAGS += -O0 -I /home/abakst/scratch/csolve/lib -I $(CURDIR)/../../inc -I $(CURDIR)/../../../trusted/inc
 #CFLAGS += --manual
 LFLAGS += -L$(CURDIR)/../../../trusted/src/kernel -ltrusted
+LFLAGS += -L$(CURDIR)/../../../trusted/src/msg    -lmsg
 
 OBJS= main.o \
+	util.o \
 	kernel.o \
 	tab.o 	\
 	ui.o \
 	wget.o \
 	proc.o \
 	cookie_hash.o 
-#	cookie_proc.o	
 
 all : kernel
 

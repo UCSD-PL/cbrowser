@@ -56,3 +56,8 @@ int
 tags_union(int s1, int s2)
 {
 }
+
+char *
+domain_strdup(char *s)
+{
+}

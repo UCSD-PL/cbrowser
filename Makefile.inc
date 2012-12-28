@@ -1,9 +1,6 @@
 CC=gcc
 CFLAGS=-g
-CSOLVE=/home/abakst/csolve/src/csolve
-
-TRUSTED=$(CURDIR)/trusted
-CHECKED=$(CURDIR)/checked
+CSOLVE=/home/abakst/scratch/csolve/src/csolve
 
 ifeq ($(CSOLVE),)
 $(error CSOLVE variable not set in src/Makefile.inc)

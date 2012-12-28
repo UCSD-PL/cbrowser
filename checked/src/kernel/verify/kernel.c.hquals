@@ -40,6 +40,11 @@ qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
 constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
 constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
 
+//Transitivity
+axiom: forall [d1:int;d2:int;d3:int].
+       (&& [? COOKIE_DOMAIN_GET([d1;d2]);
+           ? COOKIE_DOMAIN_GET([d2;d3])] => ? COOKIE_DOMAIN_GET([d1;d3]))
+
 qualif D1GetD2(v:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([~d])])
 qualif D1SetD2(v:ptr): v != 0 => ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([~d])])
 qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([d]);DOMAIN([v])])
