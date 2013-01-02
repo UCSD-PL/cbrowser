@@ -5,7 +5,7 @@
 
 struct tab {
   char NULLTERMSTR DOMAIN_STR *
-       LOC(L) START STRINGPTR REF(DOMAIN([V]) = THE_STRING([V])) tab_origin;
+  LOC(L) START STRINGPTR REF(DOMAIN([V]) = THE_STRING([V])) REF(TAGSET([V]) = TAGSET([soc])) tab_origin;
   pid_t proc;                //PID of tab process
   int   REF(TAGSET([V]) = Set_sng([V])) REF(DOMAIN([V]) = DOMAIN([tab_origin])) soc; //socket
 };

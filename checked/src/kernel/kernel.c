@@ -8,8 +8,8 @@
 #include <search.h>
 //#include "str.h"
 #include "proc.h"
-#include "cookie_util.h"
-#include "cookie_proc.h"
+//#include "cookie_util.h"
+//#include "cookie_proc.h"
 //#include "cookie_jar.h"
 #include "cookie_hash.h"
 #include "ui.h"
@@ -19,6 +19,8 @@
 #include "wget.h"
 #include "opt.h"
 #include "util.h"
+
+//#include <libsoup/soup-cookie.h>
 
 #include "debug.h"
 
@@ -189,27 +191,40 @@ handle_display_shm(int tagctx, message *m)
   }
 }
 
+void check_domain(char FINAL NULLTERMSTR DOMAIN_STR *STRINGPTR d,
+                  SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN;
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
   struct cookie *c;
+  SoupURI       *uri;
+  SoupCookie    *soup_cookie;
   struct tab *t;
 
-  if (m->content) {
-    c = parse_cookie(m->content, strlen(m->content));
-  } else {
+  if (!m->content) {
     return;
   }
-
-  if (!c) return;
 
   for (tab_idx = 0; tab_idx < MAX_NUM_TABS; tab_idx++) {
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && may_set_cookies(t->tab_origin, c->domain)) {
-      add_cookie(m->src_fd, c);
+    if (t->soc == m->src_fd) {
+      uri = soup_uri_new(t->tab_origin);
+
+      if (!uri) {
+        exit(1);
+        return;
+      }
+
+      soup_cookie = soup_cookie_parse(m->content, uri);
+      if (soup_cookie) {
+        c = malloc(sizeof(*c));
+        c->domain = domain_strdup(t->tab_origin);
+        c->cookie = soup_cookie;
+        add_cookie(m->src_fd, c);
+      }
       return;
     }
   }
@@ -235,8 +250,7 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    //Need transitivity here
-    if (t->soc == m->src_fd && may_get_cookies(t->tab_origin, c->domain)) {
+    if (t->soc == m->src_fd && soup_domain_matches(c->domain, t->tab_origin)) {
       domains = gettable_domains(c->domain); 
       while (domain = *domains) {
         l = get_cookies(domain, c->path);

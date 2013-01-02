@@ -5,7 +5,7 @@ void assert_eq_strings(char DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(THE_STRI
 
 /* void valid_tab_origin_type(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = THE_STRING([V]))) OKEXTERN; */
 /* void valid_tab(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s) */
-  OKEXTERN;
+//  OKEXTERN;
 
 void same_domain_int(int fd, char DOMAIN_STR NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s)
   OKEXTERN;

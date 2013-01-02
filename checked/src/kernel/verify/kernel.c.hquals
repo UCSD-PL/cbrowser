@@ -20,6 +20,7 @@ qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 constant DOMAIN: func(1, [@(0); int])
 constant THE_STRING: func(1, [@(0); int])
 qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:ptr, p:ptr): v != 0 => DOMAIN([v]) = THE_STRING([p])
 qualif StringDomain(v:ptr): v != 0 => DOMAIN([v]) = THE_STRING([v])
 qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([v]) = THE_STRING([p])
 qualif DomainEqPtrs(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
@@ -35,6 +36,11 @@ qualif RES_COOKIE(v:ptr):      (DEREF([v]) : int) = 12
 qualif K2C_SET_COOKIE(v:ptr):  (DEREF([v]) : int) = 13
 qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 14
 qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
+
+qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
+                                      DOMAIN([DEREF([v+4])])  = DOMAIN([v]); 
+                                      DOMAIN([DEREF([v+8])])  = DOMAIN([v]); 
+                                      DOMAIN([DEREF([v+12])]) = DOMAIN([v])] 
 
 //Cookie Domain Policy
 constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])

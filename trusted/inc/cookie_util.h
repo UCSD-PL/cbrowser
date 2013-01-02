@@ -4,13 +4,35 @@
 #include <csolve.h>
 #include <stdlib.h>
 #include "constants.h"
+#include <libsoup/soup-types.h>
+#ifdef CIL
+#define SoupDate int *
+/* #define SoupURI  char * */
+#endif
+#include <libsoup/soup-uri.h>
+#include <libsoup/soup-cookie.h>
+
+/* struct cookie { */
+/*   char parse_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain; /\*simplification*\/ */
+/*   char parse_string attrs; */
+/*   char parse_string path; */
+/*   int  httpOnly; */
+/* }; */
 
 struct cookie {
   char parse_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain; /*simplification*/
-  char parse_string attrs;
-  char parse_string path;
-  int  httpOnly;
+  SoupCookie FINAL * FINAL
+  REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
+    ROOM_FOR(SoupCookie) START VALIDPTR 
+  cookie;
 };
+
+struct cookie * REF(TAGSET([V]) = Set_cup([TAGSET([cookie]);TAGSET([domain])]))
+                REF(DOMAIN([V]) = THE_STRING([domain]))
+                START VALIDPTR ROOM_FOR(struct cookie)
+                FINAL
+make_cookie(char FINAL parse_string                                     domain,
+            SoupCookie  FINAL * REF(DOMAIN([V]) = THE_STRING([domain])) cookie) OKEXTERN;
 
 void
 may_get_cookie(char FINAL parse_string REF(? COOKIE_DOMAIN_GET([DOMAIN([V]);DOMAIN([c])])) domain,

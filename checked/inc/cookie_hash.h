@@ -18,9 +18,11 @@ OKEXTERN;
 void
 add_cookie(int soc,
            struct cookie FINAL *
-           CookiePtr REF(TAGSET([V]) = TAGSET([soc]))
-           REF(DOMAIN([V]) = THE_STRING([DEREF([V])]))
-           REF(? COOKIE_DOMAIN_SET([DOMAIN([soc]);DOMAIN([V])])) c) OKEXTERN;
+           CookiePtr
+           REF(TAGSET([DEREF([V])])     = TAGSET([soc]))
+           REF(TAGSET([DEREF([V + 4])]) = TAGSET([soc]))
+           REF(DOMAIN([DEREF([V + 4])]) = THE_STRING([DEREF([V])]))
+           /* REF(? COOKIE_DOMAIN_SET([DOMAIN([soc]);DOMAIN([V])])) */ c) OKEXTERN;
 
 struct cookie_list * 
 NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
