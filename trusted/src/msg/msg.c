@@ -7,12 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//Sigh
-#ifdef __APPLE__
-  #define htobe32 htonl
-  #define be32toh ntohl
-#endif
-
 extern struct opt_args opt;
 
 #define MSG_CHUNK_SIZE 64
@@ -91,7 +85,7 @@ read_lstr(int soc, char **dst)
 
   //Calculate size of content
   recv_exact(soc, 4, size_buf);
-  size = be32toh(*(uint32_t *)size_buf);
+  size = ntohl(*(uint32_t *)size_buf);
   //  sscanf(size_buf, "%x", &size);
   
   if (size > 0) {
@@ -149,7 +143,7 @@ write_message_len(int soc, message *m)
     
   //compute message len
   uint32_t len    = strlen(m->content);
-  uint32_t be_len = htobe32(len);
+  uint32_t be_len = htonl(len);
 
   char *lenstr = (char *)&be_len;
     

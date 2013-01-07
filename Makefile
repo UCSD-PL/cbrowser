@@ -14,9 +14,8 @@ $(EXE) : force_look
 
 cscope : 
 	echo "Building cscope database"
-	-rm ./cscope/cscope.files
-	find $(PWD)/ -iname "*.[ch]" > ./cscope/cscope.files
-	cd cscope; cscope -b -q
+	-rm ./cscope.
+	find $(PWD) -iname "*.[ch]" > ./cscope.files
 
 run: kernel
 	cd checked/src/kernel; ./kernel -l

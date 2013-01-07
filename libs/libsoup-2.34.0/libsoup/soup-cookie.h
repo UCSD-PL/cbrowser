@@ -12,10 +12,10 @@
 G_BEGIN_DECLS
 
 struct _SoupCookie {
-	char     *name;
-	char     *value;
-	char     *domain;
-	char     *path;
+	char     NULLTERMSTR * name;
+	char     NULLTERMSTR * value;
+	char     NULLTERMSTR * domain;
+	char     NULLTERMSTR * LOC(COOKIE_PATH) path;
 	SoupDate *expires;
 	gboolean  secure;
 	gboolean  http_only;
@@ -44,7 +44,15 @@ NNREF(DOMAIN([V]) = DOMAIN([origin]))  NNREF(TAGSET([V]) = Set_cup([TAGSET([head
 soup_cookie_parse(const char  FINAL NULLTERMSTR MEMPRED(DOMAIN) * STRINGPTR header,
 		  SoupURI     FINAL *origin)
   OKEXTERN;
-SoupCookie *soup_cookie_copy                    (SoupCookie  *cookie);
+SoupCookie FINAL * REF(DOMAIN([V]) = DOMAIN([cookie]))
+                   REF(TAGSET([V]) = TAGSET([cookie])) 
+                   REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
+                   START VALIDPTR ROOM_FOR(SoupCookie)
+                   /* LOC(!C) */
+	     soup_cookie_copy                    (SoupCookie  FINAL *
+						  START VALIDPTR ROOM_FOR(SoupCookie) 
+						  REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
+						  cookie) OKEXTERN;
 
 const char *soup_cookie_get_name                (SoupCookie  *cookie);
 void        soup_cookie_set_name                (SoupCookie  *cookie,
@@ -55,7 +63,9 @@ void        soup_cookie_set_value               (SoupCookie  *cookie,
 const char *soup_cookie_get_domain              (SoupCookie  *cookie);
 void        soup_cookie_set_domain              (SoupCookie  *cookie,
 						 const char  *domain);
-const char *soup_cookie_get_path                (SoupCookie  *cookie);
+const char NULLTERMSTR * LOC(COOKIE_PATH)
+soup_cookie_get_path    (SoupCookie  FINAL INST(COOKIE_PATH,COOKIE_PATH) *cookie) OKEXTERN;
+
 void        soup_cookie_set_path                (SoupCookie  *cookie,
 						 const char  *path);
 void        soup_cookie_set_max_age             (SoupCookie  *cookie,
@@ -71,7 +81,10 @@ void        soup_cookie_set_http_only           (SoupCookie  *cookie,
 						 gboolean     http_only);
 
 char       *soup_cookie_to_set_cookie_header    (SoupCookie  *cookie);
-char       *soup_cookie_to_cookie_header        (SoupCookie  *cookie);
+
+
+char       NULLTERMSTR DOMAIN_STR *START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))
+soup_cookie_to_cookie_header        (SoupCookie  FINAL *cookie) OKEXTERN;
 
 gboolean    soup_cookie_applies_to_uri          (SoupCookie  *cookie,
 						 SoupURI     *uri);

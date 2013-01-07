@@ -221,7 +221,7 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
       soup_cookie = soup_cookie_parse(m->content, uri);
       if (soup_cookie) {
         c = malloc(sizeof(*c));
-        c->domain = domain_strdup(t->tab_origin);
+        c->domain = strdup(t->tab_origin);
         c->cookie = soup_cookie;
         add_cookie(m->src_fd, c);
       }
@@ -256,11 +256,11 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
         l = get_cookies(domain, c->path);
         if (l) {
           serial = serialize_cookie_list(l);
-          if (result) {
-            result = strapp(c->domain, result, serial);
-          } else {
-            result = domain_strdup(serial);
-          }
+          /* if (result) { */
+          /*   result = strapp(c->domain, result, serial); */
+          /* } else { */
+            result = strdup(serial);
+          /* } */
         }
       }
       if (result) {

@@ -20,11 +20,8 @@
 /* }; */
 
 struct cookie {
-  char parse_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain; /*simplification*/
-  SoupCookie FINAL * FINAL
-  REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
-    ROOM_FOR(SoupCookie) START VALIDPTR 
-  cookie;
+  char parse_string /* REF(DOMAIN([V]) = THE_STRING([V])) */  FINAL LOC(CD) domain; /*simplification*/
+  SoupCookie FINAL * FINAL REF(DOMAIN([V]) = THE_STRING([domain])) REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]) ROOM_FOR(SoupCookie) START VALIDPTR cookie;
 };
 
 struct cookie * REF(TAGSET([V]) = Set_cup([TAGSET([cookie]);TAGSET([domain])]))
