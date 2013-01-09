@@ -20,7 +20,7 @@
 /* }; */
 
 struct cookie {
-  char parse_string /* REF(DOMAIN([V]) = THE_STRING([V])) */  FINAL LOC(CD) domain; /*simplification*/
+  char FINAL parse_string /* REF(DOMAIN([V]) = THE_STRING([V])) */  FINAL LOC(CD) domain; /*simplification*/
   SoupCookie FINAL * FINAL REF(DOMAIN([V]) = THE_STRING([domain])) REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]) ROOM_FOR(SoupCookie) START VALIDPTR cookie;
 };
 

@@ -221,6 +221,7 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
   return head;
 }
 
+#if 0
 char *
 serialize_cookie_list(struct cookie_list *l) CHECK_TYPE
 {
@@ -239,3 +240,4 @@ serialize_cookie_list(struct cookie_list *l) CHECK_TYPE
 
   return response;
 }
+#endif

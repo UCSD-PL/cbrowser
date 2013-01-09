@@ -40,6 +40,7 @@ add_cookie(int soc,
 struct cookie_list *
 NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
 NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain_str]))
+NNREF(? COOKIE_DOMAIN_GET([THE_STRING([domain_str]);DOMAIN([V])]))
 get_cookies(char NULLTERMSTR DOMAIN_STR FINAL *STRINGPTR domain_str,
             char NULLTERMSTR DOMAIN_STR FINAL *STRINGPTR path) OKEXTERN;
 

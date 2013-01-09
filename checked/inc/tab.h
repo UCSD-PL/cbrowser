@@ -16,6 +16,6 @@ struct tab {
 #define KERNEL_TABS_FINAL struct tab FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct tab) FINAL * ARRAY START VALIDPTR SIZE_GE(40) 
 
 void init_tab_process(KERNEL_TABS tabx, int tab_idx, char NULLTERMSTR * STRINGPTR init) OKEXTERN; 
-void tab_kill(KERNEL_TABS_FINAL tabs, int tab_idx, int signal);
+void tab_kill(KERNEL_TABS_FINAL tabs, int tab_idx, int signal) OKEXTERN;
 int  tab_fd(KERNEL_TABS_FINAL tabs, int tab_idx) OKEXTERN;
 char NULLTERMSTR* NNSTART NNSTRINGPTR tab_title(KERNEL_TABS_FINAL tabs,  int tab_idx) OKEXTERN;

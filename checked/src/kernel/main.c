@@ -161,7 +161,7 @@ main (int REF(V > 0) argc,
     if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
       if (FD_ISSET(0, &readfds)) { //stdin
         scanf("%1s", &c);
-        //        c = nondet();
+                c = nondet();
         process_input_char(tabs, c);
       } else {
         for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)

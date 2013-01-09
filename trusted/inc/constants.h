@@ -8,6 +8,7 @@
 
 /* Predicates */
 #define DOMAIN_STR MEMPRED(DOMAIN)
+#define ICHAR REF(V = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])]))
 #define VALID_TAB  REF(&& [V >= 0; V < MAX_NUM_TABS])
 
 /* Handy */

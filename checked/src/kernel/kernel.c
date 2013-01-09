@@ -87,10 +87,6 @@ add_tab(KERNEL_TABS tabs)
     num_tab++;
     init_tab_process(tabs, curr, "None"); //TODO: arguments
     t = tabs[curr];
-    /* if (t) { */
-    /*   validptr(t); */
-    /*   init_cookie_process(t->tab_origin); */
-    /* } */
   } else {
     //TODO: print some error
   }
@@ -241,6 +237,7 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
   char *domain = NULL;
   char *serial = NULL;
   char *result = NULL;
+        struct cookie *test;
 
   c = parse_get_cookie(m->content, strlen(m->content));
 
@@ -255,12 +252,13 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
       while (domain = *domains) {
         l = get_cookies(domain, c->path);
         if (l) {
+          test = l->cookie;
           serial = serialize_cookie_list(l);
-          /* if (result) { */
-          /*   result = strapp(c->domain, result, serial); */
-          /* } else { */
+          if (result) {
+            result = strapp(c->domain, result, serial);
+          } else {
             result = strdup(serial);
-          /* } */
+          }
         }
       }
       if (result) {
