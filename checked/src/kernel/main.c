@@ -27,10 +27,10 @@
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
 
-NNKERNEL_TABS tabs;
+/* NNKERNEL_TABS tabs CHECK_TYPE; */
 
 void
-print_tab_title(int tab_idx)
+print_tab_title(KERNEL_TABS tabs, int tab_idx) CHECK_TYPE
 {
   if (tabs) {
     if (tab_idx == current_tab()) {
@@ -68,6 +68,7 @@ kexit()
   //TODO
   if (tabs) {
     for (i = 0; i < num_tabs(); i++) {
+      if (!tabs) return;
       tab_kill(tabs, i, SIGINT);
       //     cp = get_cookie_process(tabs[i]->tab_origin);
       //if (cp) {
@@ -89,6 +90,7 @@ set_readfds(fd_set *readfds)
   FD_ZERO(readfds);
   FD_SET(0, readfds);
   for (i=0; i<num_tabs(); i++) {
+    if(!tabs) return 0;
     soc = tab_fd(tabs, i);
     FD_SET(soc, readfds);
     if (soc > max) {
@@ -105,7 +107,6 @@ set_readfds(fd_set *readfds)
   }
   return max;
 }
-
 int 
 tab_of_fd(int fd)
 {
@@ -130,7 +131,7 @@ tab_of_fd(int fd)
 void
 handler(int s)
 {
-  fprintf(stderr, "Interrupt caught, cleaning up...\n");
+  fprintf(stderr, "Kernel interrupt caught, cleaning up...\n");
   exit(0);
 }
 
@@ -140,16 +141,19 @@ main (int REF(V > 0) argc,
                        * START NONNULL ARRAY SIZE(argc * 4) argv)
   GLOBAL(PROGRAM_NAME_LOC) CHECK_TYPE
 {
-  char c;
+  char c = 0;
   fd_set readfds;
   int max_fd;
   int ready_tab;
   message *m;
   int tab_idx;
   int fd;
+  int i;
   /* make_command_args_global(argc, argv); */
   /* parse_options(argc, argv); */
   tabs = malloc(10*sizeof(*tabs));
+  for (i = 0; i < 10; i++)
+    tabs[i] = 0;
   ui_init();
 
   signal(SIGINT, handler);
@@ -161,7 +165,6 @@ main (int REF(V > 0) argc,
     if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
       if (FD_ISSET(0, &readfds)) { //stdin
         scanf("%1s", &c);
-                c = nondet();
         process_input_char(tabs, c);
       } else {
         for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)

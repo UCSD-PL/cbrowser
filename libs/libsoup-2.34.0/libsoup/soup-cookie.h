@@ -45,7 +45,7 @@ SoupCookie FINAL *
   NNREF(DOMAIN([V]) = DOMAIN([origin]))
   NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])]))
 /* End Refinements */
-soup_cookie_parse(const char  FINAL NULLTERMSTR MEMPRED(DOMAIN) * STRINGPTR header,
+soup_cookie_parse(const char  FINAL NULLTERMSTR * STRINGPTR header,
 		  SoupURI     FINAL *origin)
   OKEXTERN;
 SoupCookie FINAL * REF(DOMAIN([V]) = DOMAIN([cookie]))
@@ -87,7 +87,7 @@ void        soup_cookie_set_http_only           (SoupCookie  *cookie,
 char       *soup_cookie_to_set_cookie_header    (SoupCookie  *cookie);
 
 
-char       NULLTERMSTR MEMPRED(DOMAIN) *START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))
+char       NULLTERMSTR *START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))
 soup_cookie_to_cookie_header        (SoupCookie  FINAL *cookie) OKEXTERN;
 
 gboolean    soup_cookie_applies_to_uri          (SoupCookie  *cookie,
@@ -112,11 +112,11 @@ char       *soup_cookies_to_cookie_header       (GSList      *cookies);
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([cookie])]))
 soup_cookie_domain_matches          (SoupCookie  FINAL *cookie,
-				     const char  MEMPRED(DOMAIN) NULLTERMSTR FINAL *host) OKEXTERN;
+				     const char NULLTERMSTR FINAL *host) OKEXTERN;
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
-soup_domain_matches          (const char  MEMPRED(DOMAIN) NULLTERMSTR FINAL *STRINGPTR domain,
-	                      const char  MEMPRED(DOMAIN) NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
+soup_domain_matches          (const char NULLTERMSTR FINAL *STRINGPTR domain,
+	                      const char NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
 
 G_END_DECLS
 

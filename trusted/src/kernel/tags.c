@@ -50,6 +50,7 @@ tags_of_ptr(void *p)
 char *
 tags_xfer_ptr(int s, char *p)
 {
+  return p;
 }
 
 int
@@ -60,4 +61,5 @@ tags_union(int s1, int s2)
 char *
 domain_strdup(char *s)
 {
+  return s;
 }

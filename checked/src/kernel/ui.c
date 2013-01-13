@@ -16,7 +16,7 @@ struct uiproc ui CHECK_TYPE;
 void
 ui_init() CHECK_TYPE
 {
-  char *args[3];
+  char *args[5];
   pid_t proc;
   int soc;
 

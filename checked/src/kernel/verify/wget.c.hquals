@@ -1,3 +1,8 @@
+// Some useful functions
+constant DATA_AT:    func(1, [@(0); @(1); int])
+constant THE_STRING: func(1, [@(0); int])
+constant DOMAIN: func(1, [@(0); int])
+
 qualif TabIdx(v:int) : v <= 10
 qualif TabIdx(v:int) : v < 10
 qualif TabOrNeg(v:int) : v != -1 => &&[v >= 0; v < 10]

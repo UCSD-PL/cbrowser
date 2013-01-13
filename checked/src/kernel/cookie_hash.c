@@ -5,19 +5,19 @@
 
 #include "debug.h"
 
-struct cookie_list * 
-START VALIDPTR ROOM_FOR(struct cookie_list)
-REF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([V])]))
-mk_list_node(char FINAL parse_string domain, struct cookie FINAL *c) OKEXTERN;
+/* struct cookie_list *  */
+/* START VALIDPTR ROOM_FOR(struct cookie_list) */
+/* REF(? COOKIE_DOMAIN_GET([DOMAIN([domain]); DOMAIN([V])])) */
+/* mk_list_node(char FINAL parse_string domain, struct cookie FINAL *c) OKEXTERN; */
 
+#ifndef CIL
+#define domainify_cookie(c,d) c
+#else
 extern
 struct cookie /* INST(CD,CD) */ * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
 domainify_cookie(struct cookie FINAL INST(CD,CD) * CookiePtr REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
-                 char NULLTERMSTR DOMAIN_STR FINAL * LOC(CD) STRINGPTR domain) OKEXTERN;
-
-extern
-char NULLTERMSTR DOMAIN_STR *
-domainify_string(char NULLTERMSTR *) OKEXTERN;
+                 char NULLTERMSTR ICHAR FINAL * LOC(CD) STRINGPTR domain) OKEXTERN;
+#endif
 
 int
 hash_fn(char FINAL *d, char FINAL *p)
@@ -41,61 +41,22 @@ hash_fn(char FINAL *d, char FINAL *p)
 int
 hash_cookie(struct cookie FINAL *c)
 {
-  return hash_fn(c->domain, domainify_string(c->cookie->path));
+  return hash_fn(c->domain, c->cookie->path);
 }
-
-/* struct cookie * */
-/* mk_cookie(char FINAL parse_string REF(DOMAIN([V]) = THE_STRING([V])) domain, */
-/*           char FINAL parse_string attrs, */
-/*           char FINAL parse_string path, */
-/*           int httpOnly) */
-/* { */
-/*   struct cookie *ret = malloc(sizeof(*ret)); */
-
-/*   ret->domain = domain_strdup(domain); */
-/*   ret->attrs  = domain_strdup(attrs); */
-/*   ret->path   = domain_strdup(path); */
-/*   ret->httpOnly = httpOnly; */
-
-/*   return domainify_cookie(ret); */
-/* } */
-/* struct cookie * */
-/* copy_cookie2(struct cookie FINAL *c, char *dom) */
-/* { */
-/*   SoupCookie *new_s; */
-/*   struct cookie *new; */
-
-/*   dom = strdup(dom); */
-/*   new_s = soup_cookie_copy(c->cookie); */
-
-/*   new = malloc(sizeof(*new)); */
-
-/*   new->cookie = new_s; */
-/*   new->domain = dom; */
-/*   return domainify_cookie(new, new->domain); */
-/*   /\* new->domain = strdup(c->domain); *\/ */
-/*   /\* new->cookie = soup_cookie_copy(c->cookie); *\/ */
-/*   /\* new = mk_cookie(c->domain, *\/ */
-/*   /\*                 c->attrs, *\/ */
-/*   /\*                 c->path, *\/ */
-/*   /\*                 c->httpOnly); *\/ */
-
-/*   /\* return new; *\/ */
-/* } */
 
 void
 check_soup_cookie_dom(SoupCookie FINAL *sc,
-                      char NULLTERMSTR DOMAIN_STR FINAL *
+                      char NULLTERMSTR ICHAR FINAL *
                       REF(DOMAIN([sc]) = THE_STRING([V])) s) OKEXTERN;
 
 struct cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr
-copy_cookie(struct cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr c) CHECK_TYPE
+  copy_cookie(struct cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr c) //CHECK_TYPE
 {
   SoupCookie *new_s;
   struct cookie *new;
 
   char *domstr = c->domain;
-  domstr   = strdup(domstr);
+  domstr   = immutable_strdup(mutable_strdup(domstr));
   new_s = soup_cookie_copy(c->cookie);
 
   new         = malloc(sizeof(*new));
@@ -103,15 +64,21 @@ copy_cookie(struct cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DERE
   new->cookie = new_s;
 
   return domainify_cookie(new, domstr);
-  /* return domainify_cookie(new, dom); */
-  /* new->domain = strdup(c->domain); */
-  /* new->cookie = soup_cookie_copy(c->cookie); */
-  /* new = mk_cookie(c->domain, */
-  /*                 c->attrs, */
-  /*                 c->path, */
-  /*                 c->httpOnly); */
+}
 
-  /* return new; */
+void
+insert_new_cookie(struct cookie_list ** ARRAY table, int i, struct cookie *c)
+{
+  struct cookie *new_cookie;
+  struct cookie_list *new_l;
+
+  new_cookie = copy_cookie(c);
+
+  new_l = malloc(sizeof(*new_l));
+  new_l->next = NULL;
+  new_l->cookie = new_cookie;
+
+  table[i] = new_l;
 }
 
 void
@@ -122,15 +89,16 @@ add_cookie(int soc, struct cookie *c) CHECK_TYPE
   struct cookie *new_cookie;
 
   i = hash_cookie(c);
+
+  if (!table) {
+    table = malloc(53*sizeof(*table));
+  }
+
   l = table[i];
 
   if (l == NULL)
   {
-    new_cookie = copy_cookie(c);
-    new_l = malloc(sizeof(*l));
-    new_l->next = NULL;
-    new_l->cookie = new_cookie;
-    table[i] = new_l;
+    insert_new_cookie(table, i, c);
   }
   else
   {
@@ -146,35 +114,26 @@ add_cookie(int soc, struct cookie *c) CHECK_TYPE
   }
 }
 
-void
-expected_node(
-struct cookie_list FINAL * 
-NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
-NNREF(THE_STRING([DEREF([V])]) = THE_STRING([domain]))
-NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain])) n,
-char FINAL NULLTERMSTR DOMAIN_STR *STRINGPTR domain) OKEXTERN;
-
-void
-expected_cookie(struct cookie FINAL * CookiePtr REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) c) OKEXTERN;
-
 struct cookie *
 copy_if_match(struct cookie FINAL *c, char FINAL *domain)
 {
   struct cookie *new = NULL;
 
-  if (!strcmp(c->domain, domain)) {
+  if (!strcmp(mutable_strdup(c->domain), mutable_strdup(domain))) {
     new = copy_cookie(c);
   }
 
   return new;
 }
 
-struct cookie_list FINAL *
-NNSTART NNVALIDPTR NNROOM_FOR(struct cookie_list)
-NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain]))
-NNREF(DEREF([V]) = 0)
-make_cookie_node_cond(struct cookie FINAL * CookiePtr REF(DOMAIN([V]) = THE_STRING([DEREF([V])])),
-                      char FINAL NULLTERMSTR DOMAIN_STR *STRINGPTR domain) OKEXTERN;
+#ifndef CIL
+#define domainify_cookie_list(l) l
+#else
+struct cookie_list INST(C,C) * LOC(L)
+START VALIDPTR ROOM_FOR(struct cookie_list)
+REF(DOMAIN([V]) = DOMAIN([DEREF([V + 4])]))
+domainify_cookie_list(struct cookie_list FINAL INST(C,C) * LOC(L) l) OKEXTERN;
+#endif
 
 struct cookie_list INST(C,C) *
 make_cookie_node(struct cookie FINAL * LOC(C) c)
@@ -185,9 +144,8 @@ make_cookie_node(struct cookie FINAL * LOC(C) c)
   l->cookie = c;
   l->next   = NULL;
 
-  return l;
+  return domainify_cookie_list(l);
 }
-                 
 
 struct cookie_list *
 get_cookies(char *domain_str, char *path) CHECK_TYPE
@@ -195,21 +153,26 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
   struct cookie_list *l, *head = NULL, *curr = NULL, *new = NULL;
   struct cookie *c, *new_cookie;
   char  *cookie_domain, *new_domain;
+  int i;
 
-  l = table[hash_fn(domain_str, path)];
+  i = hash_fn(domain_str, path);
+
+  if (!table) return NULL;
+
+  l = table[i];
 
   while (l)
   {
     c = l->cookie;
     new_cookie = copy_if_match(c, domain_str);
     if (new_cookie &&
-        !strcmp(path, domainify_string(soup_cookie_get_path(new_cookie->cookie))))
+        !strcmp(path, soup_cookie_get_path(new_cookie->cookie)))
     {
       new = make_cookie_node(new_cookie);
 
       if (!head) {
-      head = new;
-      curr = new;
+        head = new;
+        curr = new;
       } else {
         curr->next = new;
         curr = curr->next;
@@ -218,26 +181,24 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
     l = l->next;
   }
 
-  return head;
+  return NULL;
 }
 
-#if 0
-char *
-serialize_cookie_list(struct cookie_list *l) CHECK_TYPE
-{
-  char *cookie_string = NULL;
-  char *response = NULL;
+/* char * */
+/* serialize_cookie_list(struct cookie_list *l) CHECK_TYPE */
+/* { */
+/*   char *cookie_string = NULL; */
+/*   char *response = NULL; */
 
-  while (l) {
-    cookie_string = soup_cookie_to_cookie_header(l->cookie->cookie);
-    if (response) {
-      response = strapp("%s; %s", response, cookie_string);
-    } else {
-      response = cookie_string;
-    }
-    l = l->next;
-  }
+/*   while (l) { */
+/*     cookie_string = soup_cookie_to_cookie_header(l->cookie->cookie); */
+/*     if (response) { */
+/*       response = immutable_strdup(strapp("%s; %s", response, cookie_string)); */
+/*     } else { */
+/*       response = immutable_strdup(cookie_string); */
+/*     } */
+/*     l = l->next; */
+/*   } */
 
-  return response;
-}
-#endif
+/*   return response; */
+/* } */

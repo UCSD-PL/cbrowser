@@ -72,7 +72,7 @@ typedef enum {
 typedef struct {
   mtypes FINAL type;
   int FINAL src_fd;
-  char DOMAIN_STR NULLTERMSTR * STRINGPTR START LOC(L) FINAL content;
+  char NULLTERMSTR ICHAR * STRINGPTR START LOC(L) FINAL content;
 } message;
 
 struct get_cookie {
@@ -90,7 +90,7 @@ void
 check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;
 
 struct get_cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct get_cookie) NNREF(TAGSET([V]) = TAGSET([get_cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
-parse_get_cookie(char DOMAIN_STR NULLTERMSTR FINAL * STRINGPTR get_cookie_str,
+parse_get_cookie(char NULLTERMSTR ICHAR FINAL * STRINGPTR get_cookie_str,
                  size_t n) OKEXTERN;
 
 message *
@@ -106,7 +106,7 @@ REF(Domain(Field(V,4) : int) = Domain(fd))
 REF(Domain(Field(V,8)) = Domain(c))
 REF((Field(V, 4) : int) = fd)
 /* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
-create_msg(mtypes type, int fd, char FINAL DOMAIN_STR NULLTERMSTR * NNSTRINGPTR LOC(L) c) OKEXTERN;
+create_msg(mtypes type, int fd, char NULLTERMSTR ICHAR FINAL * NNSTRINGPTR LOC(L) c) OKEXTERN;
 void write_message_soc(int soc,
                        message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
 

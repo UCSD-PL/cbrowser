@@ -1,0 +1,18 @@
+// Some useful functions
+constant DOMAIN:     func(1, [@(0); int])
+constant DATA_AT:    func(1, [@(0); @(1); int])
+constant THE_STRING: func(1, [@(0); int])
+
+//Tagsets
+qualif Tag_Singleton(v): TAGSET([v]) = Set_sng([v])
+
+//Equality
+qualif Eq_Domain(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
+qualif Eq_Tagset(v:int, a:ptr): TAGSET([v]) = TAGSET([a])
+qualif Eq_Domain_String(v:ptr,s:ptr): DOMAIN([v]) = THE_STRING([s])
+
+//Tabs
+qualif KernelTabs(v:ptr): v + 40 <= BLOCK_END([v])
+
+//Immutable Strings
+qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]); THE_STRING([BLOCK_BEGIN([VVADDR])])])

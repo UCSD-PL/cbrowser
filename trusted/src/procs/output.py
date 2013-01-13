@@ -32,9 +32,11 @@ def olog_nonl(str):
     sys.stderr.flush()
 
 def test_loop(soc):
+    f = open("~/ui.log", "w")
     while True:
         m = msg.read_message_soc(soc)
         olog("Received message: %s" % str(m))
+        f.write(msg.content)
 
 def signal_handler(signal, frame):
     sys.exit(0)

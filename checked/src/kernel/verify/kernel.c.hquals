@@ -1,3 +1,8 @@
+// Some useful functions
+constant DOMAIN:     func(1, [@(0); int])
+constant DATA_AT:    func(1, [@(0); @(1); int])
+constant THE_STRING: func(1, [@(0); int])
+
 qualif TabIdx(v:int) : v >= 0
 qualif TabIdx(v:int) : v <= 10
 qualif TabIdx(v:int) : v < 10
@@ -12,19 +17,18 @@ qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([
 qualif TagsetEqInt(v:int, x:int):   TAGSET([v])                      = TAGSET([x])
 qualif MsgTypeFdTags(v:ptr):        TAGSET([v])                      = TAGSET([(DEREF([v + 4]) : int)])
 qualif MsgContentFdTags(v:ptr):     TAGSET([DEREF([v + 8])])         = TAGSET([(DEREF([v + 4]) : int)])
-qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
-qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
+// qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
+// qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
 qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 
 //Domain functions
-constant DOMAIN: func(1, [@(0); int])
-constant THE_STRING: func(1, [@(0); int])
+qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])])
 qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
 qualif StringDomain(v:ptr, p:ptr): v != 0 => DOMAIN([v]) = THE_STRING([p])
 qualif StringDomain(v:ptr): v != 0 => DOMAIN([v]) = THE_STRING([v])
 qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([v]) = THE_STRING([p])
 qualif DomainEqPtrs(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
-qualif DomainStr(v:int): && [BLOCK_BEGIN([VVADDR]) <= VVADDR; VVADDR < BLOCK_END([VVADDR])] => DOMAIN([v]) = DOMAIN([VVADDR])
+//qualif DomainStr(v:int): && [BLOCK_BEGIN([VVADDR]) <= VVADDR; VVADDR < BLOCK_END([VVADDR])] => DOMAIN([v]) = DOMAIN([VVADDR])
 qualif MsgContentFdDomain(v:ptr):   DOMAIN([DEREF([v + 8])])         = DOMAIN([(DEREF([v + 4]) : int)])
 
 // Message Types      

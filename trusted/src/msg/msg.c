@@ -192,4 +192,5 @@ payload(message *m, char *buf)
 message *
 tags_xfer_msg(int s, message *m)
 {
+  return m;
 }

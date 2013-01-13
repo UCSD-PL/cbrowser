@@ -129,4 +129,5 @@ def main():
         tlog("Tab died: %s" % e)
     tlog("DONE")
 
+libsoup = ctypes.CDLL("../../../libs/libsoup-2.34.0/libsoup/.libs/libsoup-2.4.so")
 main()

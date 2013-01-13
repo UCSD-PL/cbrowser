@@ -5,7 +5,7 @@
 #include "msg.h"
 #include "tab.h"
 
-#define kstr char DOMAIN_STR NULLTERMSTR * NNSTRINGPTR NNSTART
+#define kstr char NULLTERMSTR * NNSTRINGPTR NNSTART
 
 
 // Kernel

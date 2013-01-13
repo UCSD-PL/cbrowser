@@ -7,8 +7,8 @@ CFLAGS += -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
 LFLAGS += -L$(CURDIR)/../../../trusted/src/kernel -ltrusted
 LFLAGS += -L$(CURDIR)/../../../trusted/src/msg    -lmsg
 
-OBJS= tags.o
-##      cookie_util.o
+OBJS= tags.o \
+      cookie_util.o
 
 all: libtrusted.so
 

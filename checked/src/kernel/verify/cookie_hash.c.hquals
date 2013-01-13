@@ -1,3 +1,8 @@
+// Some useful functions
+constant DOMAIN:     func(1, [@(0); int])
+constant DATA_AT:    func(1, [@(0); @(1); int])
+constant THE_STRING: func(1, [@(0); int])
+
 qualif TabIdx(v:int) : v >= 0
 qualif TabIdx(v:int) : v <= 10
 qualif TabIdx(v:int) : v < 10
@@ -23,24 +28,7 @@ qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([(DEREF([v + 4]) : int)])])
 qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
 qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 
-// Type of Messages that can be sent
-// qualif OkMessage(v:ptr):
-//   || [&& [(DEREF([v]) : int) = 0; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
-//       && [(DEREF([v]) : int) = 2; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
-//       && [(DEREF([v]) : int) = 2; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
-//       && [(DEREF([v]) : int) = 4];
-//       && [(DEREF([v]) : int) = 7; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
-//       && [(DEREF([v]) : int) = 12; ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) :int)]);
-//                                                         DOMAIN([DEREF([v + 8])])])];
-//       && [(DEREF([v]) : int) = 15; DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v+4]) :int)])];
-//       (? Set_emp([TAGSET([DEREF([v + 8])])]))]
-
-//       //&& [(DEREF([v]) : int) = 13; ? COOKIE_DOMAIN_SET([DOMAIN([DEREF([v + 8])]);DOMAIN([(DEREF([v+4]) :int)])])];
-//       //&& [(DEREF([v]) : int) = 14;  ? COOKIE_DOMAIN_GET([DOMAIN([DEREF([v + 8])]);DOMAIN([(DEREF([v+4]) :int)])])];
-
-//Domain functions
-constant DOMAIN: func(1, [@(0); int])
-constant THE_STRING: func(1, [@(0); int])
+qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])])
 qualif StringDomain(v:int, p:ptr)          : v != 0 => DOMAIN([v]) = DOMAIN([p])
 qualif StringDomain(v:ptr)                 : v != 0 => DOMAIN([v]) = THE_STRING([v])
 qualif StringDomain(v:ptr, p:ptr)          : v != 0 => DOMAIN([v]) = THE_STRING([p])
@@ -61,24 +49,14 @@ qualif DomainEqNext(v:ptr): DOMAIN([v]) = DOMAIN([DEREF([v + 4])])
 qualif CookieStringEq(v:ptr, c:ptr): THE_STRING([DEREF([v])]) = THE_STRING([DEREF([c])])
 qualif StringEqDerefCookieString(v:ptr, c:ptr): THE_STRING([v]) = THE_STRING([DEREF([c])])
 
-qualif DomainStr(v:int): && [BLOCK_BEGIN([VVADDR]) <= VVADDR; VVADDR < BLOCK_END([VVADDR])] => DOMAIN([v]) = DOMAIN([VVADDR])
-
 qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 4]) : int)
 qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 8]) : int)
 
-// Message Types      
-//qualif K2G_DISPLAY_SHM(v:ptr): (DEREF([v]) : int) = 0        
-//qualif REQ_URI_FOLLOW(v:ptr):  (DEREF([v]) : int) = 2        
-//qualif RENDER(v:ptr):          (DEREF([v]) : int) = 4        
-//qualif RES_URI(v:ptr):         (DEREF([v]) : int) = 7        
-//qualif RES_COOKIE(v:ptr):      (DEREF([v]) : int) = 12
-//qualif K2C_SET_COOKIE(v:ptr):  (DEREF([v]) : int) = 13
-//qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 14
-//qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
-
 //Cookie Domain Policy
-//constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
-//constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
+constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
+constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
+axiom: forall [d:int]. ? COOKIE_DOMAIN_GET([d;d])
+
 //qualif   D1SubD2Set(v:ptr, d:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([d])])
 //qualif   D1SubD2Set(d:int, v:ptr): ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([d])])
 //qualif   D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([d])])
@@ -101,6 +79,8 @@ qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 8]) : int)
 // qualif CookieListDomain(v:ptr, s:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([v])])
 
 qualif HashIdx(v:int): v < 53
+qualif TableSize(v:ptr): v != 0 => BLOCK_BEGIN([v]) + 212 <= BLOCK_END([v])
+qualif LinkedList(v:ptr, p:ptr): p > 0 => v > 0
 
 qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
                                       DOMAIN([DEREF([v+4])])  = DOMAIN([v]); 

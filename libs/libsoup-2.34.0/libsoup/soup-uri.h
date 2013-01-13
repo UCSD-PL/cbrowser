@@ -44,7 +44,7 @@ extern gpointer _SOUP_URI_SCHEME_FILE, _SOUP_URI_SCHEME_DATA;
 SoupURI	   *soup_uri_new_with_base         (SoupURI    *base,
 					    const char *uri_string);
 SoupURI	   * NNSTART NNVALIDPTR NNROOM_FOR(SoupURI) NNREF(DOMAIN([V]) = THE_STRING([uri_string])) NNREF(TAGSET([V]) = TAGSET([uri_string]))
-					 soup_uri_new(const char MEMPRED(DOMAIN) NULLTERMSTR FINAL * STRINGPTR uri_string) OKEXTERN;
+					 soup_uri_new(const char NULLTERMSTR FINAL * STRINGPTR uri_string) OKEXTERN;
 
 char   	   *soup_uri_to_string             (SoupURI    *uri,
 					    gboolean    just_path_and_query);

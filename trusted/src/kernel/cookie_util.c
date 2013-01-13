@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "cookie_util.h"
 
@@ -25,7 +26,7 @@ gettable_domains(char *domain)
   next = cur+1;
   while (cur) {
     if (i >= n) {
-      d = realloc(d, (2*n)*sizoef(*d));
+      d = realloc(d, (2*n)*sizeof(*d));
       n = 2*n;
     }
     d[i] = cur;
@@ -36,7 +37,7 @@ gettable_domains(char *domain)
 
   return d;
 }
-
+#if 0
 void
 may_get_cookie(char *domain, struct cookie *c)
 {
@@ -143,3 +144,4 @@ print_cookie(struct cookie *c)
 
   printf ("\n");
 }
+#endif

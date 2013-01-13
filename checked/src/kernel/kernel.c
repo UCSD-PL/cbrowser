@@ -8,7 +8,7 @@
 #include <search.h>
 //#include "str.h"
 #include "proc.h"
-//#include "cookie_util.h"
+#include "cookie_util.h"
 //#include "cookie_proc.h"
 //#include "cookie_jar.h"
 #include "cookie_hash.h"
@@ -74,8 +74,8 @@ void
 render(KERNEL_TABS tabs, int tab_idx)
 {
   message *m;
-  //  m = create_msg(RENDER, tab_fd(tabs, tab_idx), "");
-  //  write_message(m);
+  //m = create_msg(RENDER, tab_fd(tabs, tab_idx), "");
+  //write_message(m);
 }
 
 void
@@ -136,7 +136,7 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(int tagctx, message *m)
+handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m)  CHECK_TYPE
 {
   message *r;
   char *content;
@@ -144,6 +144,7 @@ handle_req_uri_follow(int tagctx, message *m)
   int tags_0;
   int tags_1;
 
+  //spec of ui_soc() needs some thought
   uisoc = ui_soc();
 
   tags_0 = tags_of_int(uisoc);
@@ -155,13 +156,12 @@ handle_req_uri_follow(int tagctx, message *m)
   }
 
   // Retrieve contents of the URI stored in m->content
-  content = wget(m->content);
+  content = wget(mutable_strdup(m->content));
+  if (! content) return;
+  content = immutable_strdup(content);
   content = tags_xfer_ptr(tags_0, content);
 
   tags_1 = tags_union(tags_0, tags_of_ptr(content));
-  if (!content) {
-    return; //error?
-  }
 
   // Send the result back
   r = create_msg(RES_URI, m->src_fd, content);
@@ -187,8 +187,9 @@ handle_display_shm(int tagctx, message *m)
   }
 }
 
-void check_domain(char FINAL NULLTERMSTR DOMAIN_STR *STRINGPTR d,
+void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d,
                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN;
+
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
 {
@@ -207,17 +208,18 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
       continue;
 
     if (t->soc == m->src_fd) {
-      uri = soup_uri_new(t->tab_origin);
+      uri = soup_uri_new(mutable_strdup(t->tab_origin));
 
       if (!uri) {
         exit(1);
         return;
       }
 
-      soup_cookie = soup_cookie_parse(m->content, uri);
+      soup_cookie = soup_cookie_parse(mutable_strdup(m->content), uri);
       if (soup_cookie) {
         c = malloc(sizeof(*c));
-        c->domain = strdup(t->tab_origin);
+        // Fix the following
+        c->domain = immutable_strdup(mutable_strdup(t->tab_origin));
         c->cookie = soup_cookie;
         add_cookie(m->src_fd, c);
       }
@@ -237,9 +239,9 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
   char *domain = NULL;
   char *serial = NULL;
   char *result = NULL;
-        struct cookie *test;
+  struct cookie *test;
 
-  c = parse_get_cookie(m->content, strlen(m->content));
+  c = parse_get_cookie(m->content, strlen(mutable_strdup(m->content)));
 
   if (!c) return;
 
@@ -247,21 +249,23 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && soup_domain_matches(c->domain, t->tab_origin)) {
-      domains = gettable_domains(c->domain); 
+    if (t->soc == m->src_fd && soup_domain_matches(mutable_strdup(c->domain), mutable_strdup(t->tab_origin))) {
+      domains = gettable_domains(c->domain);
       while (domain = *domains) {
         l = get_cookies(domain, c->path);
         if (l) {
           test = l->cookie;
           serial = serialize_cookie_list(l);
           if (result) {
-            result = strapp(c->domain, result, serial);
+            result = immutable_strdup(strapp(mutable_strdup(c->domain),
+                                             mutable_strdup(result),
+                                             mutable_strdup(serial)));
           } else {
-            result = strdup(serial);
+            result = immutable_strdup(mutable_strdup(serial));
           }
         }
       }
-      if (result) {
+     if (result) {
           m = create_msg(RES_COOKIE, t->soc, result);
           write_message(m);
       }
@@ -294,6 +298,7 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
   tags_1 = tags_union(tags_of_ptr(m->content), tags_0);
   if (m->content == NULL) {
     //tags_1
+
     return; //error
   } //then
 
