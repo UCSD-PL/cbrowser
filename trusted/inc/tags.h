@@ -1,5 +1,6 @@
 #include <csolve.h>
 #include "constants.h"
+#include "types.h"
 
 #define TAGGEDP(_v, _tag) (? Set_mem([_tag; TAGSET([_v])])) 
 #define UTAGGEDP(_v, _tag) (TAGS(_v) = Set_sng([_tag]))
@@ -36,6 +37,10 @@ assert_untagged_int(int REF(? Set_emp([Tags(V)])) x)
 OKEXTERN;
 
 void
+assert_untagged_ptr(void * REF(? Set_emp([Tags(V)])) x)
+OKEXTERN;
+
+void
 assert_same_tags(int REF(TAGSET([V]) = TAGSET([y])) x, int y)
 OKEXTERN;
 
@@ -60,8 +65,12 @@ char NULLTERMSTR ICHAR * LOC(L) NNSTART NNSTRINGPTR REF(p > 0 => V > 0)
 REF(TAGSET([V]) = Set_cup([TAGSET([s]);TAGSET([p])]))
 tags_xfer_ptr(int s, char NULLTERMSTR ICHAR FINAL * NNSTART NNSTRINGPTR LOC(L) p) OKEXTERN;
 
+int * START VALIDPTR ROOM_FOR(int) LOC(L) 
+/* REF(V = p) */
+REF(TAGSET([V]) = Set_cup([TAGSET([s]);TAGSET([p])]))
+tags_xfer_ptr2(int s, int * LOC(L) p) OKEXTERN;
 
 int
-REF(V = d)
+/* REF(V = d) */
 REF(TAGSET([V]) = TAGSET([s]))
 tags_xfer_int(int s, int d) OKEXTERN;

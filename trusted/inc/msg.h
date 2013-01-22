@@ -6,6 +6,7 @@
 #include "str.h"
 #include "tags.h"
 #include "constants.h"
+#include "types.h"
 
 typedef enum {
     K2G_DISPLAY_SHM,
@@ -36,9 +37,10 @@ typedef enum {
 #define MsgFdF(_f)       _f(MsgFd) 
 #define MsgContentF(_f)  _f(MsgContent)
 
-#define MsgPtrTags       MsgPtrF(Tags)
-#define MsgFdTags        MsgFdF(Tags)
-#define MsgContentTags   MsgContentF(Tags)
+#define MsgPtrTags        MsgPtrF(Tags)
+#define MsgFdTags         Tags(V + 4)
+#define MsgContentTags    MsgContentF(Tags)
+#define MsgContentPtrTags Tags(V + 8)
 
 #define MsgPtrDomain       MsgPtrF(Domain)
 #define MsgFdDomain        MsgFdF(Domain)
@@ -47,18 +49,19 @@ typedef enum {
 #define MSG_TYPE(type) ((DEREF([V]) : int) = type)
 
 #define TAB_PRIVATE_MSG(_tags)             \
-    && [MsgPtrTags     = _tags;            \
-        MsgContentTags = _tags]          
+  && [ MsgPtrTags = _tags;                 \
+       MsgContentTags = _tags]          
 
 #define SAME_DOMAIN(_domain)                    \
   && [MsgPtrDomain = _domain;                   \
       MsgContentDomain = _domain]               \
   
-#define READ_MSG_T                                    \
-  REF(&& [MsgPtrTags       = MsgFdTags;               \
-          MsgPtrDomain     = MsgFdDomain;             \
-          MsgContentTags   = MsgFdTags;               \
-          MsgContentDomain = MsgFdDomain])
+#define READ_MSG_T                                            \
+  REF(&& [MsgPtrTags        = MsgFdTags;                       \
+          MsgPtrDomain      = MsgFdDomain;                     \
+          MsgContentTags    = MsgFdTags;                       \
+          MsgContentPtrTags = MsgFdTags;                       \
+          MsgContentDomain  = MsgFdDomain])
 
 #define WRITE_MSG_T(soc)                                                \
   REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                     \
@@ -66,25 +69,31 @@ typedef enum {
           && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                     \
           && [MSG_TYPE(4)];                                             \
           && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];                 \
-          && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([soc]); MsgContentDomain])]; \
-          (? Set_emp([Tags(MsgContent)]))]) 
+          && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]); MsgContentDomain])]])
+
+          /* (? Set_emp([Tags(MsgContent)]))])  */
 
 typedef struct {
-  mtypes FINAL type;
-  int FINAL src_fd;
-  char NULLTERMSTR ICHAR * STRINGPTR START LOC(L) FINAL content;
+  mtypes                                          FINAL type;
+  int                                             FINAL src_fd;
+  char NULLTERMSTR ICHAR * START STRINGPTR LOC(L) /* REF(DOMAIN([V]) = DOMAIN([src_fd])) */ FINAL content;
 } message;
 
+#define SAFE_MESSAGE START VALIDPTR ROOM_FOR(message)
+
+message * SAFE_MESSAGE
+          READ_MSG_T
+          REF((DEREF([V + 4]) : int) = soc)
+read_message_soc(int soc) OKEXTERN;
+
 struct get_cookie {
-  char parse_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain;
-  char parse_string scheme;
-  char parse_string path;
+  char immutable_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain;
+  char immutable_string scheme;
+  char immutable_string path;
   int  httpOnly;
 };
 
 void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
-
-#define msg_start START VALIDPTR ROOM_FOR(message)
 
 void
 check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;
@@ -96,30 +105,30 @@ parse_get_cookie(char NULLTERMSTR ICHAR FINAL * STRINGPTR get_cookie_str,
 message *
 create_get_cookie(char *scheme, char *host, char *path, int for_http);
 
-message INST(L,L) FINAL *
-msg_start
-REF(Tags(V) = Set_cup([Tags(fd); Tags(c)]))
-REF(Tags(Field(V,4) : int) = Tags(fd))
-REF(Tags(Field(V,8)) = Tags(c))
-REF((Field(V,0): int) = type)
-REF(Domain(Field(V,4) : int) = Domain(fd))
+message INST(L,L) FINAL * SAFE_MESSAGE
+                          /* REF(Tags(V) = Set_cup([Tags(fd); Tags(c)])) */
+                          REF(Tags(V)     = Tags(type))
+                          REF(Tags(V + 4) = Tags(fd))
+                          REF(Tags(V + 8) = Tags(c))
+                          REF(Tags(Field(V,8)) = Tags(c))
+//                          REF(Tags(Field(V,4) : int) = Tags(fd))
+//REF(Tags(Field(V,8)) = Tags(c))
+REF((Field(V,0): int) = (DEREF([type]) : int))
+REF(Domain(Field(V,4) : int) = Domain((DEREF([fd]) : int)))
 REF(Domain(Field(V,8)) = Domain(c))
-REF((Field(V, 4) : int) = fd)
+REF((Field(V, 4) : int) = (DEREF([fd]) : int))
 /* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
-create_msg(mtypes type, int fd, char NULLTERMSTR ICHAR FINAL * NNSTRINGPTR LOC(L) c) OKEXTERN;
-void write_message_soc(int soc,
-                       message FINAL * WRITE_MSG_T(soc) m) OKEXTERN;
+create_msg(mtypes FINAL * type, int FINAL * VALIDPTR ROOM_FOR(int) fd, char NULLTERMSTR ICHAR FINAL * NNSTRINGPTR LOC(L) c) OKEXTERN;
 
-message *
-msg_start
-REF((DEREF([V + 4]) : int) = soc)
-REF(Tags(MsgFd) = Set_sng([soc]))
-READ_MSG_T
-read_message_soc(int soc) OKEXTERN;
+void write_message(message FINAL * WRITE_MSG_T(V + 4) m) OKEXTERN;
 
 message * LOC(L)
 START
-REF(TAGSET([V]) = TAGSET([s]))
+REF((Field(V,0): int) = (Field(m,0) : int))
+REF(Tags(V) = Set_cup([Tags(m); Tags(s)]))
+REF(Tags(V + 4) = Set_cup([Tags(m + 4); Tags(s)]))
+REF(Tags(V + 8) = Set_cup([Tags(m + 8); Tags(s)]))
+REF(Tags(Field(V,8)) = Set_cup([Tags(Field(m,8)); Tags(s)]))
 REF(BLOCK_BEGIN([V]) = BLOCK_BEGIN([m]))
 tags_xfer_msg(int s, message FINAL * LOC(L) START m) OKEXTERN;
 #endif

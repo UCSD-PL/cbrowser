@@ -4,6 +4,7 @@
 #include <csolve.h>
 #include <stdlib.h>
 #include "constants.h"
+#include "types.h"
 #include <libsoup/soup-types.h>
 #ifdef CIL
 #define SoupDate int *
@@ -20,7 +21,7 @@
 /* }; */
 
 struct cookie {
-  char parse_string FINAL LOC(CD) domain;
+  char immutable_string FINAL LOC(CD) domain;
   SoupCookie FINAL * FINAL REF(DOMAIN([V]) = THE_STRING([domain])) REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]) ROOM_FOR(SoupCookie) START VALIDPTR cookie;
 };
 

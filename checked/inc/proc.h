@@ -13,7 +13,7 @@ void
 init_piped_process(const char NULLTERMSTR * STRINGPTR procfile,
                    char       NULLTERMSTR * NNSTRINGPTR * START ARRAY VALIDPTR SIZE_GE(8) args,
                    pid_t *proc,
-                   int   REF(V > 0 => ? Set_emp([TAGSET([V])])) *soc)
+                   int   *REF(V > 0 => ? Set_emp([TAGSET([V])])) soc)
   OKEXTERN;
 
 #endif

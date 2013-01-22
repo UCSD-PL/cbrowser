@@ -82,7 +82,7 @@ insert_new_cookie(struct cookie_list ** ARRAY table, int i, struct cookie *c)
 }
 
 void
-add_cookie(int soc, struct cookie *c) CHECK_TYPE
+add_cookie(struct cookie *c) CHECK_TYPE
 {
   int i;
   struct cookie_list *l, *new_l;

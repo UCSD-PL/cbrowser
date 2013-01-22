@@ -26,12 +26,12 @@ append_lists(struct cookie_list * LOC(L) l1,
 OKEXTERN;
 
 void
-add_cookie(int soc,
+add_cookie(//int soc,
            struct cookie FINAL * 
            CookiePtr
-           /* REF(TAGSET([DEREF([V])])  = TAGSET([soc])) Not Necessary? */
-           REF(TAGSET([DEREF([V + 4])]) = Set_sng([soc]))
-           REF(DOMAIN([DEREF([V + 4])]) = DOMAIN([soc]))
+           /* REF(TAGSET([DEREF([V+4])])  = TAGSET([soc])) //Not Necessary? */
+           /* REF(TAGSET([DEREF([V + 4])]) = Set_sng([soc])) */
+           /* REF(DOMAIN([DEREF([V + 4])]) = DOMAIN([soc])) */
            REF(DOMAIN([DEREF([V + 4])]) = THE_STRING([DEREF([V])]))
            /* REF(? COOKIE_DOMAIN_GET([DOMAIN([soc]);DOMAIN([V])])) */
            /* REF(? COOKIE_DOMAIN_SET([DOMAIN([soc]);DOMAIN([V])])) */

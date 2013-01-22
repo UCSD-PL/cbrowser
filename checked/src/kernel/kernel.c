@@ -58,11 +58,11 @@ get_tab_idx(char ascii)
   }
 }
 
-void
-write_message(message FINAL *m)
-{
-  write_message_soc(m->src_fd, m);
-}
+/* void */
+/* write_message(message FINAL *m) */
+/* { */
+/*   write_message_soc(m->src_fd, m); */
+/* } */
 
 message*
 read_message(int fd)
@@ -74,8 +74,15 @@ void
 render(KERNEL_TABS tabs, int tab_idx)
 {
   message *m;
-  //m = create_msg(RENDER, tab_fd(tabs, tab_idx), "");
-  //write_message(m);
+  mtypes render = RENDER;
+  struct tab *t;
+  int x;
+  /* m = create_msg(&render, tab_fd(tabs, tab_idx), ""); */
+  if (t = tabs[tab_idx]) {
+    x = t->soc;
+    m = create_msg(&render, &x, "");
+    write_message(m);
+  }
 }
 
 void
@@ -136,21 +143,24 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m)  CHECK_TYPE
+handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m)
 {
   message *r;
   char *content;
-  int uisoc;
+  int *uisoc;
+  int *res_soc;
   int tags_0;
   int tags_1;
+  mtypes follow = REQ_URI_FOLLOW;
+  mtypes res    = RES_URI;
 
   //spec of ui_soc() needs some thought
   uisoc = ui_soc();
 
-  tags_0 = tags_of_int(uisoc);
-  if (uisoc > 0) {
+  tags_0 = tags_of_ptr(uisoc);
+  if (*uisoc > 0) {
     // Send message to the UI process
-    r = create_msg(REQ_URI_FOLLOW, uisoc, m->content);
+    r = create_msg(&follow, uisoc, m->content);
     r = tags_xfer_msg(tags_0, r);
     write_message(r);
   }
@@ -164,7 +174,10 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
   tags_1 = tags_union(tags_0, tags_of_ptr(content));
 
   // Send the result back
-  r = create_msg(RES_URI, m->src_fd, content);
+  res_soc=malloc(sizeof(*res_soc));
+  *res_soc = m->src_fd;
+  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->src_fd)), res_soc);
+  r = create_msg(&res, res_soc, content);
   r = tags_xfer_msg(tags_1, r);
   write_message(r);
   free(content);
@@ -173,22 +186,23 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
 void
 handle_display_shm(int tagctx, message *m)
 {
-  int uisoc;
+  int *uisoc;
   int tags_0;
   message *r;
+  mtypes dshm = K2G_DISPLAY_SHM;
 
   uisoc = ui_soc();
 
-  tags_0 = tags_union(tagctx, tags_of_int(uisoc));
-  if (uisoc > 0) {
-   r = create_msg(K2G_DISPLAY_SHM, uisoc, m->content);
-   r = tags_xfer_msg(tags_0, r);
-   write_message(r);
+  tags_0 = tags_of_ptr(uisoc);
+  if (*uisoc > 0) {
+    r = create_msg(&dshm, uisoc, m->content);
+    r = tags_xfer_msg(tags_0, r);
+    write_message(r);
   }
 }
 
-void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d,
-                  SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN;
+/* /\* void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d, *\/ */
+/* /\*                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN; *\/ */
 
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
@@ -208,20 +222,19 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
       continue;
 
     if (t->soc == m->src_fd) {
-      uri = soup_uri_new(mutable_strdup(t->tab_origin));
+      uri = soup_uri_new(t->tab_origin);
 
       if (!uri) {
         exit(1);
         return;
       }
 
-      soup_cookie = soup_cookie_parse(mutable_strdup(m->content), uri);
+      soup_cookie = soup_cookie_parse(m->content, uri);
       if (soup_cookie) {
         c = malloc(sizeof(*c));
-        // Fix the following
-        c->domain = immutable_strdup(mutable_strdup(t->tab_origin));
+        c->domain = strdupi(t->tab_origin);
         c->cookie = soup_cookie;
-        add_cookie(m->src_fd, c);
+        add_cookie(c);
       }
       return;
     }
@@ -232,6 +245,7 @@ void
 handle_get_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
+  int *res_soc;
   struct get_cookie *c;
   struct cookie_list *l = NULL, *l2 = NULL;
   struct tab *t;
@@ -240,6 +254,7 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
   char *serial = NULL;
   char *result = NULL;
   struct cookie *test;
+  mtypes getc = RES_COOKIE;
 
   c = parse_get_cookie(m->content, strlen(mutable_strdup(m->content)));
 
@@ -249,7 +264,11 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && soup_domain_matches(mutable_strdup(c->domain), mutable_strdup(t->tab_origin))) {
+    if (t->soc == m->src_fd && soup_domain_matches(c->domain, t->tab_origin)) {
+      /* if (c->domain[0] && c->domain[1]) */
+      /*   { */
+      /*     c->domain[0] = c->domain[1]; */
+      /*   } */
       domains = gettable_domains(c->domain);
       while (domain = *domains) {
         l = get_cookies(domain, c->path);
@@ -257,18 +276,24 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
           test = l->cookie;
           serial = serialize_cookie_list(l);
           if (result) {
-            result = immutable_strdup(strapp(mutable_strdup(c->domain),
-                                             mutable_strdup(result),
-                                             mutable_strdup(serial)));
+            result = strapp(c->domain,
+                            result,
+                            serial);
+            /* result = immutable_strdup(strapp(mutable_strdup(c->domain), */
+            /*                                  mutable_strdup(result), */
+            /*                                  mutable_strdup(serial))); */
           } else {
-            result = immutable_strdup(mutable_strdup(serial));
+            /* result = immutable_strdup(mutable_strdup(serial)); */
+            result = strdupi(serial);
           }
         }
       }
      if (result) {
-          m = create_msg(RES_COOKIE, t->soc, result);
-          write_message(m);
-      }
+       res_soc=malloc(sizeof(*res_soc));
+       *res_soc = m->src_fd;
+       m = create_msg(&getc, res_soc, result);
+       write_message(m);
+     }
       return;
     }
   }
@@ -302,7 +327,7 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     return; //error
   } //then
 
-  tags_2 = tags_union(tags_union(tags_of_int(m->type), tags_of_ptr(&m->type)), tags_1);
+  /* tags_2 = tags_union(tags_union(tags_of_int(m->type), tags_of_ptr(&m->type)), tags_1); */
   switch (m->type) {
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error

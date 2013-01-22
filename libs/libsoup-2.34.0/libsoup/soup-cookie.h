@@ -7,14 +7,14 @@
 #define SOUP_COOKIE_H 1
 
 #include <libsoup/soup-types.h>
-#include "csolve.h"
+#include <csolve.h>
 
 G_BEGIN_DECLS
 
 struct _SoupCookie {
 	char     NULLTERMSTR * name;
 	char     NULLTERMSTR * value;
-	char     FINAL NULLTERMSTR * domain;
+	char     ICHAR NULLTERMSTR ICHAR * domain;
 	char     NULLTERMSTR * LOC(COOKIE_PATH) path;
 	SoupDate *expires;
 	gboolean  secure;
@@ -39,13 +39,11 @@ SoupCookie *soup_cookie_new                     (const char  *name,
 SoupCookie *soup_kcookie_parse                   (const char  *header);
 
 SoupCookie FINAL *
-/* Refinemnts */
   NNSTART NNVALIDPTR NNROOM_FOR(SoupCookie)
   NNREF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
   NNREF(DOMAIN([V]) = DOMAIN([origin]))
   NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])]))
-/* End Refinements */
-soup_cookie_parse(const char  FINAL NULLTERMSTR * STRINGPTR header,
+soup_cookie_parse(const char  FINAL ICHAR NULLTERMSTR * STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
 		  SoupURI     FINAL *origin)
   OKEXTERN;
 SoupCookie FINAL * REF(DOMAIN([V]) = DOMAIN([cookie]))
@@ -112,11 +110,11 @@ char       *soup_cookies_to_cookie_header       (GSList      *cookies);
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([cookie])]))
 soup_cookie_domain_matches          (SoupCookie  FINAL *cookie,
-				     const char NULLTERMSTR FINAL *host) OKEXTERN;
+				     const char ICHAR NULLTERMSTR FINAL *host) OKEXTERN;
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
-soup_domain_matches          (const char NULLTERMSTR FINAL *STRINGPTR domain,
-	                      const char NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
+soup_domain_matches          (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,
+	                      const char ICHAR NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
 
 G_END_DECLS
 

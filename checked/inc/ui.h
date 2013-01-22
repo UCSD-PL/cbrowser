@@ -16,7 +16,6 @@ pid_t
 ui_proc()
   OKEXTERN;
 
-int //REF(V > 0 => (? Set_emp([TAGSET([V])])))
-REF(? Set_emp([TAGSET([V])]))
+int * START VALIDPTR ROOM_FOR(int) REF(? Set_emp([TAGSET([V])]))
 ui_soc()
   OKEXTERN;

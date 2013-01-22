@@ -1,3 +1,8 @@
+// Some useful functions
+constant DOMAIN:     func(1, [@(0); int])
+constant DATA_AT:    func(1, [@(0); @(1); int])
+constant THE_STRING: func(1, [@(0); int])
+
 qualif TabIdx(v:int) : v >= 0
 qualif TabIdx(v:int) : v <= 10
 qualif TabIdx(v:int) : v < 10
@@ -5,70 +10,68 @@ qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 
 qualif TagsetSng(v:ptr, t:int):     TAGSET([v])                      = Set_sng([t])
-qualif TagsetSngFld4(v:ptr, t:int): TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([t])
-qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])])         = Set_sng([t])
-qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([v])
-
-qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
-
-qualif MsgTypeFdTags(v:ptr):    TAGSET([v])              = TAGSET([(DEREF([V + 4]) : int)])
-qualif MsgContentFdTags(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([V + 4]) : int)])
-
+qualif NNTagsetSng(v:ptr, p:int):   v != 0 => TAGSET([v])            = TAGSET([p])
 qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
-qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([(DEREF([v + 4]) : int)])])
-qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
-qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
+qualif TagsetMsgPtr(v:ptr, t:ptr): TAGSET([v]) = TAGSET([t])
+qualif MsgTagsetFd(v:ptr): TAGSET([DEREF([v+8])]) = TAGSET([v + 4])
+qualif MsgContentEqTags(v:ptr, m:ptr): TAGSET([v+4]) = TAGSET([m+4])
 
-qualif MsgTagsUnion(v:ptr, a:int, p:ptr): TAGSET([v]) = Set_cup([TAGSET([a]); TAGSET([p])])
+qualif TagXferMsg1(v:ptr, m:ptr, s:int): &&[TAGSET([v]) = Set_cup([TAGSET([m]); TAGSET([s])]);
+                                            TAGSET([v+4]) = Set_cup([TAGSET([m+4]); TAGSET([s])]);
+                                            TAGSET([v+8]) = Set_cup([TAGSET([m+8]); TAGSET([s])]);
+                                            TAGSET([DEREF([v+8])]) = Set_cup([TAGSET([DEREF([m+8])]); TAGSET([s])])]
 
-// Specific message type
-qualif MsgIsReqURIFollow(v:ptr):
-  ((DEREF([v]) :int) = 2) =>
-    && [TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)]);
-        TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])]
-qualif MsgIsResURI(v:ptr):
-  ((DEREF([v]) :int) = 7) =>
-    && [TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)]);
-        TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])]
-
-// qualif TagsFieldEq0(v:ptr, p:ptr):
-//   TAGSET([v]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
-// qualif TagsFieldEq1(v:ptr, p:ptr):
-//   TAGSET([(DEREF([v + 4]) : int)]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
-// qualif TagsFieldEq2(v:ptr, p:ptr):
-//   TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([BLOCK_BEGIN([p]) + 4]) : int)])
-
-// Type of Messages that can be sent
-qualif OkMessage(v:ptr):
-  || [&& [(DEREF([v]) : int) = 0; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
-      && [(DEREF([v]) : int) = 2; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
-      && [(DEREF([v]) : int) = 2; ? Set_emp([TAGSET([(DEREF([v + 4]) :int)])])];
-      && [(DEREF([v]) : int) = 4
-];
-      && [(DEREF([v]) : int) = 7; TAGSET([v]) = TAGSET([(DEREF([v + 4]) :int)]); TAGSET([DEREF([v+8])]) = TAGSET([(DEREF([v + 4]) :int)])];
-      (? Set_emp([TAGSET([DEREF([v + 8])])]))]
 
 //Domain functions
-constant DOMAIN: func(1, [@(0); int])
-constant THE_STRING: func(1, [@(0); int])
+qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])])
 qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain(v:ptr, p:ptr): v != 0 => DOMAIN([v]) = THE_STRING([p])
 qualif StringDomain(v:ptr): v != 0 => DOMAIN([v]) = THE_STRING([v])
-qualif StringDomain(v:int, p:ptr): && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
-qualif StringDomain(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
-qualif StringDomain(v:ptr, p:ptr): DOMAIN([v]) = DOMAIN([p])
-qualif DomainIsString(v:ptr, s:ptr): DOMAIN([v]) = THE_STRING([s])
-//qualif StringEqWitness(v:int, s:int, t:ptr): v = 0 => THE_STRING([s]) = THE_STRING([t])
-qualif StringEq(v:ptr, p:ptr): THE_STRING([v]) = THE_STRING([p])
-qualif StringEq(v:ptr, p:ptr): THE_STRING([DEREF([v])]) = THE_STRING([p])
 qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([v]) = THE_STRING([p])
-qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([DEREF([v])]) = THE_STRING([p])
-qualif NNStringEq(v:ptr, p:ptr): v != 0 => THE_STRING([DEREF([v])]) = THE_STRING([DEREF([p])])
-//qualif StringEq(v:ptr, p:ptr): THE_STRING([DEREF([v])]) = THE_STRING([DEREF([p])])
+qualif DomainEqPtrs(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
+//qualif DomainStr(v:int): && [BLOCK_BEGIN([VVADDR]) <= VVADDR; VVADDR < BLOCK_END([VVADDR])] => DOMAIN([v]) = DOMAIN([VVADDR])
+qualif MsgContentFdDomain(v:ptr):   DOMAIN([DEREF([v + 8])])         = DOMAIN([(DEREF([v + 4]) : int)])
+//qualif TabFdDomain(v:ptr): v != 0 => DOMAIN([v + 8]) = DOMAIN([DEREF([v])])
 
 // Message Types      
 qualif K2G_DISPLAY_SHM(v:ptr): (DEREF([v]) : int) = 0        
 qualif REQ_URI_FOLLOW(v:ptr):  (DEREF([v]) : int) = 2        
 qualif RENDER(v:ptr):          (DEREF([v]) : int) = 4        
 qualif RES_URI(v:ptr):         (DEREF([v]) : int) = 7        
+qualif RES_COOKIE(v:ptr):      (DEREF([v]) : int) = 12
 qualif K2C_SET_COOKIE(v:ptr):  (DEREF([v]) : int) = 13
+qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 14
+qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
 
+qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
+                                      DOMAIN([DEREF([v+4])])  = DOMAIN([v]); 
+                                      DOMAIN([DEREF([v+8])])  = DOMAIN([v]); 
+                                      DOMAIN([DEREF([v+12])]) = DOMAIN([v])] 
+
+//Cookie Domain Policy
+constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
+constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
+
+//Transitivity
+axiom: forall [d1:int;d2:int;d3:int].
+       (&& [? COOKIE_DOMAIN_GET([d1;d2]);
+           ? COOKIE_DOMAIN_GET([d2;d3])] => ? COOKIE_DOMAIN_GET([d1;d3]))
+
+qualif D1GetD2(v:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([~d])])
+qualif D1SetD2(v:ptr): v != 0 => ? COOKIE_DOMAIN_SET([DOMAIN([v]);DOMAIN([~d])])
+qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([d]);DOMAIN([v])])
+qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
+qualif ParseCookieDomain(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([DEREF([v])])
+qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
+qualif NullTermStringArray(v:ptr): v != 0 => ((VVADDR + 8) < BLOCK_END([VVADDR]))
+qualif NND1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([DEREF([v])])])
+
+// Type of Messages that can be sent
+qualif OkMsg(v:ptr):
+       ||[&&[(DEREF([v]) : int) = 7; TAGSET([v]) = TAGSET([v + 4]); TAGSET([DEREF([v+8])]) = TAGSET([v + 4])];
+          &&[(DEREF([v]) : int) = 2; ? Set_emp([TAGSET([v + 4])])];
+          &&[(DEREF([v]) : int) = 2; TAGSET([v]) = TAGSET([v + 4]); TAGSET([DEREF([v+8])]) = TAGSET([v + 4])];
+          &&[(DEREF([v]) : int) = 0; ? Set_emp([TAGSET([v + 4])])];
+          &&[(DEREF([v]) : int) = 4];
+          &&[(DEREF([v]) : int) = 12; ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) : int)]);
+                                                           DOMAIN([DEREF([v + 8])])])]]

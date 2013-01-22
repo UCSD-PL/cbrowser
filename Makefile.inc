@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS+=-g
 CSOLVE=/home/abakst/scratch/csolve/src/csolve
 
 ifeq ($(CSOLVE),)
