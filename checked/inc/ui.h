@@ -2,8 +2,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#define UI_PROC  "../procs/output.py"
-
 void
 ui_init()
   OKEXTERN;

@@ -84,7 +84,7 @@ insert_new_cookie(struct cookie_list ** ARRAY table, int i, struct cookie *c)
 void
 add_cookie(struct cookie *c) CHECK_TYPE
 {
-  int i;
+  int i,t;
   struct cookie_list *l, *new_l;
   struct cookie *new_cookie;
 
@@ -92,6 +92,9 @@ add_cookie(struct cookie *c) CHECK_TYPE
 
   if (!table) {
     table = malloc(53*sizeof(*table));
+    for (t = 0; t < TABLE_SIZE; ++t) {
+      table[t] = NULL;
+    }
   }
 
   l = table[i];
@@ -184,21 +187,21 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
   return NULL;
 }
 
-/* char * */
-/* serialize_cookie_list(struct cookie_list *l) CHECK_TYPE */
-/* { */
-/*   char *cookie_string = NULL; */
-/*   char *response = NULL; */
+char *
+serialize_cookie_list(struct cookie_list *l) CHECK_TYPE
+{
+  char *cookie_string = NULL;
+  char *response = NULL;
 
-/*   while (l) { */
-/*     cookie_string = soup_cookie_to_cookie_header(l->cookie->cookie); */
-/*     if (response) { */
-/*       response = immutable_strdup(strapp("%s; %s", response, cookie_string)); */
-/*     } else { */
-/*       response = immutable_strdup(cookie_string); */
-/*     } */
-/*     l = l->next; */
-/*   } */
+  while (l) {
+    cookie_string = soup_cookie_to_cookie_header(l->cookie->cookie);
+    if (response) {
+      response = immutable_strdup(strapp("%s; %s", response, cookie_string));
+    } else {
+      response = immutable_strdup(cookie_string);
+    }
+    l = l->next;
+  }
 
-/*   return response; */
-/* } */
+  return response;
+}

@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #define TAB_PROC "../../../trusted/src/procs/tab.py"
+#define UI_PROC  "../../../trusted/src/procs/output.py"
 
 void
 call(const char *path, char *const argv[]);

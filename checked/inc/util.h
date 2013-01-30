@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "constants.h"
+#include "types.h"
 
 char ICHAR NULLTERMSTR *
 LOC(S1)

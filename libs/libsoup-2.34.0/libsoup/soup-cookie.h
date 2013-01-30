@@ -11,10 +11,12 @@
 
 G_BEGIN_DECLS
 
+#define ICHAR IMMUTABLE(THE_STRING)
+
 struct _SoupCookie {
 	char     NULLTERMSTR * name;
 	char     NULLTERMSTR * value;
-	char     ICHAR NULLTERMSTR ICHAR * domain;
+	char     NULLTERMSTR ICHAR * domain;
 	char     NULLTERMSTR * LOC(COOKIE_PATH) path;
 	SoupDate *expires;
 	gboolean  secure;

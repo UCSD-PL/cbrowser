@@ -505,8 +505,11 @@ soup_connection_connect_async (SoupConnection *conn,
 
 	status = soup_socket_connect_sync (priv->socket, cancellable);
 
-	if (!SOUP_STATUS_IS_SUCCESSFUL (status))
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status)) {
+        fprintf(stderr, " oh oh oh ohey hey hey\n");
+
 		goto fail;
+		}
 		
 	g_signal_connect (priv->socket, "disconnected",
 			  G_CALLBACK (socket_disconnected), conn);
@@ -514,6 +517,7 @@ soup_connection_connect_async (SoupConnection *conn,
 	if (priv->ssl_creds && !priv->tunnel_addr) {
 		if (!soup_socket_start_ssl (priv->socket, cancellable)) {
 			status = SOUP_STATUS_SSL_FAILED;
+        fprintf(stderr, "hey hey hey\n");
 			goto fail;
 		}
 	}
@@ -524,6 +528,7 @@ soup_connection_connect_async (SoupConnection *conn,
 		start_idle_timer (conn);
 	} else {
 	fail:
+        fprintf(stderr, "here we are now\n");
 		if (priv->socket) {
 			g_object_unref (priv->socket);
 			priv->socket = NULL;
@@ -533,6 +538,7 @@ soup_connection_connect_async (SoupConnection *conn,
 	if (priv->proxy_uri != NULL)
 		status = soup_status_proxify (status);
 
+        fprintf(stderr, "entertain us!\n");
 
 	data = g_slice_new (SoupConnectionAsyncConnectData);
 	data->conn = g_object_ref (conn);

@@ -13,6 +13,7 @@
 #include <csolve.h>
 
 G_BEGIN_DECLS
+#define ICHAR IMMUTABLE(THE_STRING)
 
 struct _SoupURI {
 	const char NULLTERMSTR ICHAR FINAL *scheme;

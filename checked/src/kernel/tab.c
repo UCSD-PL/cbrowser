@@ -82,6 +82,7 @@ init_tab_process(struct tab **tabs, int tab_idx, char *init_url)
   t->proc = proc;
   t->soc  = soc;
   tabs[tab_idx] = t;
+  free(args[3]);
   //Organize tab creation into trusted (for now) routine.
 }
 

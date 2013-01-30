@@ -15,7 +15,23 @@ CHECK_TYPE
 }
 
 char *
-immutable_strdup(char * __s) { return strdup(__s); }
+immutable_strdup(char * __s)
+{
+  return strdup(__s);
+}
 
 char *
-mutable_strdup(char * __s) { return strdup(__s); }
+mutable_strdup(char * __s)
+{
+  return strdup(__s);
+}
+
+char ICHAR NULLTERMSTR *
+START STRINGPTR
+REF(THE_STRING([V]) = THE_STRING([__s]))
+REF(DOMAIN([V])     = DOMAIN([__s]))
+REF(TAGSET([V])     = TAGSET([__s]))
+  strdupi(char NULLTERMSTR ICHAR FINAL * STRINGPTR __s)
+{
+  return strdup(__s);
+}

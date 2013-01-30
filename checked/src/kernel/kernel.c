@@ -27,6 +27,8 @@
 // socket includes
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #ifndef CIL
 # define validptr(x)
@@ -82,6 +84,7 @@ render(KERNEL_TABS tabs, int tab_idx)
     x = t->soc;
     m = create_msg(&render, &x, "");
     write_message(m);
+    free_message(m);
   }
 }
 
@@ -163,6 +166,7 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
     r = create_msg(&follow, uisoc, m->content);
     r = tags_xfer_msg(tags_0, r);
     write_message(r);
+    free_message(r);
   }
 
   // Retrieve contents of the URI stored in m->content
@@ -181,6 +185,7 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
   r = tags_xfer_msg(tags_1, r);
   write_message(r);
   free(content);
+  free_message(r);
 }
 
 void
@@ -198,6 +203,7 @@ handle_display_shm(int tagctx, message *m)
     r = create_msg(&dshm, uisoc, m->content);
     r = tags_xfer_msg(tags_0, r);
     write_message(r);
+    free_message(r);
   }
 }
 
@@ -226,6 +232,7 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
 
       if (!uri) {
         exit(1);
+        soup_uri_free(uri);
         return;
       }
 
@@ -235,7 +242,9 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
         c->domain = strdupi(t->tab_origin);
         c->cookie = soup_cookie;
         add_cookie(c);
+        free_cookie(c);
       }
+      soup_uri_free(uri);
       return;
     }
   }
@@ -253,10 +262,13 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
   char *domain = NULL;
   char *serial = NULL;
   char *result = NULL;
+  char *tmp;
   struct cookie *test;
   mtypes getc = RES_COOKIE;
+  int free_result = 1;
 
-  c = parse_get_cookie(m->content, strlen(mutable_strdup(m->content)));
+  c = parse_get_cookie(m->content, strlen(tmp = mutable_strdup(m->content)));
+  free(tmp);
 
   if (!c) return;
 
@@ -288,15 +300,72 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
           }
         }
       }
-     if (result) {
-       res_soc=malloc(sizeof(*res_soc));
-       *res_soc = m->src_fd;
-       m = create_msg(&getc, res_soc, result);
-       write_message(m);
-     }
-      return;
     }
   }
+  if (!result) {
+    free_result = 0;
+    result = "";
+  }
+  
+  if (result) {
+    res_soc=malloc(sizeof(*res_soc));
+    *res_soc = m->src_fd;
+    m = create_msg(&getc, res_soc, result);
+    write_message(m);
+    free_message(m);
+    if (free_result)
+      free(result);
+    free(res_soc);
+  }
+  return;
+}
+
+void
+handle_req_socket(KERNEL_TABS tabs, message *m)
+{
+  struct req_socket *req;
+  int soc;
+  struct hostent *host_info;
+  struct sockaddr_in addr;
+  long int host_addr = 0;
+  mtypes res_socket = RES_SOCKET;
+  int *res_soc;
+  char *str;
+
+  req = parse_req_socket(m->content, strlen(m->content));
+
+  if (!req) {
+    fprintf(stderr, "handle_req_socket: failed to parse request");
+    return;
+  }
+
+  if((soc = socket(req->family, req->type, req->protocol)) < 0) {
+    perror("handle_req_socket: socket()");
+    exit(1);
+  }
+
+  host_info = gethostbyname(req->host);
+  memcpy(&host_addr, host_info->h_addr, host_info->h_length);
+  addr.sin_addr.s_addr = host_addr;
+  addr.sin_port = htons(req->port);
+  addr.sin_family = req->family;
+
+  fprintf(stderr, "host_addr: %lx\n", host_addr);
+
+  if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    perror("handle_req_socket: connect()");
+    exit(1);
+  }
+
+  asprintf(&str, "%d", soc);
+
+  res_soc = malloc(sizeof(*res_soc));
+  *res_soc = m->src_fd;
+  m = create_msg(&res_socket, res_soc, str);
+  fprintf(stderr, "writing....\n");
+  write_message(m);
+  free_message(m);
+  free_req_socket(req);
 }
 
 void
@@ -338,6 +407,9 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     if (tab_idx == curr) {
       handle_display_shm(tags_2, m);
     }
+    break;
+  case REQ_SOCKET:
+    handle_req_socket(tabs, m);
     break;
   case SET_COOKIE:
     handle_set_cookie(tabs, m);

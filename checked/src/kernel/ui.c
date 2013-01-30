@@ -35,10 +35,10 @@ ui_kill(int sig)
   kill(ui.proc, sig);
 }
 
-int REF(V > 0 => ? Set_emp([TAGSET([V])]))
+int * REF(V > 0 => ? Set_emp([TAGSET([V])]))
 ui_soc() CHECK_TYPE
 {
-  return ui.soc;
+  return &(ui.soc);
 }
 
 pid_t

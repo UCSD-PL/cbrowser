@@ -63,3 +63,11 @@ domain_strdup(char *s)
 {
   return s;
 }
+
+int * START VALIDPTR ROOM_FOR(int) LOC(L) 
+/* REF(V = p) */
+REF(TAGSET([V]) = Set_cup([TAGSET([s]);TAGSET([p])]))
+tags_xfer_ptr2(int s, int * LOC(L) p)
+{
+  return p;
+}

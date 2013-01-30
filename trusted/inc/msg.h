@@ -93,6 +93,14 @@ struct get_cookie {
   int  httpOnly;
 };
 
+struct req_socket {
+  char immutable_string FINAL host;
+  int port;
+  int family;
+  int type;
+  int protocol;
+};
+
 void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
 
 void
@@ -104,6 +112,13 @@ parse_get_cookie(char NULLTERMSTR ICHAR FINAL * STRINGPTR get_cookie_str,
 
 message *
 create_get_cookie(char *scheme, char *host, char *path, int for_http);
+
+struct req_socket FINAL *
+parse_req_socket(char NULLTERMSTR ICHAR FINAL * STRINGPTR req_socket_str,
+                 size_t n) OKEXTERN;
+
+message *
+create_req_socket(char *hostname, int port, int family, int type, int protocol);
 
 message INST(L,L) FINAL * SAFE_MESSAGE
                           /* REF(Tags(V) = Set_cup([Tags(fd); Tags(c)])) */
@@ -131,4 +146,10 @@ REF(Tags(V + 8) = Set_cup([Tags(m + 8); Tags(s)]))
 REF(Tags(Field(V,8)) = Set_cup([Tags(Field(m,8)); Tags(s)]))
 REF(BLOCK_BEGIN([V]) = BLOCK_BEGIN([m]))
 tags_xfer_msg(int s, message FINAL * LOC(L) START m) OKEXTERN;
+
+
+void free_message(message *m);
+
+void free_req_socket(struct req_socket *r);
+void free_get_cookie(struct get_cookie *g);
 #endif

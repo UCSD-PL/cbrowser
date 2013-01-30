@@ -25,6 +25,9 @@ struct cookie {
   SoupCookie FINAL * FINAL REF(DOMAIN([V]) = THE_STRING([domain])) REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]) ROOM_FOR(SoupCookie) START VALIDPTR cookie;
 };
 
+void
+free_cookie(struct cookie *c);
+
 /* struct cookie * REF(TAGSET([V]) = Set_cup([TAGSET([cookie]);TAGSET([domain])])) */
 /*                 REF(DOMAIN([V]) = THE_STRING([domain])) */
 /*                 START VALIDPTR ROOM_FOR(struct cookie) */

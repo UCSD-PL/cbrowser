@@ -146,8 +146,12 @@ void write_param_to_kernel (char *param)
 }
 
 void write_msg_to_kernel(char msg_id,char *param) {
-	write_msg_id_to_kernel(msg_id);
-	write_param_to_kernel(param);
+
+	message *m = create_msg(&msg_id, &t2k_socket, param);
+	write_message(m);
+	free_message(m);
+	/* write_msg_id_to_kernel(msg_id); */
+	/* write_param_to_kernel(param); */
 }
 
 char read_msg_id_from_kernel(void) {
@@ -310,12 +314,17 @@ get_cookies_from_kernel (SoupURI *uri,
 			 gboolean for_http) {
 	char *request_param;
 	char* cookie_from_kernel;
-	message *m = create_get_cookie(uri->scheme, uri->host, uri->path, for_http);
+	message *m;
+
+	fprintf(stderr, "## cookie requesting\n");
+	m = create_get_cookie(uri->scheme, uri->host, uri->path, for_http);
 	request_param = g_strdup_printf("%s;%s;%s;%d", uri->scheme, uri->host, uri->path, for_http);
 	//write_msg_to_kernel((char) 10, request_param);
-        write_message_soc(t2k_socket, m);
-	free(m->content);
-	free(m);
+	m->src_fd = t2k_socket;
+	fprintf(stderr, "## cookie requesting\n");
+	fprintf(stderr, "## %s\n", m->content);
+        write_message(m);
+	free_message(m);
 	g_free(request_param);
 	cookie_from_kernel = read_msg_from_kernel((char) 12);
 #ifdef PRINT_DBG_MSG
@@ -340,8 +349,8 @@ int _recvfd(int sock, size_t *len, void *buf) {
 	int st, fd;
 
 	if(*len < 1 || buf == NULL) {
-		/* For some reason, again, one byte needs to be received. (it would not
-		 * block?) */
+		/* For some reason, again, one byte needs to be
+		 * received. (it would not block?) */
 		iov[0].iov_base = extrabuf;
 		iov[0].iov_len  = sizeof(extrabuf);
 	} else {
@@ -402,39 +411,56 @@ int get_socket_from_kernel (const char       *hostname,
 	char *dummy = NULL;
 	size_t len;
 	int rsock;
+	message *m;
 
-	sprintf(buf, "%s:%d:%d:%d:%d", hostname, port, family, type, protocol);
-	write_msg_to_kernel((char) 3, buf);
+	//sprintf(buf, "%s:%d:%d:%d:%d", hostname, port, family, type, protocol);
+	//write_msg_to_kernel((char) 3, buf);
+	m = create_req_socket(hostname, port, family, type, protocol);
+	m->src_fd = t2k_socket;
+	write_message(m);
+	free_message(m);
+	m = read_message_soc(t2k_socket);
 
-#ifdef PRINT_DBG_MSG
-	fprintf(stderr, "## begin] get_socket_from_kernel\n"); fflush(stderr);
-#endif
-	dummy = read_msg_from_kernel((char) 8);
-	if(dummy == NULL) {
-		fprintf(stderr, "FATAL ERROR:libsoup-soup_quark.c] get_socket_from_kernel is failed : timeout\n"); fflush(stderr);
-		return -1;
+	if (m->type != RES_SOCKET) {
+	    fprintf(stderr,
+		    "FATAL ERROR:libsoup-soup_quark.c get_socket_from_kernel: "
+		    "unexpected message: %d\n", m->type);
+	    return -1;
 	}
 
-	//fprintf(stderr, "returned dummy : %d\n", *dummy); fflush(stderr);
+	fprintf(stderr, "libsoup: GOT THING %s\n", m->content);
+	rsock = atoi(m->content);
+	free_message(m);
 
-	if(*dummy != 0) {
-		fprintf(stderr, "FATAL ERROR:libsoup-soup-quark.c] get_socket_from_kernel is failed : not the same domain:%s:error code:%s\n", hostname, dummy); fflush(stderr);
-		g_free(dummy);
-		return -1;
-	}
+/* #ifdef PRINT_DBG_MSG */
+/* 	fprintf(stderr, "## begin] get_socket_from_kernel\n"); fflush(stderr); */
+/* #endif */
+/* 	dummy = read_msg_from_kernel((char) 8); */
+/* 	if(dummy == NULL) { */
+/* 		fprintf(stderr, "FATAL ERROR:libsoup-soup_quark.c] get_socket_from_kernel is failed : timeout\n"); fflush(stderr); */
+/* 		return -1; */
+/* 	} */
 
-	//fprintf(stderr, "returned dummy :%d %d %d %d\n", dummy[0], dummy[1], dummy[2], dummy[3]);
+/* 	//fprintf(stderr, "returned dummy : %d\n", *dummy); fflush(stderr); */
 
-#ifdef PRINT_DBG_MSG
-	fprintf(stderr, "## midl] get_socket_from_kernel:msg is read\n"); fflush(stderr);
-#endif
-	g_free(dummy);
-	len = 0;
+/* 	if(*dummy != 0) { */
+/* 		fprintf(stderr, "FATAL ERROR:libsoup-soup-quark.c] get_socket_from_kernel is failed : not the same domain:%s:error code:%s\n", hostname, dummy); fflush(stderr); */
+/* 		g_free(dummy); */
+/* 		return -1; */
+/* 	} */
 
-#ifdef PRINT_DBG_MSG
-	fprintf(stderr, "## midl] get_socket_from_kernel:recvfd is called\n"); fflush(stderr);
-#endif
-	rsock = _recvfd(t2k_socket, &len, NULL);
+/* 	//fprintf(stderr, "returned dummy :%d %d %d %d\n", dummy[0], dummy[1], dummy[2], dummy[3]); */
+
+/* #ifdef PRINT_DBG_MSG */
+/* 	fprintf(stderr, "## midl] get_socket_from_kernel:msg is read\n"); fflush(stderr); */
+/* #endif */
+/* 	g_free(dummy); */
+/* 	len = 0; */
+
+/* #ifdef PRINT_DBG_MSG */
+/* 	fprintf(stderr, "## midl] get_socket_from_kernel:recvfd is called\n"); fflush(stderr); */
+/* #endif */
+/* 	rsock = _recvfd(t2k_socket, &len, NULL); */
 	
 	struct stat statbuf;
 	fstat(rsock, &statbuf);

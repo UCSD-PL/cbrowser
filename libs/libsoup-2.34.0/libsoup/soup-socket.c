@@ -861,8 +861,10 @@ create_connected_socket_thru_kernel (GSocketClient* client,
     }
   */
 
-  if (gsocket == NULL)
+  if (gsocket == NULL) {
+	  fprintf(stderr, "AGNOTHER !?!?!\n");
     return NULL;
+  }
 
   if ( g_socket_client_get_timeout(client))
 	  g_socket_set_timeout (gsocket,  g_socket_client_get_timeout(client));
@@ -1021,7 +1023,7 @@ g_socket_client_connect_thru_kernel (GSocketClient       *client,
   g_object_unref (enumerator);
 
   if (connection == NULL) { 
-	  //fprintf(stderr, "create_connected_socket_thru_kernel]]socket is eventuall NOT created\n"); fflush(stderr);
+	  fprintf(stderr, "create_connected_socket_thru_kernel]]socket is eventuall NOT created\n"); fflush(stderr);
 	  return NULL;
   }
 

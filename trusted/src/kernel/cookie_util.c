@@ -37,6 +37,14 @@ gettable_domains(char *domain)
 
   return d;
 }
+
+void
+free_cookie(struct cookie *c)
+{
+  free(c->domain);
+  soup_cookie_free(c->cookie);
+  free(c);
+}
 #if 0
 void
 may_get_cookie(char *domain, struct cookie *c)

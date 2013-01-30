@@ -27,7 +27,7 @@
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
 
-/* NNKERNEL_TABS tabs CHECK_TYPE; */
+/* NNKERNEL_TABS tabs CHECK_TYPE */;
 
 void
 print_tab_title(KERNEL_TABS tabs, int tab_idx) CHECK_TYPE
@@ -42,15 +42,17 @@ print_tab_title(KERNEL_TABS tabs, int tab_idx) CHECK_TYPE
 }
 
 void
-print_text_display()
+print_text_display(KERNEL_TABS tabs)
 {
   int i;
-  //    call("/usr/bin/clear", NULL);
+
+  if (!tabs) return;
+//  call("/usr/bin/clear", NULL);
   printf("--------------------------------------------------------------------"
          "----------\n");
   printf("| ");
   for (i=0; i < num_tabs(); i++) {
-    print_tab_title(i);
+    print_tab_title(tabs, i);
     printf(" | ");
   }
   printf("\n");
@@ -63,26 +65,27 @@ print_text_display()
 void
 kexit()
 {
+/*
   int i;
 //  struct cookie_proc *cp;
   //TODO
-  if (tabs) {
+  //if (tabs) {
     for (i = 0; i < num_tabs(); i++) {
-      if (!tabs) return;
-      tab_kill(tabs, i, SIGINT);
+ //     if (!tabs) return;
+//      tab_kill(tabs, i, SIGINT);
       //     cp = get_cookie_process(tabs[i]->tab_origin);
       //if (cp) {
       //  kill(cp->proc, SIGINT);
       //}
     }
   }
-
+*/
   ui_kill(SIGINT);
   _exit(0);
 }
 
 int
-set_readfds(fd_set *readfds)
+set_readfds(KERNEL_TABS tabs, fd_set *readfds)
 {
   int i, soc;
   int max = 0; //stdin
@@ -91,7 +94,8 @@ set_readfds(fd_set *readfds)
   FD_SET(0, readfds);
   for (i=0; i<num_tabs(); i++) {
     if(!tabs) return 0;
-    soc = tab_fd(tabs, i);
+    soc = tabs[i]->soc;
+/*    soc = tab_fd(tabs, i); */
     FD_SET(soc, readfds);
     if (soc > max) {
       max = soc;
@@ -107,19 +111,21 @@ set_readfds(fd_set *readfds)
   }
   return max;
 }
+
 int 
-tab_of_fd(int fd)
+tab_of_fd(KERNEL_TABS tabs, int fd)
 {
   int i, soc;
     
   //check UI process
-  soc = ui_soc();
+  soc = *(ui_soc());
   if  (soc == fd) {
     return -1;//UI_PROC_ID;
   }
   //check tabs
   for (i=0; i<num_tabs(); i++) {
-    soc = tab_fd(tabs, i);
+    soc = tabs[i]->soc;
+    /* soc = tab_fd(tabs, i); */
     if (fd == soc) {
       // csolve_assert(i < MAX_NUM_TABS);
       return i;
@@ -149,6 +155,7 @@ main (int REF(V > 0) argc,
   int tab_idx;
   int fd;
   int i;
+  KERNEL_TABS tabs;
   /* make_command_args_global(argc, argv); */
   /* parse_options(argc, argv); */
   tabs = malloc(10*sizeof(*tabs));
@@ -159,9 +166,9 @@ main (int REF(V > 0) argc,
   signal(SIGINT, handler);
   atexit(kexit);
   
-  print_text_display();
+  print_text_display(tabs);
   while (1) {
-    max_fd = set_readfds(&readfds);
+    max_fd = set_readfds(tabs, &readfds);
     if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
       if (FD_ISSET(0, &readfds)) { //stdin
         scanf("%1s", &c);
@@ -169,15 +176,17 @@ main (int REF(V > 0) argc,
       } else {
         for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)
           ;
-        tab_idx = tab_of_fd(fd);
+        tab_idx = tab_of_fd(tabs, fd);
 
         m = read_message_soc(fd);
         if (tab_idx != -1) {
           process_message(tabs,tab_idx, m);
         }
+        free_message(m);
+        m = NULL;
 
       }
-      print_text_display();
+      print_text_display(tabs);
     }
   }
 }
