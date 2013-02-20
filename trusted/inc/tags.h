@@ -48,6 +48,10 @@ void
 assert_same_domain(char NULLTERMSTR ICHAR FINAL * STRINGPTR s1,
                    char NULLTERMSTR ICHAR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
 
+void
+assert_domain_get(char FINAL Immutable s1,
+                  char FINAL Immutable REF(?COOKIE_DOMAIN_GET([DOMAIN([s1]);DOMAIN([V])])) s2) OKEXTERN;
+
 int
 REF(TAGSET([V]) = TAGSET([s]))
 tags_of_int(int s) OKEXTERN;
@@ -64,6 +68,11 @@ char NULLTERMSTR ICHAR * LOC(L) NNSTART NNSTRINGPTR REF(p > 0 => V > 0)
 /* REF(V = p) */
 REF(TAGSET([V]) = Set_cup([TAGSET([s]);TAGSET([p])]))
 tags_xfer_ptr(int s, char NULLTERMSTR ICHAR FINAL * NNSTART NNSTRINGPTR LOC(L) p) OKEXTERN;
+
+char NULLTERMSTR * LOC(L) NNSTART NNSTRINGPTR REF(p > 0 => V > 0)
+/* REF(V = p) */
+REF(TAGSET([V]) = Set_cup([TAGSET([s]);TAGSET([p])]))
+tags_xfer_ptrb(int s, char NULLTERMSTR FINAL * NNSTART NNSTRINGPTR LOC(L) p) OKEXTERN;
 
 int * START VALIDPTR ROOM_FOR(int) LOC(L) 
 /* REF(V = p) */

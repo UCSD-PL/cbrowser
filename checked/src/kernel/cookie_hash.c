@@ -14,8 +14,8 @@
 #define domainify_cookie(c,d) c
 #else
 extern
-struct cookie /* INST(CD,CD) */ * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
-domainify_cookie(struct cookie FINAL INST(CD,CD) * CookiePtr REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
+cookie /* INST(CD,CD) */ * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
+domainify_cookie(cookie FINAL INST(CD,CD) * CookiePtr REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
                  char NULLTERMSTR ICHAR FINAL * LOC(CD) STRINGPTR domain) OKEXTERN;
 #endif
 
@@ -39,9 +39,9 @@ hash_fn(char FINAL *d, char FINAL *p)
 }
 
 int
-hash_cookie(struct cookie FINAL *c)
+hash_cookie(cookie FINAL *c)
 {
-  return hash_fn(c->domain, c->cookie->path);
+  return hash_fn(c->c_domain, c->c_cookie->path);
 }
 
 void
@@ -49,44 +49,44 @@ check_soup_cookie_dom(SoupCookie FINAL *sc,
                       char NULLTERMSTR ICHAR FINAL *
                       REF(DOMAIN([sc]) = THE_STRING([V])) s) OKEXTERN;
 
-struct cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr
-  copy_cookie(struct cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr c) //CHECK_TYPE
+cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr
+copy_cookie(cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr c) //CHECK_TYPE
 {
   SoupCookie *new_s;
-  struct cookie *new;
+  cookie *new;
 
-  char *domstr = c->domain;
+  char *domstr = c->c_domain;
   domstr   = immutable_strdup(mutable_strdup(domstr));
-  new_s = soup_cookie_copy(c->cookie);
+  new_s = soup_cookie_copy(c->c_cookie);
 
   new         = malloc(sizeof(*new));
-  new->domain = domstr;
-  new->cookie = new_s;
+  new->c_domain = domstr;
+  new->c_cookie = new_s;
 
   return domainify_cookie(new, domstr);
 }
 
 void
-insert_new_cookie(struct cookie_list ** ARRAY table, int i, struct cookie *c)
+insert_new_cookie(cookie_list ** ARRAY table, int i, cookie *c)
 {
-  struct cookie *new_cookie;
-  struct cookie_list *new_l;
+  cookie *new_cookie;
+  cookie_list *new_l;
 
   new_cookie = copy_cookie(c);
 
   new_l = malloc(sizeof(*new_l));
-  new_l->next = NULL;
-  new_l->cookie = new_cookie;
+  new_l->cl_next = NULL;
+  new_l->cl_cookie = new_cookie;
 
   table[i] = new_l;
 }
 
 void
-add_cookie(struct cookie *c) CHECK_TYPE
+add_cookie(cookie *c) CHECK_TYPE
 {
   int i,t;
-  struct cookie_list *l, *new_l;
-  struct cookie *new_cookie;
+  cookie *new_cookie;
+  cookie_list *l, *new_l;
 
   i = hash_cookie(c);
 
@@ -105,24 +105,24 @@ add_cookie(struct cookie *c) CHECK_TYPE
   }
   else
   {
-    while (l->next)
+    while (l->cl_next)
     {
-      l = l->next;
+      l = l->cl_next;
     }
     new_cookie = copy_cookie(c);
     new_l = malloc(sizeof(*l));
-    new_l->next = NULL;
-    new_l->cookie = new_cookie;
-    l->next = new_l;
+    new_l->cl_next = NULL;
+    new_l->cl_cookie = new_cookie;
+    l->cl_next = new_l;
   }
 }
 
-struct cookie *
-copy_if_match(struct cookie FINAL *c, char FINAL *domain)
+cookie *
+copy_if_match(cookie FINAL *c, char FINAL *domain)
 {
-  struct cookie *new = NULL;
+  cookie *new = NULL;
 
-  if (!strcmp(mutable_strdup(c->domain), mutable_strdup(domain))) {
+  if (!strcmp(mutable_strdup(c->c_domain), mutable_strdup(domain))) {
     new = copy_cookie(c);
   }
 
@@ -132,30 +132,30 @@ copy_if_match(struct cookie FINAL *c, char FINAL *domain)
 #ifndef CIL
 #define domainify_cookie_list(l) l
 #else
-struct cookie_list INST(C,C) * LOC(L)
-START VALIDPTR ROOM_FOR(struct cookie_list)
+cookie_list INST(C,C) * LOC(L)
+MemSafe
 REF(DOMAIN([V]) = DOMAIN([DEREF([V + 4])]))
-domainify_cookie_list(struct cookie_list FINAL INST(C,C) * LOC(L) l) OKEXTERN;
+domainify_cookie_list(cookie_list FINAL INST(C,C) * LOC(L) l) OKEXTERN;
 #endif
 
-struct cookie_list INST(C,C) *
-make_cookie_node(struct cookie FINAL * LOC(C) c)
+cookie_list INST(C,C) *
+make_cookie_node(cookie FINAL * LOC(C) c)
 {
-  struct cookie_list *l;
+  cookie_list *l;
   l = malloc(sizeof(*l));
 
-  l->cookie = c;
-  l->next   = NULL;
+  l->cl_cookie = c;
+  l->cl_next   = NULL;
 
   return domainify_cookie_list(l);
 }
 
-struct cookie_list *
+cookie_list *
 get_cookies(char *domain_str, char *path) CHECK_TYPE
 {
-  struct cookie_list *l, *head = NULL, *curr = NULL, *new = NULL;
-  struct cookie *c, *new_cookie;
-  char  *cookie_domain, *new_domain;
+  char   *cookie_domain, *new_domain;
+  cookie *c, *new_cookie;
+  cookie_list *l, *head = NULL, *curr = NULL, *new = NULL;
   int i;
 
   i = hash_fn(domain_str, path);
@@ -166,10 +166,10 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
 
   while (l)
   {
-    c = l->cookie;
+    c = l->cl_cookie;
     new_cookie = copy_if_match(c, domain_str);
     if (new_cookie &&
-        !strcmp(path, soup_cookie_get_path(new_cookie->cookie)))
+        !strcmp(path, soup_cookie_get_path(new_cookie->c_cookie)))
     {
       new = make_cookie_node(new_cookie);
 
@@ -177,30 +177,30 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
         head = new;
         curr = new;
       } else {
-        curr->next = new;
-        curr = curr->next;
+        curr->cl_next = new;
+        curr          = curr->cl_next;
       }
     }
-    l = l->next;
+    l = l->cl_next;
   }
 
   return NULL;
 }
 
 char *
-serialize_cookie_list(struct cookie_list *l) CHECK_TYPE
+serialize_cookie_list(cookie_list *l) CHECK_TYPE
 {
   char *cookie_string = NULL;
-  char *response = NULL;
+  char *response      = NULL;
 
   while (l) {
-    cookie_string = soup_cookie_to_cookie_header(l->cookie->cookie);
+    cookie_string = soup_cookie_to_cookie_header(l->cl_cookie->c_cookie);
     if (response) {
       response = immutable_strdup(strapp("%s; %s", response, cookie_string));
     } else {
       response = immutable_strdup(cookie_string);
     }
-    l = l->next;
+    l = l->cl_next;
   }
 
   return response;

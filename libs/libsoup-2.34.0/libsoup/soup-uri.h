@@ -55,7 +55,7 @@ SoupURI	   *soup_uri_copy                  (SoupURI    *uri);
 gboolean    soup_uri_equal                 (SoupURI    *uri1,
 					    SoupURI    *uri2);
 
-void  	    soup_uri_free                  (SoupURI    *uri);
+void  	    soup_uri_free                  (SoupURI    *uri) OKEXTERN;
 
 char  	   *soup_uri_encode                (const char *part,
 					    const char *escape_extra);

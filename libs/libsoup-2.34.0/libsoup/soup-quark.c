@@ -5,6 +5,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -316,13 +317,10 @@ get_cookies_from_kernel (SoupURI *uri,
 	char* cookie_from_kernel;
 	message *m;
 
-	fprintf(stderr, "## cookie requesting\n");
 	m = create_get_cookie(uri->scheme, uri->host, uri->path, for_http);
 	request_param = g_strdup_printf("%s;%s;%s;%d", uri->scheme, uri->host, uri->path, for_http);
 	//write_msg_to_kernel((char) 10, request_param);
-	m->src_fd = t2k_socket;
-	fprintf(stderr, "## cookie requesting\n");
-	fprintf(stderr, "## %s\n", m->content);
+	m->m_fd = t2k_socket;
         write_message(m);
 	free_message(m);
 	g_free(request_param);
@@ -416,20 +414,19 @@ int get_socket_from_kernel (const char       *hostname,
 	//sprintf(buf, "%s:%d:%d:%d:%d", hostname, port, family, type, protocol);
 	//write_msg_to_kernel((char) 3, buf);
 	m = create_req_socket(hostname, port, family, type, protocol);
-	m->src_fd = t2k_socket;
+	m->m_fd = t2k_socket;
 	write_message(m);
 	free_message(m);
 	m = read_message_soc(t2k_socket);
 
-	if (m->type != RES_SOCKET) {
+	if (m->m_type != RES_SOCKET) {
 	    fprintf(stderr,
 		    "FATAL ERROR:libsoup-soup_quark.c get_socket_from_kernel: "
-		    "unexpected message: %d\n", m->type);
+		    "unexpected message: %d\n", m->m_type);
 	    return -1;
 	}
 
-	fprintf(stderr, "libsoup: GOT THING %s\n", m->content);
-	rsock = atoi(m->content);
+	rsock = atoi(m->m_content);
 	free_message(m);
 
 /* #ifdef PRINT_DBG_MSG */

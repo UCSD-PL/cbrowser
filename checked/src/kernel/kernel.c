@@ -8,7 +8,7 @@
 #include <search.h>
 //#include "str.h"
 #include "proc.h"
-#include "cookie_util.h"
+/* #include "cookie_util.h" */
 //#include "cookie_proc.h"
 //#include "cookie_jar.h"
 #include "cookie_hash.h"
@@ -60,12 +60,6 @@ get_tab_idx(char ascii)
   }
 }
 
-/* void */
-/* write_message(message FINAL *m) */
-/* { */
-/*   write_message_soc(m->src_fd, m); */
-/* } */
-
 message*
 read_message(int fd)
 {
@@ -79,10 +73,10 @@ render(KERNEL_TABS tabs, int tab_idx)
   mtypes render = RENDER;
   struct tab *t;
   int x;
-  /* m = create_msg(&render, tab_fd(tabs, tab_idx), ""); */
+  /* m = create_message(&render, tab_fd(tabs, tab_idx), ""); */
   if (t = tabs[tab_idx]) {
     x = t->soc;
-    m = create_msg(&render, &x, "");
+    m = create_message(&render, &x, "");
     write_message(m);
     free_message(m);
   }
@@ -146,7 +140,7 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m)
+handle_req_uri_follow(int tagctx, message *m)
 {
   message *r;
   char *content;
@@ -163,14 +157,14 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
   tags_0 = tags_of_ptr(uisoc);
   if (*uisoc > 0) {
     // Send message to the UI process
-    r = create_msg(&follow, uisoc, m->content);
+    r = create_message(&follow, uisoc, m->m_content);
     r = tags_xfer_msg(tags_0, r);
     write_message(r);
     free_message(r);
   }
 
-  // Retrieve contents of the URI stored in m->content
-  content = wget(mutable_strdup(m->content));
+  // Retrieve contents of the URI stored in m->m_content
+  content = wget(mutable_strdup(m->m_content));
   if (! content) return;
   content = immutable_strdup(content);
   content = tags_xfer_ptr(tags_0, content);
@@ -179,9 +173,9 @@ handle_req_uri_follow(int tagctx, message * START VALIDPTR ROOM_FOR(message) REA
 
   // Send the result back
   res_soc=malloc(sizeof(*res_soc));
-  *res_soc = m->src_fd;
-  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->src_fd)), res_soc);
-  r = create_msg(&res, res_soc, content);
+  *res_soc = m->m_fd;
+  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->m_fd)), res_soc);
+  r = create_message(&res, res_soc, content);
   r = tags_xfer_msg(tags_1, r);
   write_message(r);
   free(content);
@@ -200,26 +194,26 @@ handle_display_shm(int tagctx, message *m)
 
   tags_0 = tags_of_ptr(uisoc);
   if (*uisoc > 0) {
-    r = create_msg(&dshm, uisoc, m->content);
+    r = create_message(&dshm, uisoc, m->m_content);
     r = tags_xfer_msg(tags_0, r);
     write_message(r);
     free_message(r);
   }
 }
 
-/* /\* void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d, *\/ */
-/* /\*                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN; *\/ */
+/* /\* /\\* void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d, *\\/ *\/ */
+/* /\* /\\*                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN; *\\/ *\/ */
 
 void
 handle_set_cookie(KERNEL_TABS tabs, message *m)
 {
   int tab_idx;
-  struct cookie *c;
+  cookie *c;
   SoupURI       *uri;
   SoupCookie    *soup_cookie;
   struct tab *t;
 
-  if (!m->content) {
+  if (!m->m_content) {
     return;
   }
 
@@ -227,20 +221,19 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd) {
+    if (t->soc == m->m_fd) {
       uri = soup_uri_new(t->tab_origin);
 
       if (!uri) {
         exit(1);
-        soup_uri_free(uri);
         return;
       }
 
-      soup_cookie = soup_cookie_parse(m->content, uri);
+      soup_cookie = soup_cookie_parse(m->m_content, uri);
       if (soup_cookie) {
         c = malloc(sizeof(*c));
-        c->domain = strdupi(t->tab_origin);
-        c->cookie = soup_cookie;
+        c->c_domain = strdupi(t->tab_origin);
+        c->c_cookie = soup_cookie;
         add_cookie(c);
         free_cookie(c);
       }
@@ -251,24 +244,27 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
 }
 
 void
-handle_get_cookie(KERNEL_TABS tabs, message *m)
+handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 {
+  int w;
   int tab_idx;
   int *res_soc;
-  struct get_cookie *c;
-  struct cookie_list *l = NULL, *l2 = NULL;
+  get_cookie *c;
+  cookie_list *l = NULL, *new_l = NULL;
   struct tab *t;
   char **domains;
+  char *gc_domain = NULL;
   char *domain = NULL;
   char *serial = NULL;
   char *result = NULL;
   char *tmp;
-  struct cookie *test;
+  cookie *test;
   mtypes getc = RES_COOKIE;
   int free_result = 1;
+  res_soc = malloc(sizeof(*res_soc));
+ *res_soc = m->m_fd;
 
-  c = parse_get_cookie(m->content, strlen(tmp = mutable_strdup(m->content)));
-  free(tmp);
+  c = parse_get_cookie(m->m_content);
 
   if (!c) return;
 
@@ -276,46 +272,28 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->src_fd && soup_domain_matches(c->domain, t->tab_origin)) {
-      /* if (c->domain[0] && c->domain[1]) */
-      /*   { */
-      /*     c->domain[0] = c->domain[1]; */
-      /*   } */
-      domains = gettable_domains(c->domain);
+    if (t->soc == m->m_fd && soup_domain_matches(c->gc_domain, t->tab_origin)) {
+      gc_domain = c->gc_domain;
+      domains = gettable_domains(gc_domain);
       while (domain = *domains) {
-        l = get_cookies(domain, c->path);
         if (l) {
-          test = l->cookie;
-          serial = serialize_cookie_list(l);
-          if (result) {
-            result = strapp(c->domain,
-                            result,
-                            serial);
-            /* result = immutable_strdup(strapp(mutable_strdup(c->domain), */
-            /*                                  mutable_strdup(result), */
-            /*                                  mutable_strdup(serial))); */
-          } else {
-            /* result = immutable_strdup(mutable_strdup(serial)); */
-            result = strdupi(serial);
-          }
+          new_l = get_cookies(domain, c->gc_path);
+          new_l->cl_next = l;
+          l = new_l;
+        } else {
+          l = get_cookies(domain, c->gc_path);
         }
       }
+      if (l) {
+        result = serialize_cookie_list(l);
+        m = create_message(&getc, res_soc, result);
+        write_message(m);
+        free_message(m);
+        free(result);
+        free(res_soc);
+        /* Should free cookie list, too */
+      }
     }
-  }
-  if (!result) {
-    free_result = 0;
-    result = "";
-  }
-  
-  if (result) {
-    res_soc=malloc(sizeof(*res_soc));
-    *res_soc = m->src_fd;
-    m = create_msg(&getc, res_soc, result);
-    write_message(m);
-    free_message(m);
-    if (free_result)
-      free(result);
-    free(res_soc);
   }
   return;
 }
@@ -323,53 +301,60 @@ handle_get_cookie(KERNEL_TABS tabs, message *m)
 void
 handle_req_socket(KERNEL_TABS tabs, message *m)
 {
-  struct req_socket *req;
   int soc;
   struct hostent *host_info;
   struct sockaddr_in addr;
+  req_socket *req;
   long int host_addr = 0;
   mtypes res_socket = RES_SOCKET;
   int *res_soc;
-  char *str;
+  int tags_0;
+  int tags_1;
+  char *buf = malloc(4);
 
-  req = parse_req_socket(m->content, strlen(m->content));
+  req = parse_req_socket(m->m_content);
+  tags_0 = tags_of_ptr(req);
 
   if (!req) {
     fprintf(stderr, "handle_req_socket: failed to parse request");
     return;
   }
 
-  if((soc = socket(req->family, req->type, req->protocol)) < 0) {
+  if((soc = socket(req->r_family, req->r_type, req->r_protocol)) < 0) {
     perror("handle_req_socket: socket()");
     exit(1);
+    return; /* csolve */
   }
 
-  host_info = gethostbyname(req->host);
-  memcpy(&host_addr, host_info->h_addr, host_info->h_length);
+  host_info = gethostbyname(req->r_host);
+  if (!host_info) { return; }
+  /* memcpy(&host_addr, host_info->h_addr, host_info->h_length); */
   addr.sin_addr.s_addr = host_addr;
-  addr.sin_port = htons(req->port);
-  addr.sin_family = req->family;
-
-  fprintf(stderr, "host_addr: %lx\n", host_addr);
+  addr.sin_port = htons(req->r_port);
+  addr.sin_family = req->r_family;
 
   if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     perror("handle_req_socket: connect()");
     exit(1);
+    return; /* csolve */
   }
 
-  asprintf(&str, "%d", soc);
+  sprintf(buf, "%d", soc);
+  buf = tags_xfer_ptrb(tags_0, buf);
+  tags_1 = tags_of_ptr(buf);
 
   res_soc = malloc(sizeof(*res_soc));
-  *res_soc = m->src_fd;
-  m = create_msg(&res_socket, res_soc, str);
-  fprintf(stderr, "writing....\n");
+  *res_soc = m->m_fd;
+  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->m_fd)), res_soc);
+  m = create_message(&res_socket, res_soc, immutable_strdup(buf));
+  m = tags_xfer_msg(tags_0, m);
   write_message(m);
-  free_message(m);
-  free_req_socket(req);
+  /* free_message(m); */
+  /* free_req_socket(req); */
 }
 
 void
-process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR(message) READ_MSG_T m) CHECK_TYPE
+process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
 {
   int tags_0;
   int tags_1;
@@ -379,7 +364,7 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
   
   message *r;
 
-  printf("K: process message: tab %d, type %d\n", tab_idx, m->type);
+  printf("K: process message: tab %d, type %d\n", tab_idx, m->m_type);
   
   tags_0 = tags_of_int(tab_idx);
   if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
@@ -387,21 +372,27 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     return;
   } //then
 
-  /* There's a control flow dependency on &m->type, so propagate
+  /* There's a control flow dependency on &m->m_type, so propagate
      that information to all data below */
-  tags_1 = tags_union(tags_of_ptr(m->content), tags_0);
-  if (m->content == NULL) {
+  tags_1 = tags_union(tags_of_ptr(m->m_content), tags_0);
+  if (m->m_content == NULL) {
     //tags_1
 
     return; //error
   } //then
 
-  /* tags_2 = tags_union(tags_union(tags_of_int(m->type), tags_of_ptr(&m->type)), tags_1); */
-  switch (m->type) {
+  /* tags_2 = tags_union(tags_union(tags_of_int(m->m_type), tags_of_ptr(&m->m_type)), tags_1); */
+  switch (m->m_type) {
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
-    if (m->content == NULL) return; //error
+    if (m->m_content == NULL) return; //error
     handle_req_uri_follow(tags_2, m);
+    break;
+  case SET_COOKIE:
+    handle_set_cookie(tabs, m);
+    break;
+  case GET_COOKIE:
+    handle_get_cookie(tabs, m);
     break;
   case DISPLAY_SHM:
     if (tab_idx == curr) {
@@ -409,13 +400,8 @@ process_message(KERNEL_TABS tabs, int tab_idx, message * START VALIDPTR ROOM_FOR
     }
     break;
   case REQ_SOCKET:
+    if (m->m_content == NULL) return; //error
     handle_req_socket(tabs, m);
-    break;
-  case SET_COOKIE:
-    handle_set_cookie(tabs, m);
-    break;
-  case GET_COOKIE:
-    handle_get_cookie(tabs, m);
     break;
   default:
     printf("Uhoh! We don't process that message type!\n");

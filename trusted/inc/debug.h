@@ -12,3 +12,8 @@ void same_domain_int(int fd, char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(DOMAIN(
 void same_domain_eq(char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s2])) s1,
                     char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([s1])) s2) OKEXTERN;
 
+void assert_gettable(int fd, char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(?COOKIE_DOMAIN_GET([DOMAIN([fd]);DOMAIN([V])]))) OKEXTERN;
+
+void assert_string_gettable(char FINAL Immutable s1,
+                            char FINAL Immutable REF(? COOKIE_DOMAIN_GET([THE_STRING([s1]);THE_STRING([V])])) s2) OKEXTERN;
+

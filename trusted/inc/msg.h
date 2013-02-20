@@ -29,7 +29,29 @@ typedef enum {
     C2K_SET_COOKIE
 } mtypes;
 
+typedef struct {
+  mtypes         FINAL m_type;
+  int            FINAL m_fd;
+  char Immutable FINAL m_content;
+} message;
+
+typedef struct {
+  char Immutable START REF(DOMAIN([V]) = THE_STRING([V])) FINAL gc_domain;
+  char Immutable gc_scheme;
+  char Immutable gc_path;
+  int            gc_httpOnly;
+} get_cookie;
+
+typedef struct {
+  char Immutable FINAL START SIZE_GE(1) r_host;
+  int                  r_port;
+  int                  r_family;
+  int                  r_type;
+  int                  r_protocol;
+} req_socket;
+
 #define MsgPtr     V
+#define MsgType    (Field(V, 0) : int)
 #define MsgFd      (Field(V, 4) : int)
 #define MsgContent Field(V, 8)
 
@@ -52,90 +74,89 @@ typedef enum {
   && [ MsgPtrTags = _tags;                 \
        MsgContentTags = _tags]          
 
+#define MessageTagsEq(s) \
+  && [ MsgPtrTags        = s                      \
+     ; MsgContentPtrTags = s                      \
+     ; MsgContentTags    = s                      \
+     ] 
+
+#define MessageDomainEq(d)  \
+  && [ MsgPtrDomain = d     \
+     ; MsgContentDomain = d \
+      
 #define SAME_DOMAIN(_domain)                    \
   && [MsgPtrDomain = _domain;                   \
       MsgContentDomain = _domain]               \
   
-#define READ_MSG_T                                            \
-  REF(&& [MsgPtrTags        = MsgFdTags;                       \
-          MsgPtrDomain      = MsgFdDomain;                     \
-          MsgContentTags    = MsgFdTags;                       \
-          MsgContentPtrTags = MsgFdTags;                       \
+#define ReadMsgPolicy                                         \
+  REF(&& [MsgPtrTags        = MsgFdTags;                      \
+          MsgPtrDomain      = MsgFdDomain;                    \
+          MsgContentTags    = MsgFdTags;                      \
+          MsgContentPtrTags = MsgFdTags;                      \
           MsgContentDomain  = MsgFdDomain])
 
-#define WRITE_MSG_T(soc)                                                \
+#define ReqSocketPolicy(soc) \
+  && [MSG_TYPE(8); MsgContentDomain = MsgFdDomain]
+
+#define WriteMsgPolicy(soc)                                                \
   REF(|| [&& [MSG_TYPE(0); ? Set_emp([Tags(soc)])];                     \
           && [MSG_TYPE(2); TAB_PRIVATE_MSG(Tags(soc))];                 \
           && [MSG_TYPE(2); ? Set_emp([Tags(soc)])];                     \
           && [MSG_TYPE(4)];                                             \
           && [MSG_TYPE(7); TAB_PRIVATE_MSG(Tags(soc))];                 \
-          && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]); MsgContentDomain])]])
+          && [MSG_TYPE(8); TAB_PRIVATE_MSG(Tags(soc))];                  \
+          && [MSG_TYPE(12); ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain])]])
 
-          /* (? Set_emp([Tags(MsgContent)]))])  */
+              /* MsgPtrDomain = MsgFdDomain;                               \ */
+              /* MsgContentDomain = MsgFdDomain];                          \ */
+#define WriteMsgPtr(s)       MemSafe WriteMsgPolicy(s)
 
-typedef struct {
-  mtypes                                          FINAL type;
-  int                                             FINAL src_fd;
-  char NULLTERMSTR ICHAR * START STRINGPTR LOC(L) /* REF(DOMAIN([V]) = DOMAIN([src_fd])) */ FINAL content;
-} message;
+#define ReadMsgPtr           MemSafe ReadMsgPolicy
+#define ReadMsgPtrFrom(_s)   ReadMsgPtr REF(MsgFd = _s)
 
-#define SAFE_MESSAGE START VALIDPTR ROOM_FOR(message)
+#define ParsedGetCookie(str) NullOrSafe                               \
+                             NNREF(TAGSET([V]) = TAGSET([str]))       \
+                             NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
 
-message * SAFE_MESSAGE
-          READ_MSG_T
-          REF((DEREF([V + 4]) : int) = soc)
+message* ReadMsgPtrFrom(soc) 
 read_message_soc(int soc) OKEXTERN;
 
-struct get_cookie {
-  char immutable_string REF(DOMAIN([V]) = THE_STRING([V])) FINAL domain;
-  char immutable_string scheme;
-  char immutable_string path;
-  int  httpOnly;
-};
-
-struct req_socket {
-  char immutable_string FINAL host;
-  int port;
-  int family;
-  int type;
-  int protocol;
-};
-
-void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN;
+/* void assert_read_msg_t(message FINAL * READ_MSG_T m) OKEXTERN; */
 
 void
 check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;
 
-struct get_cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct get_cookie) NNREF(TAGSET([V]) = TAGSET([get_cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
-parse_get_cookie(char NULLTERMSTR ICHAR FINAL * STRINGPTR get_cookie_str,
-                 size_t n) OKEXTERN;
+/* struct get_cookie FINAL * NNSTART NNVALIDPTR NNROOM_FOR(struct get_cookie) NNREF(TAGSET([V]) = TAGSET([get_cookie_str])) NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])])) */
+
+get_cookie FINAL * ParsedGetCookie(get_cookie_str)
+parse_get_cookie(char FINAL Immutable get_cookie_str) OKEXTERN;
 
 message *
 create_get_cookie(char *scheme, char *host, char *path, int for_http);
 
-struct req_socket FINAL *
-parse_req_socket(char NULLTERMSTR ICHAR FINAL * STRINGPTR req_socket_str,
-                 size_t n) OKEXTERN;
+req_socket FINAL * NullOrSafe NNREF(TAGSET([V]) = TAGSET([req_socket_str]))
+parse_req_socket(char FINAL Immutable req_socket_str) OKEXTERN;
 
 message *
 create_req_socket(char *hostname, int port, int family, int type, int protocol);
 
-message INST(L,L) FINAL * SAFE_MESSAGE
-                          /* REF(Tags(V) = Set_cup([Tags(fd); Tags(c)])) */
-                          REF(Tags(V)     = Tags(type))
-                          REF(Tags(V + 4) = Tags(fd))
-                          REF(Tags(V + 8) = Tags(c))
-                          REF(Tags(Field(V,8)) = Tags(c))
-//                          REF(Tags(Field(V,4) : int) = Tags(fd))
-//REF(Tags(Field(V,8)) = Tags(c))
-REF((Field(V,0): int) = (DEREF([type]) : int))
-REF(Domain(Field(V,4) : int) = Domain((DEREF([fd]) : int)))
-REF(Domain(Field(V,8)) = Domain(c))
-REF((Field(V, 4) : int) = (DEREF([fd]) : int))
-/* REF(THE_STRING([Field(V,8)]) = THE_STRING([c])) */
-create_msg(mtypes FINAL * type, int FINAL * VALIDPTR ROOM_FOR(int) fd, char NULLTERMSTR ICHAR FINAL * NNSTRINGPTR LOC(L) c) OKEXTERN;
+#define CreateMessage(_type,_fd,_c)                      \
+  MemSafe                                                \
+  REF(MsgType          = (DEREF([_type]):int))            \
+  REF(MsgFd            = (DEREF([_fd]):int))              \
+  REF(MsgPtrTags       = Tags(_type))                     \
+  REF(MsgFdTags        = Tags(_fd))                       \
+  REF(MsgContentTags   = Tags(_c))                        \
+  REF(MsgFdDomain      = Domain((DEREF([_fd]) : int)))    \
+  REF(MsgContentDomain = Domain(_c)) 
 
-void write_message(message FINAL * WRITE_MSG_T(V + 4) m) OKEXTERN;
+//add once i can ref it? REF(MsgContentPtrTags = Tags(c))              \
+
+message INST(L,L) FINAL * CreateMessage(type,fd,c)
+create_message(mtypes FINAL *type, int FINAL * VALIDPTR HASROOM fd, char FINAL NImmutable LOC(L) c) OKEXTERN;
+
+void
+write_message(message FINAL * WriteMsgPtr(V+4) m) OKEXTERN;
 
 message * LOC(L)
 START
@@ -147,9 +168,8 @@ REF(Tags(Field(V,8)) = Set_cup([Tags(Field(m,8)); Tags(s)]))
 REF(BLOCK_BEGIN([V]) = BLOCK_BEGIN([m]))
 tags_xfer_msg(int s, message FINAL * LOC(L) START m) OKEXTERN;
 
-
-void free_message(message *m);
-
-void free_req_socket(struct req_socket *r);
-void free_get_cookie(struct get_cookie *g);
+/* Not really final... */
+void free_message(message FINAL *m)       OKEXTERN;
+void free_req_socket(req_socket FINAL *r) OKEXTERN;
+void free_get_cookie(get_cookie FINAL *g) OKEXTERN;
 #endif
