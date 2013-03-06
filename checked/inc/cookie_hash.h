@@ -9,8 +9,8 @@
 #define TABLE_SIZE 53 
 
 struct _cookie_list {
-  struct _cookie_list * FINAL NullOrSafe cl_next;
-  cookie              * FINAL MemSafe LOC(C) REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) cl_cookie;
+  struct _cookie_list * NullOrSafe cl_next;
+  cookie              * MemSafe LOC(C) REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) cl_cookie;
 } _cookie_list;
 typedef struct _cookie_list cookie_list;
 
@@ -26,16 +26,26 @@ add_cookie(cookie FINAL * MemSafe
            REF(DOMAIN([DEREF([V + 4])]) = THE_STRING([DEREF([V])])) c) OKEXTERN;
 
 cookie_list * NullOrSafe
-NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain_str]))
+/* NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain_str])) */
 NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])]))
 NNREF(DEREF([V]) > 0 => ? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([DEREF([V])])]))
 get_cookies(char FINAL Immutable REF(DOMAIN([V]) = THE_STRING([V])) domain_str,
             char NULLTERMSTR FINAL * STRINGPTR path) OKEXTERN;
 
-char Immutable REF(DOMAIN([V]) = DOMAIN([l]))
-serialize_cookie_list(cookie_list FINAL *l)
+char NImmutable NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])]))
+serialize_cookie_list(char FINAL Immutable REF(DOMAIN([V]) = THE_STRING([V]))
+  domain_str,
+  cookie_list FINAL * MemSafe
+  /* NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain_str])) */
+  /* NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])])) */
+  /* NNREF(DEREF([V]) > 0 => ? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([DEREF([V])])])) */
+  l)
 OKEXTERN;
 #endif
+            /* char NULLTERMSTR FINAL * STRINGPTR path) OKEXTERN; */
+/* serialize_cookie_list(char *domain_str, */
+/*   cookie_list FINAL * */
+/*                       NNREF(DOMAIN([DEREF([V + 4])]) = THE_STRING([domain_str])) l) */
 
 void
 assert_gettable_list(char FINAL Immutable s,

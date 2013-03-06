@@ -2,6 +2,7 @@
 #include "tags.h"
 #include "cookie_hash.h"
 #include "util.h"
+#include "libsoup/soup-cookie.h"
 
 #include "debug.h"
 
@@ -14,8 +15,8 @@
 #define domainify_cookie(c,d) c
 #else
 extern
-cookie /* INST(CD,CD) */ * START ROOM_FOR(struct cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
-domainify_cookie(cookie FINAL INST(CD,CD) * CookiePtr REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
+cookie /* INST(CD,CD) */ * START ROOM_FOR(cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
+domainify_cookie(cookie FINAL INST(CD,CD) * MemSafe REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
                  char NULLTERMSTR ICHAR FINAL * LOC(CD) STRINGPTR domain) OKEXTERN;
 #endif
 
@@ -49,8 +50,8 @@ check_soup_cookie_dom(SoupCookie FINAL *sc,
                       char NULLTERMSTR ICHAR FINAL *
                       REF(DOMAIN([sc]) = THE_STRING([V])) s) OKEXTERN;
 
-cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr
-copy_cookie(cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) CookiePtr c) //CHECK_TYPE
+cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) MemSafe
+copy_cookie(cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) MemSafe c) //CHECK_TYPE
 {
   SoupCookie *new_s;
   cookie *new;
@@ -188,17 +189,23 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
 }
 
 char *
-serialize_cookie_list(cookie_list *l) CHECK_TYPE
+serialize_cookie_list(char *domain_str, cookie_list *l) CHECK_TYPE
 {
   char *cookie_string = NULL;
   char *response      = NULL;
 
   while (l) {
+    // Sanity check
+    if (!soup_cookie_domain_matches(l->cl_cookie->c_cookie, domain_str))
+      continue;
+
     cookie_string = soup_cookie_to_cookie_header(l->cl_cookie->c_cookie);
+    cookie_string = immutable_strdup(cookie_string);
+
     if (response) {
-      response = immutable_strdup(strapp("%s; %s", response, cookie_string));
+      response = strapp("%s; %s", response, cookie_string);
     } else {
-      response = immutable_strdup(cookie_string);
+      response = cookie_string;
     }
     l = l->cl_next;
   }

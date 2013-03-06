@@ -17,3 +17,5 @@ void assert_gettable(int fd, char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(?COOKIE
 void assert_string_gettable(char FINAL Immutable s1,
                             char FINAL Immutable REF(? COOKIE_DOMAIN_GET([THE_STRING([s1]);THE_STRING([V])])) s2) OKEXTERN;
 
+void assert_string_gettable2(char FINAL Immutable s1,
+                            char FINAL Immutable REF(? COOKIE_DOMAIN_GET([DOMAIN([s1]);DOMAIN([V])])) s2) OKEXTERN;

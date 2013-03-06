@@ -112,7 +112,7 @@ char       *soup_cookies_to_cookie_header       (GSList      *cookies);
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([cookie])]))
 soup_cookie_domain_matches          (SoupCookie  FINAL *cookie,
-				     const char ICHAR NULLTERMSTR FINAL *host) OKEXTERN;
+				     const char ICHAR NULLTERMSTR FINAL * STRINGPTR host) OKEXTERN;
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
 soup_domain_matches          (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,

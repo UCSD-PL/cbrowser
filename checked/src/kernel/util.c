@@ -8,10 +8,13 @@ strapp(char NULLTERMSTR ICHAR * STRINGPTR d,
        char NULLTERMSTR ICHAR * START STRINGPTR REF(? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])])) s2)
 CHECK_TYPE
 {
-  size_t sz = strlen(s1) + strlen(s2);
+  char *ret;
+  /* size_t sz = strlen(s1) + strlen(d) + strlen(s2); */
 
-  s1 = realloc(s1, sz);
-  return strncat(s1, s2, sz);
+  /* s1 = realloc(s1, sz); */
+  /* return strncat(s1, s2, sz); */
+  asprintf(&ret, d, s1, s2);
+  return ret;
 }
 
 char *
