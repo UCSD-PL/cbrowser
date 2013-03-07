@@ -138,6 +138,12 @@ soup_domain_matches(const char *domain, const char *host)
 	return FALSE;
 }
 
+gboolean
+soup_domain_matches_uri(const char *domain, const SoupURI *uri)
+{
+	return soup_domain_matches(domain, uri->host);
+}
+
 /**
  * soup_cookie_domain_matches:
  * @cookie: a #SoupCookie

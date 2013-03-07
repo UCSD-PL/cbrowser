@@ -53,6 +53,12 @@ tags_xfer_ptr(int s, char *p)
   return p;
 }
 
+char *
+tags_xfer_ptrb(int s, char *p)
+{
+  return p;
+}
+
 int
 tags_union(int s1, int s2)
 {

@@ -3,6 +3,7 @@
 #include "cookie_hash.h"
 #include "util.h"
 #include "libsoup/soup-cookie.h"
+#include <assert.h>
 
 #include "debug.h"
 
@@ -159,6 +160,8 @@ get_cookies(char *domain_str, char *path) CHECK_TYPE
   cookie_list *l, *head = NULL, *curr = NULL, *new = NULL;
   int i;
 
+  assert (domain_str);
+  assert (path);
   i = hash_fn(domain_str, path);
 
   if (!table) return NULL;

@@ -148,7 +148,7 @@ void write_param_to_kernel (char *param)
 
 void write_msg_to_kernel(char msg_id,char *param) {
 
-	message *m = create_msg(&msg_id, &t2k_socket, param);
+	message *m = create_message(&msg_id, &t2k_socket, param);
 	write_message(m);
 	free_message(m);
 	/* write_msg_id_to_kernel(msg_id); */
@@ -321,7 +321,7 @@ get_cookies_from_kernel (SoupURI *uri,
 	request_param = g_strdup_printf("%s;%s;%s;%d", uri->scheme, uri->host, uri->path, for_http);
 	//write_msg_to_kernel((char) 10, request_param);
 	m->m_fd = t2k_socket;
-        write_message(m);
+  write_message(m);
 	free_message(m);
 	g_free(request_param);
 	cookie_from_kernel = read_msg_from_kernel((char) 12);

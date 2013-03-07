@@ -250,6 +250,7 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
   int tab_idx;
   int *res_soc;
   get_cookie *c;
+  SoupURI    *uri;
   cookie_list *l = NULL, *new_l = NULL;
   struct tab *t;
   char **domains;
@@ -272,10 +273,19 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
     if (!(t = tabs[tab_idx]))
       continue;
 
-    if (t->soc == m->m_fd && soup_domain_matches(c->gc_domain, t->tab_origin)) {
+    uri = soup_uri_new(t->tab_origin);
+
+    if (!uri) {
+      exit(1);
+      return;
+    }
+
+    if (t->soc == m->m_fd && soup_domain_matches_uri(c->gc_domain, uri)) {
       gc_domain = c->gc_domain;
       domains = gettable_domains(gc_domain);
+      assert (domains);
       while (domain = *domains) {
+        printf("trying %s...\n", domain);
         if (l) {
           new_l = get_cookies(domain, c->gc_path);
           new_l->cl_next = l;
@@ -283,15 +293,22 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
         } else {
           l = get_cookies(domain, c->gc_path);
         }
+        domains++;
       }
       if (l) {
-        result = serialize_cookie_list(l);
+        result = serialize_cookie_list(domain, l);
         m = create_message(&getc, res_soc, result);
         write_message(m);
         free_message(m);
         free(result);
         free(res_soc);
+        return;
         /* Should free cookie list, too */
+      }
+      else {
+        m = create_message(&getc, res_soc, "");
+        write_message(m);
+        free_message(m);
       }
     }
   }
@@ -328,7 +345,7 @@ handle_req_socket(KERNEL_TABS tabs, message *m)
 
   host_info = gethostbyname(req->r_host);
   if (!host_info) { return; }
-  /* memcpy(&host_addr, host_info->h_addr, host_info->h_length); */
+  memcpy(&host_addr, host_info->h_addr, host_info->h_length);
   addr.sin_addr.s_addr = host_addr;
   addr.sin_port = htons(req->r_port);
   addr.sin_family = req->r_family;

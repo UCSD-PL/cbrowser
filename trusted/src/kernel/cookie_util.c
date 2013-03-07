@@ -32,7 +32,12 @@ gettable_domains(char *domain)
     d[i] = cur;
     i++;
     cur = next;
-    next = strchr(cur+1, '.');
+    if (cur) {
+      next = strchr(cur+1, '.');
+    }
+  }
+  if (i < n) {
+    d[i] = 0;
   }
 
   return d;

@@ -118,6 +118,10 @@ REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
 soup_domain_matches          (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,
 	                      const char ICHAR NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
 
+gboolean
+REF(V != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([host]);DOMAIN([domain])]))
+soup_domain_matches_uri      (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,
+	                      const SoupURI FINAL *host) OKEXTERN;
 G_END_DECLS
 
 #endif /* SOUP_COOKIE_H */

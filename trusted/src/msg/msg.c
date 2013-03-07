@@ -102,7 +102,7 @@ write_fd(int fd, void *ptr, size_t nbytes, int sendfd)
 
 
 get_cookie *
-parse_get_cookie(char *get_cookie_str, size_t n)
+parse_get_cookie(char *get_cookie_str)
 {
   get_cookie *req;
   char *s;
@@ -120,7 +120,7 @@ parse_get_cookie(char *get_cookie_str, size_t n)
 }
 
 req_socket *
-parse_req_socket(char *req_socket_str, size_t n)
+parse_req_socket(char *req_socket_str)
 {
   req_socket *req;
   char *str = strdup(req_socket_str);
@@ -192,9 +192,9 @@ create_get_cookie(char *scheme, char *host, char *path, int for_http)
 }
 
 message *
-create_msg(mtypes *type,
-           int *fd,
-           char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content)
+create_message(mtypes *type,
+               int *fd,
+               char NULLTERMSTR * NNSTRINGPTR NNSTART LOC(S) content)
 {
   message *m = malloc(sizeof(*m));
 
