@@ -111,9 +111,9 @@ process_input_char(KERNEL_TABS tabs, char c) CHECK_TYPE
   int tab_idx = get_tab_idx(c);
   if (tab_idx >= 0) {
     switch_tab(tabs, tab_idx);
-  } else if (c == 'e' /*15*/) {   // F9
-    exit(0);
-    return;
+//  } else if (c == 'e' /*15*/) {   // F9
+//    exit(0);
+//    return;
   } else if (c == 'a' /*16*/) {   // F10
     add_tab(tabs);
   } else if (c == 17) {   // F11
@@ -122,7 +122,9 @@ process_input_char(KERNEL_TABS tabs, char c) CHECK_TYPE
     //TODO: mouse_click();
     fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
   } else {
-    fprintf(stderr, "Ooops! We don't handle that character yet.\n");
+    if (tabs[curr])
+      write(tabs[curr]->soc, &c, 1);
+//    fprintf(stderr, "Ooops! We don't handle that character yet. [%c] %d\n", c, (int)c);
     //TODO write message to current tab
   }
 }

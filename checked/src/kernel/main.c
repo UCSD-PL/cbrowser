@@ -27,7 +27,7 @@
 extern char scheme[SCHEME_SIZE];
 extern char netloc[NETLOC_SIZE];
 
-/* NNKERNEL_TABS tabs CHECK_TYPE */;
+NNKERNEL_TABS tabs CHECK_TYPE;
 
 void
 print_tab_title(KERNEL_TABS tabs, int tab_idx) CHECK_TYPE
@@ -47,7 +47,7 @@ print_text_display(KERNEL_TABS tabs)
   int i;
 
   if (!tabs) return;
-//  call("/usr/bin/clear", NULL);
+  call("/usr/bin/clear", NULL);
   printf("--------------------------------------------------------------------"
          "----------\n");
   printf("| ");
@@ -65,21 +65,21 @@ print_text_display(KERNEL_TABS tabs)
 void
 kexit()
 {
-/*
+
   int i;
 //  struct cookie_proc *cp;
   //TODO
-  //if (tabs) {
+    if (tabs) {
     for (i = 0; i < num_tabs(); i++) {
- //     if (!tabs) return;
-//      tab_kill(tabs, i, SIGINT);
+      if (!tabs) return;
+      tab_kill(tabs, i, SIGINT);
       //     cp = get_cookie_process(tabs[i]->tab_origin);
       //if (cp) {
       //  kill(cp->proc, SIGINT);
-      //}
+      }
     }
-  }
-*/
+  
+
   ui_kill(SIGINT);
   _exit(0);
 }
@@ -95,19 +95,10 @@ set_readfds(KERNEL_TABS tabs, fd_set *readfds)
   for (i=0; i<num_tabs(); i++) {
     if(!tabs) return 0;
     soc = tabs[i]->soc;
-/*    soc = tab_fd(tabs, i); */
     FD_SET(soc, readfds);
     if (soc > max) {
       max = soc;
     }
-    /* cookie_proc = get_cookie_process(tabs[i].tab_origin); */
-    /* if (cookie_proc) { */
-    /*   soc = cookie_proc->soc; */
-    /*   FD_SET(soc, readfds); */
-    /*   if (soc > max) { */
-    /*     max = soc; */
-    /*   } */
-    /* } */
   }
   return max;
 }
@@ -125,9 +116,7 @@ tab_of_fd(KERNEL_TABS tabs, int fd)
   //check tabs
   for (i=0; i<num_tabs(); i++) {
     soc = tabs[i]->soc;
-    /* soc = tab_fd(tabs, i); */
     if (fd == soc) {
-      // csolve_assert(i < MAX_NUM_TABS);
       return i;
     }
   }
@@ -155,7 +144,7 @@ main (int REF(V > 0) argc,
   int tab_idx;
   int fd;
   int i;
-  KERNEL_TABS tabs;
+//  KERNEL_TABS tabs;
   /* make_command_args_global(argc, argv); */
   /* parse_options(argc, argv); */
   tabs = malloc(10*sizeof(*tabs));
