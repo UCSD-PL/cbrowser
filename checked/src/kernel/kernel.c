@@ -15,7 +15,6 @@
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
-#include "tags.h"
 #include "wget.h"
 #include "opt.h"
 #include "util.h"
@@ -67,7 +66,7 @@ read_message(int fd)
 }
 
 void
-render(KERNEL_TABS tabs, int tab_idx)
+render(KERNEL_TABS tabs, int REF(V > 0) REF(V < 10) tab_idx)
 {
   message *m;
   mtypes render = RENDER;
@@ -76,11 +75,12 @@ render(KERNEL_TABS tabs, int tab_idx)
   /* m = create_message(&render, tab_fd(tabs, tab_idx), ""); */
   if (t = tabs[tab_idx]) {
     x = t->soc;
-    m = create_message(&render, &x, "");
+    m = create_message(&render, &x, freeze_ptr(""));
     write_message(m);
     free_message(m);
   }
 }
+
 
 void
 add_tab(KERNEL_TABS tabs)
@@ -89,7 +89,7 @@ add_tab(KERNEL_TABS tabs)
   if (num_tab < MAX_NUM_TABS) {
     curr = num_tab;
     num_tab++;
-    init_tab_process(tabs, curr, "None"); //TODO: arguments
+    init_tab_process(tabs, curr, freeze_ptr("None")); //TODO: arguments
     t = tabs[curr];
   } else {
     //TODO: print some error
@@ -106,7 +106,7 @@ switch_tab(KERNEL_TABS tabs, int tab_idx)
 }
 
 void
-process_input_char(KERNEL_TABS tabs, char c) CHECK_TYPE
+process_input_char(KERNEL_TABS tabs, char c)  CHECK_TYPE
 {
   int tab_idx = get_tab_idx(c);
   if (tab_idx >= 0) {
@@ -122,8 +122,8 @@ process_input_char(KERNEL_TABS tabs, char c) CHECK_TYPE
     //TODO: mouse_click();
     fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
   } else {
-    if (tabs[curr])
-      write(tabs[curr]->soc, &c, 1);
+    //if (tabs[curr])
+      //write(tabs[curr]->soc, &c, 1);
 //    fprintf(stderr, "Ooops! We don't handle that character yet. [%c] %d\n", c, (int)c);
     //TODO write message to current tab
   }
@@ -142,25 +142,21 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(int tagctx, message *m)
+handle_req_uri_follow(message *m) 
 {
   message *r;
   char *content;
   int *uisoc;
   int *res_soc;
-  int tags_0;
-  int tags_1;
   mtypes follow = REQ_URI_FOLLOW;
   mtypes res    = RES_URI;
 
   //spec of ui_soc() needs some thought
   uisoc = ui_soc();
 
-  tags_0 = tags_of_ptr(uisoc);
   if (*uisoc > 0) {
     // Send message to the UI process
     r = create_message(&follow, uisoc, m->m_content);
-    r = tags_xfer_msg(tags_0, r);
     write_message(r);
     free_message(r);
   }
@@ -168,36 +164,28 @@ handle_req_uri_follow(int tagctx, message *m)
   // Retrieve contents of the URI stored in m->m_content
   content = wget(mutable_strdup(m->m_content));
   if (! content) return;
-  content = immutable_strdup(content);
-  content = tags_xfer_ptr(tags_0, content);
 
-  tags_1 = tags_union(tags_0, tags_of_ptr(content));
 
   // Send the result back
   res_soc=malloc(sizeof(*res_soc));
   *res_soc = m->m_fd;
-  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->m_fd)), res_soc);
-  r = create_message(&res, res_soc, content);
-  r = tags_xfer_msg(tags_1, r);
+  r = create_message(&res, res_soc, freeze_ptr(content));
   write_message(r);
   free(content);
   free_message(r);
 }
 
 void
-handle_display_shm(int tagctx, message *m)
+handle_display_shm(message *m) 
 {
   int *uisoc;
-  int tags_0;
   message *r;
   mtypes dshm = K2G_DISPLAY_SHM;
 
   uisoc = ui_soc();
 
-  tags_0 = tags_of_ptr(uisoc);
   if (*uisoc > 0) {
     r = create_message(&dshm, uisoc, m->m_content);
-    r = tags_xfer_msg(tags_0, r);
     write_message(r);
     free_message(r);
   }
@@ -207,7 +195,7 @@ handle_display_shm(int tagctx, message *m)
 /* /\* /\\*                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN; *\\/ *\/ */
 
 void
-handle_set_cookie(KERNEL_TABS tabs, message *m)
+handle_set_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m) 
 {
   int tab_idx;
   cookie *c;
@@ -246,7 +234,7 @@ handle_set_cookie(KERNEL_TABS tabs, message *m)
 }
 
 void
-handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
+handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)  
 {
   int w;
   int tab_idx;
@@ -298,17 +286,19 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
         domains++;
       }
       if (l) {
-        result = serialize_cookie_list(domain, l);
-        m = create_message(&getc, res_soc, result);
-        write_message(m);
-        free_message(m);
-        free(result);
+        result = serialize_cookie_list(gc_domain, l);
+        if (result) {
+          m = create_message(&getc, res_soc, result);
+          write_message(m);
+          free_message(m);
+          free(result);
+        }
         free(res_soc);
-        return;
         /* Should free cookie list, too */
+        return;
       }
       else {
-        m = create_message(&getc, res_soc, "");
+        m = create_message(&getc, res_soc, lift_domain(gc_domain,""));
         write_message(m);
         free_message(m);
       }
@@ -318,7 +308,7 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 }
 
 void
-handle_req_socket(KERNEL_TABS tabs, message *m)
+handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m) 
 {
   int soc;
   struct hostent *host_info;
@@ -327,12 +317,11 @@ handle_req_socket(KERNEL_TABS tabs, message *m)
   long int host_addr = 0;
   mtypes res_socket = RES_SOCKET;
   int *res_soc;
-  int tags_0;
-  int tags_1;
+  char port[10];
   char *buf = malloc(4);
+  struct addrinfo *res, *addr;
 
   req = parse_req_socket(m->m_content);
-  tags_0 = tags_of_ptr(req);
 
   if (!req) {
     fprintf(stderr, "handle_req_socket: failed to parse request");
@@ -345,67 +334,54 @@ handle_req_socket(KERNEL_TABS tabs, message *m)
     return; /* csolve */
   }
 
-  host_info = gethostbyname(req->r_host);
-  if (!host_info) { return; }
-  memcpy(&host_addr, host_info->h_addr, host_info->h_length);
-  addr.sin_addr.s_addr = host_addr;
-  addr.sin_port = htons(req->r_port);
-  addr.sin_family = req->r_family;
-
-  if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-    perror("handle_req_socket: connect()");
-    exit(1);
-    return; /* csolve */
+  snprintf(port, sizeof(port), "%d", req->r_port);
+  if (getaddrinfo(req->r_host, port, NULL, &res) < 0) {
+    return;
   }
 
   sprintf(buf, "%d", soc);
-  buf = tags_xfer_ptrb(tags_0, buf);
-  tags_1 = tags_of_ptr(buf);
 
-  res_soc = malloc(sizeof(*res_soc));
-  *res_soc = m->m_fd;
-  res_soc = tags_xfer_ptr2(tags_of_ptr(&(m->m_fd)), res_soc);
-  m = create_message(&res_socket, res_soc, immutable_strdup(buf));
-  m = tags_xfer_msg(tags_0, m);
-  write_message(m);
-  /* free_message(m); */
-  /* free_req_socket(req); */
+  for (addr = res; addr != NULL; addr = res->ai_next) {
+
+    if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+      perror("handle_req_socket: connect()");
+      exit(1);
+      continue; /* csolve */
+    }
+
+    res_soc = malloc(sizeof(*res_soc));
+    *res_soc = m->m_fd;
+    m = create_message(&res_socket, res_soc, freeze_ptr(buf));
+    write_message(m);
+    free_message(m);
+    break;
+  }
+
+  free_req_socket(req);
+  free(buf);
 }
+
 
 void
 process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
 {
-  int tags_0;
-  int tags_1;
-  int tags_2;
-  int tags_3;
-  int tags_4;
-  
   message *r;
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->m_type);
   
-  tags_0 = tags_of_int(tab_idx);
   if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
-    //tags_0
     return;
   } //then
 
-  /* There's a control flow dependency on &m->m_type, so propagate
-     that information to all data below */
-  tags_1 = tags_union(tags_of_ptr(m->m_content), tags_0);
   if (m->m_content == NULL) {
-    //tags_1
-
     return; //error
   } //then
 
-  /* tags_2 = tags_union(tags_union(tags_of_int(m->m_type), tags_of_ptr(&m->m_type)), tags_1); */
   switch (m->m_type) {
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->m_content == NULL) return; //error
-    handle_req_uri_follow(tags_2, m);
+    handle_req_uri_follow(m);
     break;
   case SET_COOKIE:
     handle_set_cookie(tabs, m);
@@ -415,7 +391,7 @@ process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
     break;
   case DISPLAY_SHM:
     if (tab_idx == curr) {
-      handle_display_shm(tags_2, m);
+      handle_display_shm(m);
     }
     break;
   case REQ_SOCKET:

@@ -15,28 +15,23 @@ char Immutable LOC(S1) REF(|| [DOMAIN([V]) = DOMAIN([s1]); DOMAIN([V]) = DOMAIN(
 strapp(char FINAL Immutable d,
        char FINAL Immutable LOC(S1) s1,
        char FINAL NImmutable LOC(S1) s2) OKEXTERN;
-char NULLTERMSTR ICHAR *
+char NULLTERMSTR * IMMUTABLE
 START STRINGPTR
-REF(THE_STRING([V]) = THE_STRING([__s]))
 REF(DOMAIN([V])     = DOMAIN([__s]))
-REF(TAGSET([V])     = TAGSET([__s]))
   immutable_strdup(char NULLTERMSTR FINAL * STRINGPTR __s)
 OKEXTERN;
 
 char NULLTERMSTR *
 START STRINGPTR
-REF(THE_STRING([V]) = THE_STRING([__s]))
 REF(DOMAIN([V])     = DOMAIN([__s]))
-REF(TAGSET([V])     = TAGSET([__s]))
-  mutable_strdup(char NULLTERMSTR ICHAR FINAL * STRINGPTR __s)
+  mutable_strdup(char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR __s)
 OKEXTERN;
 
-char ICHAR NULLTERMSTR *
+char NULLTERMSTR * IMMUTABLE
 START STRINGPTR
-REF(THE_STRING([V]) = THE_STRING([__s]))
 REF(DOMAIN([V])     = DOMAIN([__s]))
-REF(TAGSET([V])     = TAGSET([__s]))
-  strdupi(char NULLTERMSTR ICHAR FINAL * STRINGPTR __s)
+REF(THE_STRING([V])     = THE_STRING([__s]))
+  strdupi(char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR __s)
 OKEXTERN;
 
 

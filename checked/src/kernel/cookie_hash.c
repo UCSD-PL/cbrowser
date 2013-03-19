@@ -1,5 +1,4 @@
 #include <string.h>
-#include "tags.h"
 #include "cookie_hash.h"
 #include "util.h"
 #include "libsoup/soup-cookie.h"

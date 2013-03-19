@@ -1,7 +1,8 @@
 #include <csolve.h>
 
-void assert_eq_strings(char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(THE_STRING([V]) = THE_STRING([s2])) s1,
-                       char NULLTERMSTR ICHAR FINAL *STRINGPTR REF(THE_STRING([s1]) = THE_STRING([V])) s2) OKEXTERN;
+#if 0
+void assert_eq_strings(char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR REF(THE_STRING([V]) = THE_STRING([s2])) s1,
+                       char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR REF(THE_STRING([s1]) = THE_STRING([V])) s2) OKEXTERN;
 
 /* void valid_tab_origin_type(char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = THE_STRING([V]))) OKEXTERN; */
 /* void valid_tab(int fd, char NULLTERMSTR FINAL *STRINGPTR REF(DOMAIN([V]) = DOMAIN([fd])) s) */
@@ -19,3 +20,4 @@ void assert_string_gettable(char FINAL Immutable s1,
 
 void assert_string_gettable2(char FINAL Immutable s1,
                             char FINAL Immutable REF(? COOKIE_DOMAIN_GET([DOMAIN([s1]);DOMAIN([V])])) s2) OKEXTERN;
+#endif

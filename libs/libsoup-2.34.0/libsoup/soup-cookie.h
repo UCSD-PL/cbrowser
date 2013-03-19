@@ -11,13 +11,11 @@
 
 G_BEGIN_DECLS
 
-#define ICHAR IMMUTABLE(THE_STRING)
-
 struct _SoupCookie {
-	char     NULLTERMSTR * name;
-	char     NULLTERMSTR * value;
-	char     NULLTERMSTR ICHAR * domain;
-	char     NULLTERMSTR * LOC(COOKIE_PATH) path;
+	char     NULLTERMSTR * STRINGPTR name;
+	char     NULLTERMSTR * STRINGPTR value;
+	char     NULLTERMSTR * IMMUTABLE STRINGPTR domain;
+	char     NULLTERMSTR * LOC(COOKIE_PATH) STRINGPTR path;
 	SoupDate *expires;
 	gboolean  secure;
 	gboolean  http_only;
@@ -45,7 +43,7 @@ SoupCookie FINAL *
   NNREF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
   NNREF(DOMAIN([V]) = DOMAIN([origin]))
   NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])]))
-soup_cookie_parse(const char  FINAL ICHAR NULLTERMSTR * STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
+soup_cookie_parse(const char  FINAL NULLTERMSTR * IMMUTABLE STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
 		  SoupURI     FINAL *origin)
   OKEXTERN;
 SoupCookie FINAL * REF(DOMAIN([V]) = DOMAIN([cookie]))
@@ -112,15 +110,15 @@ char       *soup_cookies_to_cookie_header       (GSList      *cookies);
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([cookie])]))
 soup_cookie_domain_matches          (SoupCookie  FINAL *cookie,
-				     const char ICHAR NULLTERMSTR FINAL * STRINGPTR host) OKEXTERN;
+				     const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR host) OKEXTERN;
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
-soup_domain_matches          (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,
-	                      const char ICHAR NULLTERMSTR FINAL *STRINGPTR host) OKEXTERN;
+soup_domain_matches          (const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR domain,
+	                      const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR host) OKEXTERN;
 
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([host]);DOMAIN([domain])]))
-soup_domain_matches_uri      (const char ICHAR NULLTERMSTR FINAL *STRINGPTR domain,
+soup_domain_matches_uri      (const char NULLTERMSTR FINAL *STRINGPTR domain,
 	                      const SoupURI FINAL *host) OKEXTERN;
 G_END_DECLS
 

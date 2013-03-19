@@ -13,15 +13,14 @@
 #include <csolve.h>
 
 G_BEGIN_DECLS
-#define ICHAR IMMUTABLE(THE_STRING)
 
 struct _SoupURI {
-	const char NULLTERMSTR ICHAR FINAL *scheme;
-
-	char       NULLTERMSTR ICHAR FINAL *user;
-	char       NULLTERMSTR ICHAR FINAL *password;
-
-	char       NULLTERMSTR ICHAR FINAL *host;
+	const char NULLTERMSTR FINAL * IMMUTABLE scheme;
+			       
+	char       NULLTERMSTR FINAL * IMMUTABLE user;
+	char       NULLTERMSTR FINAL * IMMUTABLE password;
+			       
+	char       NULLTERMSTR FINAL * IMMUTABLE host;
 	guint       port;
 
 	char       *path;
@@ -44,8 +43,8 @@ extern gpointer _SOUP_URI_SCHEME_FILE, _SOUP_URI_SCHEME_DATA;
 
 SoupURI	   *soup_uri_new_with_base         (SoupURI    *base,
 					    const char *uri_string);
-SoupURI	   * NNSTART NNVALIDPTR NNROOM_FOR(SoupURI) NNREF(DOMAIN([V]) = THE_STRING([uri_string])) NNREF(TAGSET([V]) = TAGSET([uri_string]))
-					 soup_uri_new(const char ICHAR NULLTERMSTR FINAL * STRINGPTR uri_string) OKEXTERN;
+SoupURI	   * NNSTART NNVALIDPTR NNROOM_FOR(SoupURI) NNREF(DOMAIN([V]) = THE_STRING([uri_string])) IMMUTABLE
+					 soup_uri_new(const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR uri_string) OKEXTERN;
 
 char   	   *soup_uri_to_string             (SoupURI    *uri,
 					    gboolean    just_path_and_query);

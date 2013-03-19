@@ -11,10 +11,8 @@
 #define Tags(_v) TAGSET([_v])
 #define TagsEq(_v1, _v2) REF(TAGSET([_v1]) = TAGSET([_v2]))
 
-#define Field(_v, _off) DEREF([BLOCK_BEGIN([_v]) + _off])
 #define FieldTags(_v, _off)  TAGSET([Field(V, _off)])
 
-#define Domain(_v) DOMAIN([_v])
 
 void *LOC(L) START REF(V = p) Tagged(V, x)  
 tag(int x, void * START LOC(L) p)
