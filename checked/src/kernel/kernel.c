@@ -298,7 +298,7 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
         return;
       }
       else {
-        m = create_message(&getc, res_soc, lift_domain(gc_domain,""));
+        m = create_message(&getc, res_soc, lift_domain(gc_domain,freeze_ptr("")));
         write_message(m);
         free_message(m);
       }

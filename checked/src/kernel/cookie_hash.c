@@ -17,7 +17,7 @@
 extern
 cookie /* INST(CD,CD) */ * START ROOM_FOR(cookie) VALIDPTR REF(DOMAIN([V]) = THE_STRING([domain])) REF(THE_STRING([domain]) = THE_STRING([DEREF([V])])) 
 domainify_cookie(cookie FINAL INST(CD,CD) * MemSafe REF(THE_STRING([DEREF([V])]) = THE_STRING([domain])) c,
-                 char NULLTERMSTR ICHAR FINAL * LOC(CD) STRINGPTR domain) OKEXTERN;
+                 char NULLTERMSTR FINAL * IMMUTABLE LOC(CD) STRINGPTR domain) OKEXTERN;
 #endif
 
 int
@@ -47,7 +47,7 @@ hash_cookie(cookie FINAL *c)
 
 void
 check_soup_cookie_dom(SoupCookie FINAL *sc,
-                      char NULLTERMSTR ICHAR FINAL *
+                      char NULLTERMSTR FINAL * IMMUTABLE
                       REF(DOMAIN([sc]) = THE_STRING([V])) s) OKEXTERN;
 
 cookie FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])])) MemSafe
@@ -57,7 +57,7 @@ copy_cookie(cookie INST(CD,CD) FINAL * REF(DOMAIN([V]) = THE_STRING([DEREF([V])]
   cookie *new;
 
   char *domstr = c->c_domain;
-  domstr   = immutable_strdup(mutable_strdup(domstr));
+  domstr   = strdupi(domstr);//immutable_strdup(mutable_strdup(domstr));
   new_s = soup_cookie_copy(c->c_cookie);
 
   new         = malloc(sizeof(*new));
@@ -205,11 +205,12 @@ serialize_cookie_list(char *domain_str, cookie_list *l) CHECK_TYPE
     cookie_string = immutable_strdup(cookie_string);
 
     if (response) {
-      response = strapp("%s; %s", response, cookie_string);
+      response = strapp(freeze_ptr("%s; %s"), response, cookie_string);
     } else {
       response = cookie_string;
     }
     l = l->cl_next;
+
   }
 
   return response;
