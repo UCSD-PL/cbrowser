@@ -106,12 +106,18 @@ parse_get_cookie(char *get_cookie_str)
 {
   get_cookie *req;
   char *s;
+  char *dom;
 
   req = malloc(sizeof(*req));
 
   s = strdup(get_cookie_str);
   req->gc_scheme   = strdup(strtok(s, ";"));
-  req->gc_domain   = strdup(strtok(NULL, ";"));
+  /* req->gc_domain   = strdup(strtok(NULL, ";")); */
+  dom =            strdup(strtok(NULL, ";"));
+  req->gc_domain   = malloc(strlen(dom) + 1);
+  req->gc_domain[0] = '.';
+  req->gc_domain[1] = 0;
+  strcat(req->gc_domain, dom);
   req->gc_path     = strdup(strtok(NULL, ";"));
   req->gc_httpOnly = atoi(strtok(NULL, ";"));
 

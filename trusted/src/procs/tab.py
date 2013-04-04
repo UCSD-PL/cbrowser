@@ -283,6 +283,8 @@ class Tab:
         
     def navigation_cb(self, view, frame, request, action, policy):
         uri = request.get_uri()
+        tlog('navigation_cb: (' + uri + ') (' + self.get_origin(uri) + ')')
+        tlog('sub_origin? ' + repr(self.is_tab_sub_origin(self.get_origin(uri))))
         if frame == view.get_main_frame() and (not self.is_tab_sub_origin(self.get_origin(uri))) :
             tlog('NAV: ' + frame.get_name() + " is navigating to " + uri)
             m = msg.create_navigate(uri)
@@ -622,10 +624,12 @@ class Tab:
         (x,y,width,height,depth) = self.view.get_window().get_geometry()
         self.pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB,False,8,width,height)
         self.tab_origin = sys.argv[2]
-        re_match = re.match('[a-zA-Z]*://(.*)', self.tab_origin)
+        re_match = re.match('[a-zA-Z]*://([^/]*)(/.*)?', self.tab_origin)
+        print "tentative: %s" % (self.tab_origin)
+        print "match: %s" % (repr(re_match))
         if re_match != None:
+            print "NOT NONE: %s" %(re_match.groups(0)[0])
             self.tab_origin = re_match.groups(0)[0]
-
         m = msg.create_display_shm(self.shm_obj.shmid, 0)
         self.write_message(m)
         self.view.open(self.add_http(self.tab_origin))

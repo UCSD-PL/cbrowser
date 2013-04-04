@@ -90,7 +90,7 @@ add_tab(KERNEL_TABS tabs)
   if (num_tab < MAX_NUM_TABS) {
     curr = num_tab;
     num_tab++;
-    init_tab_process(tabs, curr, freeze_ptr("None")); //TODO: arguments
+    init_tab_process(tabs, curr, NULL); //TODO: arguments
     t = tabs[curr];
   } else {
     //TODO: print some error
@@ -282,20 +282,21 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
       return;
     }
 
-    if (t->soc == m->m_fd && soup_domain_matches_uri(c->gc_domain, uri)) {
-      gc_domain = c->gc_domain;
-      domains = gettable_domains(gc_domain);
-      assert (domains);
-      while (domain = *domains) {
-        printf("trying %s...\n", domain);
-        if (l) {
-          new_l = get_cookies(domain, c->gc_path);
-          new_l->cl_next = l;
-          l = new_l;
-        } else {
-          l = get_cookies(domain, c->gc_path);
+    if (t->soc == m->m_fd) {
+      if (soup_domain_matches_uri(c->gc_domain, uri)) {
+        gc_domain = c->gc_domain;
+        domains = gettable_domains(gc_domain);
+        assert (domains);
+        while (domain = *domains) {
+          if (l) {
+            new_l = get_cookies(domain, c->gc_path);
+            new_l->cl_next = l;
+            l = new_l;
+          } else {
+            l = get_cookies(domain, c->gc_path);
+          }
+          domains++;
         }
-        domains++;
       }
       if (l) {
         result = serialize_cookie_list(gc_domain, l);
@@ -390,6 +391,11 @@ process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
   } //then
 
   switch (m->m_type) {
+  case NAVIGATE:
+    printf("NAVIGATE TO: (%s)\n",   m->m_content);
+    tab_kill(tabs, tab_idx, SIGINT);
+    init_tab_process(tabs, tab_idx, m->m_content);
+    break;
   case REQ_URI_FOLLOW:
     if (tab_idx < 0 || tab_idx >= MAX_NUM_TABS) return; //error
     if (m->m_content == NULL) return; //error

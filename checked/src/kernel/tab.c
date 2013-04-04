@@ -35,7 +35,10 @@ void
 tab_kill(KERNEL_TABS tabs, int VALID_TAB tab_idx, int sig) CHECK_TYPE
 {
   if (tabs[tab_idx]) {
+    close(tabs[tab_idx]->soc);
     kill(tabs[tab_idx]->proc, sig);
+    free(tabs[tab_idx]);
+    tabs[tab_idx] = NULL;
   }
 }
 
@@ -68,21 +71,22 @@ init_tab_process(struct tab **tabs, int tab_idx, char *init_url)
     free(t);
   }
 
-  origin  = get_trusted_origin_suffix();
-  args[2] = origin;
-  args[3] = strdupi(init_url);
+//  origin  = get_trusted_origin_suffix();
+//  args[2] = origin;
+  printf("init_url: %s\n", init_url);
+  args[2] = (init_url == NULL) ? (origin = get_trusted_origin_suffix()) : (origin = init_url);
+  args[3] = NULL;
   args[4] = NULL;
   init_piped_process(TAB_PROC,
                      args,
                      &proc,
                      &soc);
-
   t = malloc(sizeof(*t));
-  t->tab_origin = origin;
+  t->tab_origin = strdup(origin);
   t->proc = proc;
   t->soc  = soc;
   tabs[tab_idx] = t;
-  free(args[3]);
+//  free(args[3]);
   //Organize tab creation into trusted (for now) routine.
 }
 
