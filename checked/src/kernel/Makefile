@@ -14,6 +14,7 @@ OBJS= main.o \
 	tab.o 	\
 	ui.o \
 	wget.o \
+	mouse.o \
 	proc.o \
 	cookie_hash.o 
 

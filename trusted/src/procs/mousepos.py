@@ -21,7 +21,7 @@ m = re.search("Absolute upper-left X:(\s+)(\S+)(\s+)Absolute upper-left Y:(\s+)(
 outputx = int(m.group(2))
 outputy = int(m.group(5))
 
-line = os.popen("~/vcr/python-browser-8/getcurpos").read()
+line = os.popen("../../../trusted/src/procs/getcurpos").read()
 #m = re.search(r"x:(\d+) y:(\d+) screen:(\d+)", line)
 m = re.search(r"(\d+) (\d+)", line)
 mousex = int(m.group(1)) - outputx
@@ -33,6 +33,7 @@ if mousex < 0:
 if mousey < 0:
     mousey = 0
 
+##print "%d;%d" % (mousex, mousey)
 pickle.dump((mousex, mousey), sys.stdout)
 
 

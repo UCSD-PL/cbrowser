@@ -12,7 +12,7 @@
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
-#include "tags.h"
+//#include "tags.h"
 #include "wget.h"
 
 // socket includes
@@ -47,7 +47,7 @@ print_text_display(KERNEL_TABS tabs)
   int i;
 
   if (!tabs) return;
-  call("/usr/bin/clear", NULL);
+//  call("/usr/bin/clear", NULL);
   printf("--------------------------------------------------------------------"
          "----------\n");
   printf("| ");

@@ -16,6 +16,7 @@
 #include "kernel.h"
 #include "assert.h"
 #include "wget.h"
+#include "mouse.h"
 #include "opt.h"
 #include "util.h"
 
@@ -97,6 +98,16 @@ add_tab(KERNEL_TABS tabs)
 }
 
 void
+handle_mouse_click(KERNEL_TABS tabs, int tab_idx)
+{
+  mtypes click = MOUSE_CLICK;
+  int soc = tabs[tab_idx]->soc;
+  message *m = create_message(&click, &soc, read_mouse());
+  write_message(m);
+  free_message(m);
+}
+
+void
 switch_tab(KERNEL_TABS tabs, int tab_idx)
 {
   if (tab_idx < num_tab) {
@@ -120,7 +131,8 @@ process_input_char(KERNEL_TABS tabs, char c)  CHECK_TYPE
     add_tab(tabs);
   } else if (c == 18) {   // F12
     //TODO: mouse_click();
-    fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
+    handle_mouse_click(tabs, curr);
+    //    fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
   } else {
     //if (tabs[curr])
       //write(tabs[curr]->soc, &c, 1);
@@ -301,6 +313,7 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
         m = create_message(&getc, res_soc, lift_domain(gc_domain,freeze_ptr("")));
         write_message(m);
         free_message(m);
+        return;
       }
     }
   }
@@ -312,14 +325,14 @@ handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
 {
   int soc;
   struct hostent *host_info;
-  struct sockaddr_in addr;
+  //  struct sockaddr_in addr;
   req_socket *req;
   long int host_addr = 0;
   mtypes res_socket = RES_SOCKET;
   int *res_soc;
   char port[10];
   char *buf = malloc(4);
-  struct addrinfo *res, *addr;
+  struct addrinfo *res, *addr, hints;
 
   req = parse_req_socket(m->m_content);
 
@@ -328,24 +341,23 @@ handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
     return;
   }
 
-  if((soc = socket(req->r_family, req->r_type, req->r_protocol)) < 0) {
-    perror("handle_req_socket: socket()");
-    exit(1);
-    return; /* csolve */
-  }
+  hints.ai_socktype = req->r_type;
+  hints.ai_family   = req->r_family;
 
   snprintf(port, sizeof(port), "%d", req->r_port);
-  if (getaddrinfo(req->r_host, port, NULL, &res) < 0) {
+  if (getaddrinfo(req->r_host, port, &hints, &res) < 0) {
     return;
   }
 
-  sprintf(buf, "%d", soc);
-
-  for (addr = res; addr != NULL; addr = res->ai_next) {
-
-    if (connect(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-      perror("handle_req_socket: connect()");
+  for (addr = res; addr != NULL; addr = addr->ai_next) {
+    if((soc = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) < 0) {
+      perror("handle_req_socket: socket()");
       exit(1);
+      return; /* csolve */
+    }
+    sprintf(buf, "%d", soc);
+    if (connect(soc, res->ai_addr, res->ai_addrlen) < 0) {
+      close(soc);
       continue; /* csolve */
     }
 

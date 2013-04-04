@@ -43,8 +43,8 @@ assert_same_tags(int REF(TAGSET([V]) = TAGSET([y])) x, int y)
 OKEXTERN;
 
 void
-assert_same_domain(char NULLTERMSTR ICHAR FINAL * STRINGPTR s1,
-                   char NULLTERMSTR ICHAR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
+assert_same_domain(char NULLTERMSTR FINAL * STRINGPTR s1,
+                   char NULLTERMSTR FINAL * REF(DOMAIN([V]) = DOMAIN([s1])) STRINGPTR s2) OKEXTERN;
 
 void
 assert_domain_get(char FINAL Immutable s1,

@@ -384,16 +384,16 @@ class Tab:
         #self.sem_obj.setblocking(True)
         self.sem_obj.P()
 
-        tlog('ok here1')
+        #tlog('ok here1')
         try :
-            tlog('ok here2a')
+            #tlog('ok here2a')
             pixbuf.save_to_callback(pixbuf_save_func, 'png')
             self.shm_obj.write(struct.pack("i", self.shm_size-4*5), 4*0)
             self.shm_obj.write(struct.pack("i", x), 4*1)
             self.shm_obj.write(struct.pack("i", y), 4*2)
             self.shm_obj.write(struct.pack("i", width), 4*3)
             self.shm_obj.write(struct.pack("i", height), 4*4)
-            tlog('ok here2b')
+            #tlog('ok here2b')
 
         # try :
         #     pixels = pickle.dumps(pixbuf.get_pixels_array())

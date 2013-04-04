@@ -8,6 +8,7 @@ LFLAGS += -L$(CURDIR)/../../../trusted/src/kernel -ltrusted
 LFLAGS += -L$(CURDIR)/../../../trusted/src/msg    -lmsg
 
 OBJS= tags.o \
+      types.o \
       cookie_util.o
 
 all: libtrusted.so
