@@ -89,7 +89,7 @@ void        soup_cookie_set_http_only           (SoupCookie  *cookie,
 char       *soup_cookie_to_set_cookie_header    (SoupCookie  *cookie);
 
 
-char       NULLTERMSTR *START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))
+char       NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))
 soup_cookie_to_cookie_header        (SoupCookie  FINAL *cookie) OKEXTERN;
 
 gboolean    soup_cookie_applies_to_uri          (SoupCookie  *cookie,
