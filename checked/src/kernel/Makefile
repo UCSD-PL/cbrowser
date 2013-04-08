@@ -2,8 +2,8 @@ include ../../../Makefile.inc
 CFLAGS += -O0 -I/home/abakst/scratch/csolve/lib -I$(CURDIR)/../../inc -I$(CURDIR)/../../../trusted/inc
 CFLAGS += -I $(CURDIR)/../../../libs/libsoup-2.34.0/ 
 CFLAGS += $(shell pkg-config gio-2.0 --cflags)
-CFLAGS += -DGLIB_VERSION_MIN_REQUIRED=GLIB_V-ERSION_2_26
-CSOLVE_FLAGS += -I$(CURDIR)/../../../libs/include32/usr/include --manual
+CFLAGS += -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_26
+CSOLVE_FLAGS += -I$(CURDIR)/../../../libs/include32/usr/include
 LFLAGS += -L$(CURDIR)/../../../trusted/src/kernel -ltrusted
 LFLAGS += -L$(CURDIR)/../../../trusted/src/msg    -lmsg
 LFLAGS += -L$(CURDIR)/../../../libs/libsoup-2.34.0/libsoup/.libs -lsoup-2.4

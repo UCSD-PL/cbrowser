@@ -14,7 +14,7 @@ G_BEGIN_DECLS
 struct _SoupCookie {
 	char     NULLTERMSTR * STRINGPTR name;
 	char     NULLTERMSTR * STRINGPTR value;
-	char     NULLTERMSTR * IMMUTABLE STRINGPTR domain;
+	char     NULLTERMSTR * FINAL I STRINGPTR domain;
 	char     NULLTERMSTR * LOC(COOKIE_PATH) STRINGPTR path;
 	SoupDate *expires;
 	gboolean  secure;
@@ -22,6 +22,8 @@ struct _SoupCookie {
 };
 
 #define StructDom(fld) DOMAIN([DEREF([V + fld])]) = DOMAIN([V])
+#define SoupCookieInvariant  \
+	&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]
 
 GType soup_cookie_get_type (void);
 #define SOUP_TYPE_COOKIE (soup_cookie_get_type())
@@ -42,16 +44,18 @@ SoupCookie FINAL *
   NNSTART NNVALIDPTR NNROOM_FOR(SoupCookie)
   NNREF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
   NNREF(DOMAIN([V]) = DOMAIN([origin]))
-  NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])]))
-soup_cookie_parse(const char  FINAL NULLTERMSTR * IMMUTABLE STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
+  NNREF(DOMAIN([V]) = THE_STRING([DEREF([V+8])]))
+  /* NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])])) */
+soup_cookie_parse(const char  FINAL NULLTERMSTR * I STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
 		  SoupURI     FINAL *origin)
   OKEXTERN;
-SoupCookie FINAL * REF(DOMAIN([V]) = DOMAIN([cookie]))
-                   REF(TAGSET([V]) = TAGSET([cookie])) 
-                   REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
-                   START VALIDPTR ROOM_FOR(SoupCookie)
-                   /* LOC(!C) */
-	     soup_cookie_copy                    (SoupCookie  FINAL *
+SoupCookie FINAL *
+  OK
+  REF(DOMAIN([V]) = DOMAIN([cookie]))
+  REF(DOMAIN([V]) = THE_STRING([DEREF([V+8])]))
+  REF(THE_STRING([DEREF([cookie+8])]) = THE_STRING([DEREF([V+8])]))
+  REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
+	     soup_cookie_copy                    (SoupCookie FINAL *
 						  START VALIDPTR ROOM_FOR(SoupCookie) 
 						  REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
 						  cookie) OKEXTERN;
@@ -110,11 +114,11 @@ char       *soup_cookies_to_cookie_header       (GSList      *cookies);
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([cookie])]))
 soup_cookie_domain_matches          (SoupCookie  FINAL *cookie,
-				     const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR host) OKEXTERN;
+				     const char NULLTERMSTR FINAL * I STRINGPTR host) OKEXTERN;
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([THE_STRING([host]);DOMAIN([domain])]))
-soup_domain_matches          (const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR domain,
-	                      const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR host) OKEXTERN;
+soup_domain_matches          (const char NULLTERMSTR FINAL * I STRINGPTR domain,
+	                      const char NULLTERMSTR FINAL * I STRINGPTR host) OKEXTERN;
 
 gboolean
 REF(V != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([host]);DOMAIN([domain])]))

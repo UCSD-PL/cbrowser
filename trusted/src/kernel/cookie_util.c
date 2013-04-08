@@ -18,9 +18,11 @@ gettable_domains(char *domain)
 
   assert (domain != NULL);
 
-  if (asprintf(&cur, ".%s", domain) < 1) {
-    //Error
-    exit(1);
+  if (domain[0] != '.') {
+    if (asprintf(&cur, ".%s", domain) < 1) {
+      //Error
+      exit(1);
+    }
   }
 
   next = cur+1;

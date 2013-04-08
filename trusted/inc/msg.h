@@ -81,7 +81,7 @@ typedef struct {
 #define WriteMsgPolicy(soc)                                             \
   REF(MSG_TYPE(12) => ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
 
-#define WriteMsgPtr(s)       MemSafe WriteMsgPolicy(s)
+#define WriteMsgPtr(s)       MemSafe //WriteMsgPolicy(s)
 
 #define ReadMsgPtr           MemSafe ReadMsgPolicy
 #define ReadMsgPtrFrom(_s)   ReadMsgPtr REF(MsgFd = _s)

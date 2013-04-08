@@ -9,6 +9,7 @@
 //#include "str.h"
 #include "proc.h"
 //#include "cookie_proc.h"
+#include "cookie_hash.h"
 #include "ui.h"
 #include "kernel.h"
 #include "assert.h"
@@ -47,7 +48,7 @@ print_text_display(KERNEL_TABS tabs)
   int i;
 
   if (!tabs) return;
-//  call("/usr/bin/clear", NULL);
+  //  call("/usr/bin/clear", NULL);
   printf("--------------------------------------------------------------------"
          "----------\n");
   printf("| ");
@@ -58,7 +59,7 @@ print_text_display(KERNEL_TABS tabs)
   printf("\n");
   printf("--------------------------------------------------------------------"
          "----------\n");
-  printf("Enter command: ");
+  //  printf("Enter command: ");
   fflush(stdout);
 }
 
@@ -67,19 +68,13 @@ kexit()
 {
 
   int i;
-//  struct cookie_proc *cp;
-  //TODO
-    if (tabs) {
+  if (tabs) {
     for (i = 0; i < num_tabs(); i++) {
       if (!tabs) return;
       tab_kill(tabs, i, SIGINT);
-      //     cp = get_cookie_process(tabs[i]->tab_origin);
-      //if (cp) {
-      //  kill(cp->proc, SIGINT);
-      }
     }
+  }
   
-
   ui_kill(SIGINT);
   _exit(0);
 }
@@ -151,8 +146,14 @@ main (int REF(V > 0) argc,
   for (i = 0; i < 10; i++)
     tabs[i] = 0;
   ui_init();
+  table = init_table();
 
   signal(SIGINT, handler);
+  signal(SIGTERM, handler);
+  signal(SIGABRT, handler);
+  signal(SIGHUP, handler);
+  signal(SIGKILL, handler);
+
   atexit(kexit);
   
   print_text_display(tabs);

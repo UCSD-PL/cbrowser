@@ -12,9 +12,9 @@
 #include "proc.h"
 #include "kernel.h"
 #include "assert.h"
-#include "tags.h"
+//#include "tags.h"
 
-#define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30'"
+#define WGET_CMD "/usr/bin/wget -q --tries=1 --timeout=1 -O - -U 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Ubuntu/11.04 Chromium/12.0.742.112 Chrome/12.0.742.112 Safari/534.30' '"
 
 kstr NNREF(TAGSET([V]) = TAGSET([uri]))
 wget(kstr uri) CHECK_TYPE
@@ -26,10 +26,11 @@ wget(kstr uri) CHECK_TYPE
   char * command;
   FILE *p;
 
+  fprintf(stderr, "K: wget(%s)", uri);
   command = malloc(sizeof(WGET_CMD) + MAX_URI_LEN);
 
-  snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s", uri);
-  command = xfer_tags(command, uri);
+  snprintf(command, sizeof(WGET_CMD) + MAX_URI_LEN, WGET_CMD" %s'", uri);
+//  command = xfer_tags(command, uri);
 
   p = popen(command, "r");
   if (p == NULL) { //Fix spec of popen
@@ -40,7 +41,7 @@ wget(kstr uri) CHECK_TYPE
 
   content = calloc(csize, 1);
 
-  content = xfer_tags(content, p);
+//  content = xfer_tags(content, p);
   while ((n = fread(content + len, 1, csize - len, p)) == csize - len) {
     csize *= 2;
     content = realloc(content, csize);

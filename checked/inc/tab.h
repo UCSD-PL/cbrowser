@@ -3,7 +3,7 @@
 #include "constants.h"
 
 struct tab {
-  char NULLTERMSTR * IMMUTABLE STRINGPTR FINAL
+  char NULLTERMSTR * I STRINGPTR FINAL
   LOC(L) START STRINGPTR REF(DOMAIN([V]) = THE_STRING([V])) tab_origin;
   pid_t proc;                //PID of tab process
   int   FINAL REF(DOMAIN([V]) = DOMAIN([tab_origin])) soc; //socket
@@ -16,6 +16,6 @@ struct tab {
 
 void init_tab_process(KERNEL_TABS tabx,
                       int REF(V >= 0) REF (V < 10) tab_idx,
-                      char FINAL NULLTERMSTR * IMMUTABLE STRINGPTR init) OKEXTERN; 
+                      char FINAL NULLTERMSTR * I NNSTRINGPTR init) OKEXTERN; 
 void tab_kill(KERNEL_TABS_FINAL tabs, int tab_idx, int signal) OKEXTERN;
 char NULLTERMSTR* NNSTART NNSTRINGPTR tab_title(KERNEL_TABS_FINAL tabs,  int tab_idx) OKEXTERN;

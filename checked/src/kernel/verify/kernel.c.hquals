@@ -44,18 +44,29 @@ axiom: forall [d1:int;d2:int;d3:int].
        (&& [? COOKIE_DOMAIN_GET([d1;d2]);
             ? COOKIE_DOMAIN_GET([d2;d3])] => ? COOKIE_DOMAIN_GET([d1;d3]))
 
-axiom: forall [d:int]. ?COOKIE_DOMAIN_GET([d;d])
+//axiom: forall [p:ptr]. ? COOKIE_DOMAIN_GET([DOMAIN([p]);DOMAIN([p])])
+
+qualif SoupCookieDomain(v:ptr)             :           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
+qualif NNSoupCookieDomain(v:ptr)           : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v+8])])
 
 qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([DEREF([v])])])
 qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([v])])
+qualif D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([v])])
+qualif D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([d])])
 qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
 qualif ParseCookieDomain(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([DEREF([v])])
 qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
 qualif NullTermStringArray(v:ptr): v != 0 => ((VVADDR + 8) < BLOCK_END([VVADDR]))
-qualif GettableList(v:ptr, s:ptr):
-  v > 0 => ((DEREF([v]) > 0) => ? COOKIE_DOMAIN_GET([THE_STRING([s]);DOMAIN([DEREF([v])])]))
+//qualif GettableList(v:ptr, s:ptr):
+//  v > 0 => ((DEREF([v]) > 0) => ? COOKIE_DOMAIN_GET([THE_STRING([s]);DOMAIN([DEREF([v])])]))
 
 // Type of Messages that can be sent
 qualif OkMsg(v:ptr):
   ((DEREF([v]) : int) = 12) =>
      ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) : int)]);DOMAIN([DEREF([v + 8])])])
+
+qualif LinkedList(v:ptr, p:ptr): p > 0 => v > 0
+qualif NextMutable(v:ptr): ? MUTABLE([BLOCK_BEGIN([DEREF([v])])])
+
+qualif CookieListGet(v:ptr,p:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([p]);DOMAIN([DEREF([v+4])])])
+qualif CookieListDomain(v:ptr,p:ptr): v != 0 => DOMAIN([DEREF([v+4])]) = DOMAIN([p])

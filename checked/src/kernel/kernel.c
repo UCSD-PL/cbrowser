@@ -73,7 +73,6 @@ render(KERNEL_TABS tabs, int REF(V > 0) REF(V < 10) tab_idx)
   mtypes render = RENDER;
   struct tab *t;
   int x;
-  /* m = create_message(&render, tab_fd(tabs, tab_idx), ""); */
   if (t = tabs[tab_idx]) {
     x = t->soc;
     m = create_message(&render, &x, freeze_ptr(""));
@@ -81,7 +80,6 @@ render(KERNEL_TABS tabs, int REF(V > 0) REF(V < 10) tab_idx)
     free_message(m);
   }
 }
-
 
 void
 add_tab(KERNEL_TABS tabs)
@@ -100,11 +98,17 @@ add_tab(KERNEL_TABS tabs)
 void
 handle_mouse_click(KERNEL_TABS tabs, int tab_idx)
 {
+  struct tab *t = NULL;
   mtypes click = MOUSE_CLICK;
-  int soc = tabs[tab_idx]->soc;
-  message *m = create_message(&click, &soc, read_mouse());
-  write_message(m);
-  free_message(m);
+  char *mouse;
+  if (t = tabs[tab_idx]) {
+    int soc = tabs[tab_idx]->soc;
+    if (mouse = read_mouse()) {
+      message *m = create_message(&click, &soc, freeze_ptr(mouse));
+      write_message(m);
+      free_message(m);
+    }
+  }
 }
 
 void
@@ -120,21 +124,29 @@ void
 process_input_char(KERNEL_TABS tabs, char c)  CHECK_TYPE
 {
   int tab_idx = get_tab_idx(c);
+  struct tab *t = NULL;
   if (tab_idx >= 0) {
     switch_tab(tabs, tab_idx);
 //  } else if (c == 'e' /*15*/) {   // F9
 //    exit(0);
 //    return;
-  } else if (c == 'a' /*16*/) {   // F10
-    add_tab(tabs);
+  /* } else if (c == 'a' /\*16*\/) {   // F10 */
+  /*   add_tab(tabs); */
   } else if (c == 17) {   // F11
     add_tab(tabs);
   } else if (c == 18) {   // F12
-    //TODO: mouse_click();
     handle_mouse_click(tabs, curr);
-    //    fprintf(stderr, "Ooops! We don't handle mouse clicks yet.\n");
   } else {
-    //if (tabs[curr])
+    if (t = tabs[curr]) {
+      message *m;
+      mtypes key_press = KEY_PRESS;
+      int soc = t->soc;
+      char str[2];
+      str[0] = c;
+      m = create_message(&key_press, &soc, freeze_ptr(str));
+      write_message(m);
+      free_message(m);
+    }
       //write(tabs[curr]->soc, &c, 1);
 //    fprintf(stderr, "Ooops! We don't handle that character yet. [%c] %d\n", c, (int)c);
     //TODO write message to current tab
@@ -154,7 +166,7 @@ num_tabs()
 }
 
 void
-handle_req_uri_follow(message *m) 
+handle_req_uri_follow(message *m)
 {
   message *r;
   char *content;
@@ -177,9 +189,8 @@ handle_req_uri_follow(message *m)
   content = wget(mutable_strdup(m->m_content));
   if (! content) return;
 
-
   // Send the result back
-  res_soc=malloc(sizeof(*res_soc));
+  res_soc = malloc(sizeof(*res_soc));
   *res_soc = m->m_fd;
   r = create_message(&res, res_soc, freeze_ptr(content));
   write_message(r);
@@ -188,7 +199,7 @@ handle_req_uri_follow(message *m)
 }
 
 void
-handle_display_shm(message *m) 
+handle_display_shm(message *m)
 {
   int *uisoc;
   message *r;
@@ -203,11 +214,8 @@ handle_display_shm(message *m)
   }
 }
 
-/* /\* /\\* void check_domain(char FINAL NULLTERMSTR ICHAR *STRINGPTR d, *\\/ *\/ */
-/* /\* /\\*                   SoupCookie FINAL * REF(DOMAIN([V]) = THE_STRING([d]))) OKEXTERN; *\\/ *\/ */
-
 void
-handle_set_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m) 
+handle_set_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 {
   int tab_idx;
   cookie *c;
@@ -233,11 +241,8 @@ handle_set_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 
       soup_cookie = soup_cookie_parse(m->m_content, uri);
       if (soup_cookie) {
-        c = malloc(sizeof(*c));
-        c->c_domain = strdupi(t->tab_origin);
-        c->c_cookie = soup_cookie;
-        add_cookie(c);
-        free_cookie(c);
+        add_cookie(table, soup_cookie);
+        /* free_cookie(c); */
       }
       soup_uri_free(uri);
       return;
@@ -245,15 +250,43 @@ handle_set_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
   }
 }
 
+char *
+get_the_cookies(char * ARRAY sink_domain, char * ARRAY path)
+{
+  char **domains = NULL, *domain = NULL;
+  cookie_list *new_l = NULL, *l = NULL, *curr_l = NULL;
+  domains = gettable_domains(sink_domain);
+  while (domain = *domains) {
+    new_l = get_cookies(table, domain, path);
+
+    if (l == NULL) {
+      l      = new_l;
+      curr_l = new_l;
+    } else {
+      while (curr_l->cl_next) {
+        curr_l = curr_l->cl_next;
+      }
+      curr_l->cl_next = new_l;
+    }
+    domains++;
+  }
+
+  if (l) {
+    return serialize_cookie_list(sink_domain, l);
+  }
+
+  return NULL;
+}
+
 void
-handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)  
+handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 {
   int w;
   int tab_idx;
   int *res_soc;
   get_cookie *c;
   SoupURI    *uri;
-  cookie_list *l = NULL, *new_l = NULL;
+  cookie_list *l = NULL, *curr_l = NULL, *new_l = NULL;
   struct tab *t;
   char **domains;
   char *gc_domain = NULL;
@@ -283,23 +316,9 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
     }
 
     if (t->soc == m->m_fd) {
-      if (soup_domain_matches_uri(c->gc_domain, uri)) {
-        gc_domain = c->gc_domain;
-        domains = gettable_domains(gc_domain);
-        assert (domains);
-        while (domain = *domains) {
-          if (l) {
-            new_l = get_cookies(domain, c->gc_path);
-            new_l->cl_next = l;
-            l = new_l;
-          } else {
-            l = get_cookies(domain, c->gc_path);
-          }
-          domains++;
-        }
-      }
-      if (l) {
-        result = serialize_cookie_list(gc_domain, l);
+      gc_domain = c->gc_domain;
+      if (soup_domain_matches_uri(gc_domain, uri)) {
+        result = get_the_cookies(gc_domain, c->gc_path);
         if (result) {
           m = create_message(&getc, res_soc, result);
           write_message(m);
@@ -307,10 +326,8 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
           free(result);
         }
         free(res_soc);
-        /* Should free cookie list, too */
         return;
-      }
-      else {
+      } else {
         m = create_message(&getc, res_soc, lift_domain(gc_domain,freeze_ptr("")));
         write_message(m);
         free_message(m);
@@ -322,7 +339,7 @@ handle_get_cookie(KERNEL_TABS tabs, message * ReadMsgPtr m)
 }
 
 void
-handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m) 
+handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
 {
   int soc;
   struct hostent *host_info;
@@ -342,11 +359,12 @@ handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
     return;
   }
 
-  hints.ai_socktype = req->r_type;
-  hints.ai_family   = req->r_family;
+//  hints.ai_socktype = req->r_type;
+//  hints.ai_family   = req->r_family;
 
   snprintf(port, sizeof(port), "%d", req->r_port);
-  if (getaddrinfo(req->r_host, port, &hints, &res) < 0) {
+  if (getaddrinfo(req->r_host, port, NULL,/* &hints, */ &res) < 0) {
+    perror("getaddrinfo()");
     return;
   }
 
@@ -357,7 +375,7 @@ handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
       return; /* csolve */
     }
     sprintf(buf, "%d", soc);
-    if (connect(soc, res->ai_addr, res->ai_addrlen) < 0) {
+    if (connect(soc, addr->ai_addr, addr->ai_addrlen) < 0) {
       close(soc);
       continue; /* csolve */
     }
@@ -374,7 +392,6 @@ handle_req_socket(KERNEL_TABS tabs, message * ReadMsgPtr m)
   free(buf);
 }
 
-
 void
 process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
 {
@@ -382,7 +399,7 @@ process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
 
   printf("K: process message: tab %d, type %d\n", tab_idx, m->m_type);
   
-  if (tab_idx == MAX_NUM_TABS) { //doubled as UI, clean this up.
+  if (!(0 <= tab_idx && tab_idx < MAX_NUM_TABS)) {
     return;
   } //then
 
@@ -392,7 +409,6 @@ process_message(KERNEL_TABS tabs, int tab_idx, message *m) CHECK_TYPE
 
   switch (m->m_type) {
   case NAVIGATE:
-    printf("NAVIGATE TO: (%s)\n",   m->m_content);
     tab_kill(tabs, tab_idx, SIGINT);
     init_tab_process(tabs, tab_idx, m->m_content);
     break;

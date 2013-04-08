@@ -15,12 +15,12 @@
 G_BEGIN_DECLS
 
 struct _SoupURI {
-	const char NULLTERMSTR FINAL * IMMUTABLE scheme;
-			       
-	char       NULLTERMSTR FINAL * IMMUTABLE user;
-	char       NULLTERMSTR FINAL * IMMUTABLE password;
-			       
-	char       NULLTERMSTR FINAL * IMMUTABLE host;
+	const char NULLTERMSTR FINAL * I scheme;
+			       		
+	char       NULLTERMSTR FINAL * I user;
+	char       NULLTERMSTR FINAL * I password;
+			       		
+	char       NULLTERMSTR FINAL * I host;
 	guint       port;
 
 	char       *path;
@@ -43,8 +43,8 @@ extern gpointer _SOUP_URI_SCHEME_FILE, _SOUP_URI_SCHEME_DATA;
 
 SoupURI	   *soup_uri_new_with_base         (SoupURI    *base,
 					    const char *uri_string);
-SoupURI	   * NNSTART NNVALIDPTR NNROOM_FOR(SoupURI) NNREF(DOMAIN([V]) = THE_STRING([uri_string])) IMMUTABLE
-					 soup_uri_new(const char NULLTERMSTR FINAL * IMMUTABLE STRINGPTR uri_string) OKEXTERN;
+SoupURI	   * NNSTART NNVALIDPTR NNROOM_FOR(SoupURI) NNREF(DOMAIN([V]) = THE_STRING([uri_string])) I
+					 soup_uri_new(const char NULLTERMSTR FINAL * I STRINGPTR uri_string) OKEXTERN;
 
 char   	   *soup_uri_to_string             (SoupURI    *uri,
 					    gboolean    just_path_and_query);

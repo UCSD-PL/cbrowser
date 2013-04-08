@@ -9,31 +9,34 @@ qualif TabIdx(v:int) : v < 10
 qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 
-qualif TagsetSng(v:ptr, t:int):     TAGSET([v])                      = Set_sng([t])
-qualif NNTagsetSng(v:ptr, p:int): v != 0 => TAGSET([v])              = TAGSET([p])
-qualif TagsetSngFld4(v:ptr, t:int): TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([t])
-qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])])         = Set_sng([t])
-qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([v])
-qualif TagsetEqInt(v:int, x:int): TAGSET([v]) = TAGSET([x])
+//qualif TagsetSng(v:ptr, t:int):     TAGSET([v])                      = Set_sng([t])
+//qualif NNTagsetSng(v:ptr, p:int): v != 0 => TAGSET([v])              = TAGSET([p])
+//qualif TagsetSngFld4(v:ptr, t:int): TAGSET([(DEREF([v + 4]) : int)]) = Set_sng([t])
+//qualif TagsetSngFld8(v:ptr, t:int): TAGSET([DEREF([v + 8])])         = Set_sng([t])
+//qualif TagsetSelf(v:int):           TAGSET([v])                      = Set_sng([v])
+//qualif TagsetEqInt(v:int, x:int): TAGSET([v]) = TAGSET([x])
 
 qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
 qualif FldEq(v:ptr, a:int): (DEREF([v + 8]) : int) = a
 
-qualif MsgTypeFdTags(v:ptr):    TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)])
-qualif MsgContentFdTags(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])
-qualif MsgContentFdDomain(v:ptr): DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v + 4]) : int)])
+//qualif MsgTypeFdTags(v:ptr):    TAGSET([v])              = TAGSET([(DEREF([v + 4]) : int)])
+//qualif MsgContentFdTags(v:ptr): TAGSET([DEREF([v + 8])]) = TAGSET([(DEREF([v + 4]) : int)])
+//qualif MsgContentFdDomain(v:ptr): DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v + 4]) : int)])
 
-qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
-qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([(DEREF([v + 4]) : int)])])
-qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
-qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
+//qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([v])])
+//qualif TagsetEmpty(v:ptr): ? Set_emp([TAGSET([(DEREF([v + 4]) : int)])])
+//qualif TagsetEmpty(v:int): ? Set_emp([TAGSET([v])])
+//qualif NZTag(v:int): v > 0 => ? Set_emp([TAGSET([v])])
 
-qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])])
-qualif StringDomain(v:int, p:ptr)          : v != 0 => DOMAIN([v]) = DOMAIN([p])
-qualif StringDomain(v:ptr)                 : v != 0 => DOMAIN([v]) = THE_STRING([v])
-qualif StringDomain(v:ptr, p:ptr)          : v != 0 => DOMAIN([v]) = THE_STRING([p])
-qualif StringDomain(v:ptr, p:ptr)          : v != 0 => DOMAIN([DEREF([v+4])]) = THE_STRING([p])
-qualif StringDomain(v:int, p:ptr)          : && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
+//qualif ICharOfStr(v:int): v = DATA_AT([VVADDR-BLOCK_BEGIN([VVADDR]);THE_STRING([BLOCK_BEGIN([VVADDR])])])
+qualif StringDomain1(v:int, p:ptr)          : v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif StringDomain2(v:ptr)                 : v != 0 => DOMAIN([v]) = THE_STRING([v])
+qualif StringDomain3a(v:ptr, p:ptr)          : v != 0 => DOMAIN([v]) = THE_STRING([p])
+qualif StringDomain3b(v:ptr, p:ptr)          : v != 0 => DOMAIN([v+4]) = THE_STRING([p])
+qualif StringDomain4(v:int, p:ptr)          : && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
+qualif SoupCookieDomain(v:ptr)             :           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
+qualif NNSoupCookieDomain(v:ptr)           : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v+8])])
+//qualif StringDomain(v:ptr, p:ptr)          : v != 0 => DOMAIN([v]) = THE_STRING([p])
 qualif DomainIsString(v:ptr, s:ptr)        : DOMAIN([v]) = THE_STRING([s])
 qualif StringEq(v:ptr, p:ptr)              : THE_STRING([v]) = THE_STRING([p])
 qualif NNStringEq(v:ptr, p:ptr)            : v != 0 => THE_STRING([v]) = THE_STRING([p])
@@ -44,6 +47,7 @@ qualif NNDomainCookieEqString(v:ptr, p:ptr): v != 0 => DOMAIN([DEREF([v + 4])]) 
 qualif DomainEqPtrs(v:int, p:ptr)          : DOMAIN([v]) = DOMAIN([p])
 qualif DomainEqFd(v:ptr, i:int)          : DOMAIN([i]) = DOMAIN([DEREF([v + 4])])
 qualif DomainEqNext(v:ptr): DOMAIN([v]) = DOMAIN([DEREF([v + 4])])
+qualif DomainEqWitness(v:int): DOMAIN([@n]) = DOMAIN([@d])
 //qualif StrCmp(v:int, p:ptr, q:ptr)         : v = 0 => THE_STRING([p]) = THE_STRING([q])
 
 qualif CookieStringEq(v:ptr, c:ptr): THE_STRING([DEREF([v])]) = THE_STRING([DEREF([c])])
@@ -86,3 +90,26 @@ qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
                                       DOMAIN([DEREF([v+4])])  = DOMAIN([v]); 
                                       DOMAIN([DEREF([v+8])])  = DOMAIN([v]); 
                                       DOMAIN([DEREF([v+12])]) = DOMAIN([v])] 
+
+qualif StringEq(v:ptr,s:ptr): THE_STRING([v]) = THE_STRING([s])
+qualif StringEqWitness(v:int, p:ptr, q:ptr):
+      &&[v = 0;
+         ? MUTABLE([BLOCK_BEGIN([p])]) => (0 = 1);
+         ? MUTABLE([BLOCK_BEGIN([q])]) => (0 = 1)] =>
+      (THE_STRING([p]) = THE_STRING([q]))
+
+qualif CookieList_Eq_Cookie(v:ptr,c:ptr): DEREF([v+4]) = c
+qualif CLDomain(v:ptr,p:ptr): DOMAIN([v]) = DOMAIN([DEREF([p+4])])
+qualif CLString(v:ptr,p:ptr): THE_STRING([v]) = DOMAIN([DEREF([p+4])])
+
+//qualif GettableList(v:ptr, s:ptr):
+//  v > 0 => ((DEREF([v]) > 0) => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([DEREF([v])])]))
+
+qualif NextIsNull(v:ptr): DEREF([v]) = 0
+qualif NextIsNotNull(v:ptr): DEREF([v]) != 0
+qualif CookieDom_Eq_CookieDom(v:ptr,c:ptr): v != 0 => (DOMAIN([DEREF([v+8])]) = DOMAIN([DEREF([c+8])]))
+qualif CookieDom_Eq_Dom(v:ptr,s:ptr): v != 0 => DOMAIN([DEREF([v + 8])]) = DOMAIN([s])
+qualif CookieDom_Eq_Dom(v:ptr,s:ptr):           DOMAIN([DEREF([v + 8])]) = DOMAIN([s])
+
+qualif CookieDomString_Eq_String(v:ptr,s:ptr): v != 0 => THE_STRING([DEREF([v + 8])]) = THE_STRING([s])
+qualif CookieDomString_Eq_String(v:ptr,s:ptr):           THE_STRING([DEREF([v + 8])]) = THE_STRING([s])

@@ -20,7 +20,7 @@ void main(void)
   m = create_message(fd);
 
   assert_tagged(fd, m);
-  assert_tagged(fd, &(m->type));
+  assert_tagged(fd, &(m->m_type));
   assert_tagged(fd, m->content);
 }
           

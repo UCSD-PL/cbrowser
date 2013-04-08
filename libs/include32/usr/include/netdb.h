@@ -141,7 +141,7 @@ extern struct hostent *gethostbyaddr (__const void *__addr, __socklen_t __len,
    This function is a possible cancellation point and therefore not
    marked with __THROW.  */
 extern struct hostent FINAL * NNOK NNSTART
-gethostbyname (__const char FINAL NULLTERMSTR * IMMUTABLE STRINGPTR __name) OKEXTERN;
+gethostbyname (__const char FINAL NULLTERMSTR * STRINGPTR __name) OKEXTERN;
 
 #ifdef __USE_MISC
 /* Return entry from host data base for host with NAME.  AF must be
@@ -571,8 +571,8 @@ struct addrinfo
   int ai_family;		/* Protocol family for socket.  */
   int ai_socktype;		/* Socket type.  */
   int ai_protocol;		/* Protocol for socket.  */
-  socklen_t ai_addrlen;		/* Length of socket address.  */
-  struct sockaddr *ai_addr;	/* Socket address for socket.  */
+  socklen_t         FINAL REF(V > 0) ai_addrlen;		/* Length of socket address.  */
+  struct sockaddr * FINAL OK SIZE_GE(ai_addrlen) ai_addr;	/* Socket address for socket.  */
   char *ai_canonname;		/* Canonical name for service location.  */
   struct addrinfo * NNOK ai_next;	/* Pointer to next in list.  */
 };

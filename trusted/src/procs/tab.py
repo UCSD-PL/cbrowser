@@ -49,7 +49,7 @@ def signal_handler(signal, frame):
     #shm.remove_memory(tab.shm_obj.shmid)
     #shm.remove_semaphore(tab.sem_obj.semid)
     global tab
-    tlog("shared objects are destroyed:start")
+    #tlog("shared objects are destroyed:start")
     try :
         shm.remove_semaphore(tab.sem_obj.semid)
     except :
@@ -66,7 +66,7 @@ def signal_handler(signal, frame):
         tlog("an error occured while destroying the shared memory" + str(sys.exc_info()[0]))
         pass
 
-    tlog("shared objects are destroyed:end")
+    #tlog("shared objects are destroyed:end")
     sys.exit(0)
 
 def tlog(str):
@@ -487,7 +487,7 @@ class Tab:
         #     http://rachel-codebook.googlecode.com/svn-history/r130/trunk/Graphics/GraphicsA1/src/appwindow.cpp
         # http://www.pberndt.com/Programme/Linux/pqiv/_download/pqiv.py?ct=raw
         elif m.type == msg.mtypes.KEY_PRESS:
-            #tlog("pressed key:" + str(m.key) + "\n")
+            tlog("pressed key:" + str(m.key) + "\n")
             if self.escaped == None:
                 if m.key == "\\":
                     self.escaped = ""

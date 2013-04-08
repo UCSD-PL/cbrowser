@@ -143,8 +143,13 @@ strncat (char NULLTERMSTR MEMPRED(DOMAIN) * LOC(S) SIZE_GE(__n) START STRINGPTR 
          __const char MEMPRED(DOMAIN) NULLTERMSTR FINAL * LOC(S2) STRINGPTR __restrict __src,
          size_t __n) __THROW __nonnull ((1, 2)) OKEXTERN;
 
+#define STRCMPWITNESS                                                   \
+  REF(&&[V = 0;                                                       \ 
+         ? MUTABLE([BLOCK_BEGIN([__s1])]) => (0 = 1);                   \
+         ? MUTABLE([BLOCK_BEGIN([__s2])]) => (0 = 1)] =>                \
+      (THE_STRING([__s1]) = THE_STRING([__s2])))
 /* Compare S1 and S2.  */
-extern int REF(V = 0 => THE_STRING([__s1]) = THE_STRING([__s2]))
+extern int STRCMPWITNESS
 strcmp (__const char NULLTERMSTR FINAL * ARRAY VALIDPTR __s1,
         __const char NULLTERMSTR FINAL * ARRAY VALIDPTR __s2)
      __THROW __attribute_pure__ __nonnull ((1, 2)) OKEXTERN;
