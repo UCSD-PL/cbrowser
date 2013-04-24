@@ -23,6 +23,8 @@ gettable_domains(char *domain)
       //Error
       exit(1);
     }
+  } else {
+    cur = domain;
   }
 
   next = cur+1;
@@ -45,10 +47,44 @@ gettable_domains(char *domain)
   return d;
 }
 
-void
-free_cookie(cookie *c)
+char *
+discard_http(char *s)
 {
-  free(c->c_domain);
-  soup_cookie_free(c->c_cookie);
-  free(c);
+  char *clean_s;
+
+  printf("COOKIE DISCARD http:// %s", s);
+  if (clean_s = strstr(s, "http://")) {
+    return strdup(clean_s+strlen("http://"));
+  } else {
+    return strdup(s);
+  }
+}
+
+int
+check_cookie_domain(char *c_domain, char *host_domain)
+{
+  char *s1, *s2;
+  char *d1, *d2;
+  s1 = discard_http(c_domain);
+  s2 = discard_http(host_domain);
+  if (*s1 != '.') { 
+    asprintf(&d1, ".%s", s1);
+  } else {
+    d1 = s1;
+  }
+  if (*s2 != '.') { 
+    asprintf(&d2, ".%s", s2);
+  } else {
+    d2 = s2;
+  }
+  printf("CHECK COOKIE %s %s", d1, d2);
+  return (NULL != strstr(d1,d2) ||
+          NULL != strstr(d2,d1) ||
+          NULL != strstr(d1, "gstatic.com"));
+}
+
+void
+free_cookie(SoupCookie *c)
+{
+  soup_cookie_free(c);
 }

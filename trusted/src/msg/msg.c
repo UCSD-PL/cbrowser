@@ -381,3 +381,8 @@ void free_get_cookie(get_cookie *g)
   free(g->gc_path);
   free(g);
 }
+
+char *empty_string(char *d)
+{
+  return "(null)";
+}

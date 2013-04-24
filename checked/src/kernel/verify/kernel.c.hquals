@@ -1,14 +1,38 @@
 constant DOMAIN:     func(1, [@(0); int])
+constant SOURCE:     func(1, [@(0); int])
 constant DATA_AT:    func(1, [@(0); @(1); int])
 constant THE_STRING: func(1, [@(0); int])
 
-qualif TabIdx(v:int) : v [ <= ; < ] 10
-qualif TabIdx(v:int) : v  >= 0
-qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
+qualif TabIdxBound(v:int) : v <= 10
+qualif TabIdxBound(v:int) : v < 10
+qualif TabIdxPos(v:int) : v  >= 0
+qualif NNTabs(v:ptr) : v != 0 => v + 40 <= BLOCK_END([v])
 //qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
+
+qualif HashIdx(v:int): v < 53
+qualif TableSize(v:ptr): (v != 0) => (BLOCK_BEGIN([v]) + 212 <= BLOCK_END([v]))
 
 qualif Eq_Msg_Fd(v:ptr, f:ptr): (DEREF([v + 4]) :int) = (DEREF([f]) : int)
 qualif Eq_MsgContentDomain_Fd(v:ptr, f:ptr): DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v+4]):int)])
+
+qualif EqDomainSourcedomain(v:ptr): DOMAIN([v]) = DOMAIN([SOURCE([~c])])
+
+qualif Eq_MsgSrc(v:ptr): && [SOURCE([v])            = (DEREF([v+4]) : int);
+                             SOURCE([DEREF([v+8])]) = (DEREF([v+4]) : int)]
+                             // DOMAIN([SOURCE([v])])  = DOMAIN([(DEREF([v+4]) : int)]);
+                             // DOMAIN([SOURCE([DEREF([v+8])])]) = DOMAIN([(DEREF([v+4]) : int)])]
+
+//qualif Eq_MsgSrcDom(v:ptr): && [DOMAIN([SOURCE([v])])            = DOMAIN([(DEREF([v+4]) : int)]);
+                                //DOMAIN([SOURCE([DEREF([v+8])])]) = DOMAIN([(DEREF([v+4]) : int)])]
+
+//qualif Eq_SourceDomain(v:ptr, p:ptr): DOMAIN([SOURCE([v])]) = DOMAIN([p])
+qualif Gets_SourceDomain(v:int, p:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([p])]);DOMAIN([p])])
+qualif Gets_SourceDomain(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([v])]);DOMAIN([v])])
+// qualif Gets_SourceDomain_Other(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([SOURCE([~o])])])
+qualif Eq_Source(v:ptr, p:ptr): v != 0 => SOURCE([v]) = SOURCE([p])
+qualif Eq_SoupCookieDomSource(v:ptr): v != 0 => SOURCE([v]) = SOURCE([DEREF([v+8])])
+
+qualif Eq_GetSource(v:ptr): SOURCE([v]) = SOURCE([DEREF([v])])
 
 
 //Domain functions
@@ -44,7 +68,8 @@ axiom: forall [d1:int;d2:int;d3:int].
        (&& [? COOKIE_DOMAIN_GET([d1;d2]);
             ? COOKIE_DOMAIN_GET([d2;d3])] => ? COOKIE_DOMAIN_GET([d1;d3]))
 
-//axiom: forall [p:ptr]. ? COOKIE_DOMAIN_GET([DOMAIN([p]);DOMAIN([p])])
+// axiom: forall [p:int;q:int]. ((p = q) => ? COOKIE_DOMAIN_GET([p;q]))
+axiom: forall [d:int]. ? COOKIE_DOMAIN_GET([d;d])
 
 qualif SoupCookieDomain(v:ptr)             :           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
 qualif NNSoupCookieDomain(v:ptr)           : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v+8])])
@@ -70,3 +95,4 @@ qualif NextMutable(v:ptr): ? MUTABLE([BLOCK_BEGIN([DEREF([v])])])
 
 qualif CookieListGet(v:ptr,p:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([p]);DOMAIN([DEREF([v+4])])])
 qualif CookieListDomain(v:ptr,p:ptr): v != 0 => DOMAIN([DEREF([v+4])]) = DOMAIN([p])
+qualif SoupCookieSource(v:ptr)      : v != 0 => SOURCE([v]) = SOURCE([DEREF([v+8])])

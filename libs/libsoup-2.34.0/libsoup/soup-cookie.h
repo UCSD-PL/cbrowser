@@ -23,7 +23,14 @@ struct _SoupCookie {
 
 #define StructDom(fld) DOMAIN([DEREF([V + fld])]) = DOMAIN([V])
 #define SoupCookieInvariant  \
-	&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)]
+	&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)] \
+
+#define SoupCookieDomInv                                       \
+  REF(SoupCookieInvariant)                                     \
+  REF(Domain(V) = String(Field(V,8)))                          \
+  REF(?COOKIE_DOMAIN_GET([DOMAIN([SOURCE([V])]);DOMAIN([V])])) \
+  REF(SOURCE([V]) = SOURCE([DEREF([V+8])]))
+  /* REF(Domain(V) = Domain(Source(V))) */
 
 GType soup_cookie_get_type (void);
 #define SOUP_TYPE_COOKIE (soup_cookie_get_type())
@@ -43,15 +50,18 @@ SoupCookie *soup_kcookie_parse                   (const char  *header);
 SoupCookie FINAL *
   NNSTART NNVALIDPTR NNROOM_FOR(SoupCookie)
   NNREF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
-  NNREF(DOMAIN([V]) = DOMAIN([origin]))
   NNREF(DOMAIN([V]) = THE_STRING([DEREF([V+8])]))
+  NNREF(SOURCE([V]) = SOURCE([header]))
+  NNREF(SOURCE([V]) = SOURCE([DEREF([V+8])]))
   /* NNREF(TAGSET([V]) = Set_cup([TAGSET([header]);TAGSET([origin])])) */
-soup_cookie_parse(const char  FINAL NULLTERMSTR * I STRINGPTR REF(DOMAIN([V]) = DOMAIN([origin])) header,
-		  SoupURI     FINAL *origin)
+soup_cookie_parse(const char  FINAL NULLTERMSTR * I STRINGPTR header,
+		  SoupURI     FINAL             * NNOK origin)
   OKEXTERN;
 SoupCookie FINAL *
   OK
   REF(DOMAIN([V]) = DOMAIN([cookie]))
+  REF(SOURCE([V]) = SOURCE([cookie]))
+  REF(SOURCE([V]) = SOURCE([DEREF([V+8])]))
   REF(DOMAIN([V]) = THE_STRING([DEREF([V+8])]))
   REF(THE_STRING([DEREF([cookie+8])]) = THE_STRING([DEREF([V+8])]))
   REF(&&[StructDom(0);StructDom(4);StructDom(8);StructDom(12)])
@@ -86,7 +96,8 @@ gboolean    soup_cookie_get_http_only           (SoupCookie  *cookie);
 void        soup_cookie_set_http_only           (SoupCookie  *cookie,
 						 gboolean     http_only);
 
-char       *soup_cookie_to_set_cookie_header    (SoupCookie  *cookie);
+char       NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie])) REF(SOURCE([V]) = SOURCE([cookie]))
+soup_cookie_to_set_cookie_header    (SoupCookie  FINAL * OK SoupCookieDomInv cookie) OKEXTERN;
 
 
 char       NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([cookie]))

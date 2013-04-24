@@ -123,6 +123,8 @@ soup_domain_matches(const char *domain, const char *host)
 	char *match;
 	int dlen;
 
+	printf("COOKIE CHECKING %s -> %s\n", domain, host);
+
 	if (!g_ascii_strcasecmp (domain, host))
 		return TRUE;
 	if (*domain != '.')
@@ -131,6 +133,7 @@ soup_domain_matches(const char *domain, const char *host)
 		return TRUE;
 	dlen = strlen (domain);
 	while ((match = strstr (host, domain))) {
+	printf("COOKIE CHECKING strstr(%s,%s)\n", host, domain);
 		if (!match[dlen])
 			return TRUE;
 		host = match + 1;
@@ -339,7 +342,9 @@ parse_one_cookie (const char *header, SoupURI *origin, gboolean isKCookie)
 	if (origin) {
 		/* Sanity-check domain */
 		if (cookie->domain) {
-			if (!soup_cookie_domain_matches (cookie, origin->host)) {
+			char *tmp = g_strdup_printf(".%s", origin->host);
+			if (!soup_cookie_domain_matches (cookie, tmp)) {
+				printf("COOKIE THIS FAILED %s %s\n", cookie->domain, origin->host);
 				soup_cookie_free (cookie);
 				return NULL;
 			}
@@ -805,8 +810,8 @@ serialize_cookie (SoupCookie *cookie, GString *header, gboolean set_cookie)
 		g_string_append (header, cookie->path);
 	}
 	
-	fprintf(stderr, "cookie->domain:%d\n", (cookie->domain != NULL));
-	fflush(stderr);
+	//fprintf(stderr, "cookie->domain:%d\n", (cookie->domain != NULL));
+	//fflush(stderr);
 
 	if (cookie->domain) {
 		g_string_append (header, "; domain=");

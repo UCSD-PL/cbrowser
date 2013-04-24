@@ -680,6 +680,7 @@ calc_response (const guchar *key, const guchar *plaintext, guchar *results)
 static void
 md4sum (const unsigned char *in, int nbytes, unsigned char digest[16])
 {
+#undef M
 	unsigned char *M;
 	guint32 A, B, C, D, AA, BB, CC, DD, X[16];
 	int pbytes, nbits = nbytes * 8, i, j;

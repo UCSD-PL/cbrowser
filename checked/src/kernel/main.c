@@ -146,7 +146,6 @@ main (int REF(V > 0) argc,
   for (i = 0; i < 10; i++)
     tabs[i] = 0;
   ui_init();
-  table = init_table();
 
   signal(SIGINT, handler);
   signal(SIGTERM, handler);
@@ -160,8 +159,9 @@ main (int REF(V > 0) argc,
   while (1) {
     max_fd = set_readfds(tabs, &readfds);
     if (select(max_fd+1, &readfds, NULL, NULL, NULL) > 0) {
+      printf ("SELECT\n");
       if (FD_ISSET(0, &readfds)) { //stdin
-        scanf("%1s", &c);
+        c = getc(stdin);
         process_input_char(tabs, c);
       } else {
         for (fd = 1; 0 == FD_ISSET(fd, &readfds); fd++)

@@ -353,7 +353,6 @@ class Tab:
     def render(self,x,y,width,height):
         #stime = time.time()
         self.write_webkit_as_png(x,y,width,height)
-        tlog("write_webkit_as_png")
         m = msg.create_display_shm(self.shm_obj.shmid, self.shm_size)
         self.write_message(m)
         self.renderred = True

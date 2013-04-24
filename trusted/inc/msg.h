@@ -62,36 +62,54 @@ typedef struct {
 #define MsgFdDomain        MsgFdF(Domain)
 #define MsgContentDomain   MsgContentF(Domain)
 
+#define MsgPtrSrc          MsgPtrF(Source)
+#define MsgFdSrc           MsgFdF(Source)
+#define MsgContentSrc      MsgContentF(Source)
+
 #define MSG_TYPE(type) ((DEREF([V]) : int) = type)
 #define MessageDomainEq(d)  \
   && [ MsgPtrDomain = d     \
-     ; MsgContentDomain = d \
+     ; MsgContentDomain = d]
       
 #define SAME_DOMAIN(_domain)                    \
   && [MsgPtrDomain = _domain;                   \
       MsgContentDomain = _domain]               \
   
 #define ReadMsgPolicy                           \
-  REF(&& [MsgPtrDomain = MsgFdDomain;           \
-          MsgContentDomain = MsgFdDomain])
+  REF(&& [MsgPtrSrc   = MsgFd;  \
+          MsgContentSrc   = MsgFd;  \
+          Domain(MsgPtrSrc)   = Domain(MsgFd);  \
+          Domain(MsgContentSrc)    = Domain(MsgFd)])
+
+  /* REF(&& [MsgPtrDomain     = MsgFdDomain;           \ */
+  /*         MsgContentDomain = MsgFdDomain;       \ */
+  /*         MsgPtrSrc   = MsgFd;  \ */
+  /*         MsgContentSrc   = MsgFd;  \ */
+  /*         Domain(MsgPtrSrc)   = Domain(MsgFd);  \ */
+  /*         Domain(MsgContentSrc)    = Domain(MsgFd)]) */
 
 #define ReqSocketPolicy(soc) \
   && [MSG_TYPE(8); MsgContentDomain = MsgFdDomain]
 
 #define WriteMsgPolicy(soc)                                             \
-  REF(MSG_TYPE(12) => ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
+  REF(MSG_TYPE(12) =>                                                   \
+      ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
 
-#define WriteMsgPtr(s)       MemSafe //WriteMsgPolicy(s)
+#define WriteMsgPtr(s)       MemSafe WriteMsgPolicy(s)
 
 #define ReadMsgPtr           MemSafe ReadMsgPolicy
 #define ReadMsgPtrFrom(_s)   ReadMsgPtr REF(MsgFd = _s)
 
-#define ParsedGetCookie(str) NullOrSafe                               \
-                             NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
+#define ParsedGetCookie(str) NullOrSafe                                 \
+  REF(SOURCE([V]) = SOURCE([str]))                                      \
+  REF(SOURCE([V]) = SOURCE([DEREF([V])]))                               \
+NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
 
 message* ReadMsgPtrFrom(soc) 
 read_message_soc(int soc) OKEXTERN;
 
+char NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([d])) REF(?COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])]))
+empty_string(char FINAL NULLTERMSTR * STRINGPTR d) OKEXTERN;
 
 void
 check_ok_set_cookie(message FINAL * REF(Domain(Field(V,4) : int) = Domain(Field(V,8)))) OKEXTERN;

@@ -406,10 +406,10 @@ soup_cookie_jar_get_cookies (SoupCookieJar *jar, SoupURI *uri,
 			
 			while((cookies_str_next = strstr(cookies_str, "@@@")) != NULL) {
 				*cookies_str_next = 0;
-#ifdef PRINT_DBG_MSG
+//#ifdef PRINT_DBG_MSG
 				fprintf(stderr, "\nCOOKIE: a cookie is being processed : %s: %s\n", cookies_str ,soup_cookie_parse(cookies_str, NULL)->domain);
 				fflush(stderr);
-#endif
+//#endif
 				
 				//fprintf(stderr, "raw cookie str : %s\n", cookies);
 				
