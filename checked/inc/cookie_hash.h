@@ -44,7 +44,7 @@ get_cookies(
 OKEXTERN;
 
 char NImmutable NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])]))
-serialize_cookie_list(char FINAL NULLTERMSTR * STRINGPTR I /* REF(DOMAIN([V]) = THE_STRING([V])) */ domain_str,
+serialize_cookie_list(char FINAL NULLTERMSTR * STRINGPTR I REF(DOMAIN([V]) = THE_STRING([V])) domain_str,
                       cookie_list_f FINAL * MemSafe
                       REF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([DEREF([V+4])])]))
                       l)

@@ -91,9 +91,14 @@ typedef struct {
 #define ReqSocketPolicy(soc) \
   && [MSG_TYPE(8); MsgContentDomain = MsgFdDomain]
 
+/* #define WriteMsgPolicy(soc)                                             \ */
+/*   REF(|| [MSG_TYPE(12) =>                                               \ */
+/*           ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]); \ */
+/*           MsgContentSrc = (DEREF([soc]):int)]) */
 #define WriteMsgPolicy(soc)                                             \
-  REF(MSG_TYPE(12) =>                                                   \
-      ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
+  REF(MSG_TYPE(12) =>                                               \
+       ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
+
 
 #define WriteMsgPtr(s)       MemSafe WriteMsgPolicy(s)
 
@@ -127,12 +132,14 @@ parse_req_socket(char FINAL Immutable req_socket_str) OKEXTERN;
 message *
 create_req_socket(char *hostname, int port, int family, int type, int protocol);
 
-#define CreateMessage(_type,_fd,_c)                      \
-  MemSafe                                                \
+#define CreateMessage(_type,_fd,_c)                       \
+  MemSafe                                                 \
   REF(MsgType          = (DEREF([_type]):int))            \
   REF(MsgFd            = (DEREF([_fd]):int))              \
   REF(MsgFdDomain      = Domain((DEREF([_fd]) : int)))    \
-  REF(MsgContentDomain = Domain(_c)) 
+  REF(MsgContentDomain = Domain(_c))                      \
+  REF(MsgFdSrc         = SOURCE([(DEREF([_fd]):int)]))    \
+  REF(MsgContentSrc    = SOURCE([_c]))
 
 
 message INST(L,L) FINAL * CreateMessage(type,fd,c)

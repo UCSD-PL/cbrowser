@@ -23,6 +23,7 @@
 
 int REF(V != 0 => ?COOKIE_DOMAIN_GET([DOMAIN([host_domain]);DOMAIN([c_domain])]))
 check_cookie_domain(char FINAL NULLTERMSTR * I STRINGPTR
+                    REF(DOMAIN([V]) = THE_STRING([V]))
                     REF(|| [?COOKIE_DOMAIN_GET([DOMAIN([host_domain]);DOMAIN([SOURCE([V])])]);
                             ?COOKIE_DOMAIN_GET([DOMAIN([SOURCE([V])]);DOMAIN([V])])])
                     c_domain,
