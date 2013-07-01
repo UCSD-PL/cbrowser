@@ -21,7 +21,7 @@ typedef struct _cookie_list_f cookie_list_f;
 
 struct _cookie_list_d {
   struct _cookie_list_d * M NullOrSafe cl_next;
-  SoupCookie FINAL      * LOC(C) MemSafe SoupCookieDomInv REF(DOMAIN([V]) = DOMAIN([domain_str])) cl_cookie;
+  SoupCookie FINAL      * LOC(C) MemSafe SoupCookieDomInv REF(?COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])])) /*REF(DOMAIN([V]) = DOMAIN([domain_str]))*/ cl_cookie;
 };
 typedef struct _cookie_list_d cookie_list_d;
 
@@ -50,9 +50,10 @@ get_cookies(
 OKEXTERN;
 
 char NImmutable NNREF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([V])]))
+                NNREF(? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([V])]);DOMAIN([V])]))
 serialize_cookie_list(char FINAL NULLTERMSTR * STRINGPTR I REF(DOMAIN([V]) = THE_STRING([V])) domain_str,
-                      cookie_list_f FINAL * MemSafe
-                      REF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([DEREF([V+4])])]))
-                      l)
+                      cookie_list_d FINAL * MemSafe l
+                      /* REF(? COOKIE_DOMAIN_GET([DOMAIN([domain_str]);DOMAIN([DEREF([V+4])])])) l*/
+                      )
 OKEXTERN;
 #endif

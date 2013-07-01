@@ -7,9 +7,8 @@ qualif TabIdxBound(v:int) : v <= 10
 qualif TabIdxBound(v:int) : v < 10
 qualif TabIdxPos(v:int) : v  >= 0
 qualif NNTabs(v:ptr) : v != 0 => v + 40 <= BLOCK_END([v])
-//qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
 
-qualif HashIdx(v:int): v < 53
+//qualif HashIdx(v:int): v < 53
 qualif TableSize(v:ptr): (v != 0) => (BLOCK_BEGIN([v]) + 212 <= BLOCK_END([v]))
 
 qualif Eq_Msg_Fd(v:ptr, f:ptr): (DEREF([v + 4]) :int) = (DEREF([f]) : int)
@@ -19,16 +18,9 @@ qualif EqDomainSourcedomain(v:ptr): DOMAIN([v]) = DOMAIN([SOURCE([~c])])
 
 qualif Eq_MsgSrc(v:ptr): && [SOURCE([v])            = (DEREF([v+4]) : int);
                              SOURCE([DEREF([v+8])]) = (DEREF([v+4]) : int)]
-                             // DOMAIN([SOURCE([v])])  = DOMAIN([(DEREF([v+4]) : int)]);
-                             // DOMAIN([SOURCE([DEREF([v+8])])]) = DOMAIN([(DEREF([v+4]) : int)])]
 
-//qualif Eq_MsgSrcDom(v:ptr): && [DOMAIN([SOURCE([v])])            = DOMAIN([(DEREF([v+4]) : int)]);
-                                //DOMAIN([SOURCE([DEREF([v+8])])]) = DOMAIN([(DEREF([v+4]) : int)])]
-
-//qualif Eq_SourceDomain(v:ptr, p:ptr): DOMAIN([SOURCE([v])]) = DOMAIN([p])
 qualif Gets_SourceDomain(v:int, p:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([p])]);DOMAIN([p])])
 qualif Gets_SourceDomain(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([v])]);DOMAIN([v])])
-// qualif Gets_SourceDomain_Other(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([SOURCE([~o])])])
 qualif Eq_Source(v:ptr, p:ptr): v != 0 => SOURCE([v]) = SOURCE([p])
 qualif Eq_SoupCookieDomSource(v:ptr): v != 0 => SOURCE([v]) = SOURCE([DEREF([v+8])])
 
@@ -39,20 +31,20 @@ qualif Eq_GetSource(v:ptr): SOURCE([v]) = SOURCE([DEREF([v])])
 qualif StringDomain(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
 qualif StringDomain(v:ptr, p:ptr): v != 0 => DOMAIN([v]) = THE_STRING([p])
 qualif StringDomain(v:ptr):        v != 0 => DOMAIN([v]) = THE_STRING([v])
-qualif NNStringEq(v:ptr, p:ptr):   v != 0 => THE_STRING([v]) = THE_STRING([p])
+//qualif NNStringEq(v:ptr, p:ptr):   v != 0 => THE_STRING([v]) = THE_STRING([p])
 qualif DomainEqPtrs(v:int, p:ptr): DOMAIN([v]) = DOMAIN([p])
-qualif MsgContentFdDomain(v:ptr):  DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v + 4]) : int)])
+//qualif MsgContentFdDomain(v:ptr):  DOMAIN([DEREF([v + 8])]) = DOMAIN([(DEREF([v + 4]) : int)])
 
 // Message Types      
-qualif K2G_DISPLAY_SHM(v:ptr): (DEREF([v]) : int) = 0        
-qualif REQ_URI_FOLLOW(v:ptr):  (DEREF([v]) : int) = 2        
-qualif RENDER(v:ptr):          (DEREF([v]) : int) = 4        
-qualif RES_URI(v:ptr):         (DEREF([v]) : int) = 7        
-qualif RES_SOCKET(v:ptr):      (DEREF([v]) : int) = 8
-qualif RES_COOKIE(v:ptr):      (DEREF([v]) : int) = 12
-qualif K2C_SET_COOKIE(v:ptr):  (DEREF([v]) : int) = 13
-qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 14
-qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
+//qualif K2G_DISPLAY_SHM(v:ptr): (DEREF([v]) : int) = 0        
+//qualif REQ_URI_FOLLOW(v:ptr):  (DEREF([v]) : int) = 2        
+//qualif RENDER(v:ptr):          (DEREF([v]) : int) = 4        
+//qualif RES_URI(v:ptr):         (DEREF([v]) : int) = 7        
+//qualif RES_SOCKET(v:ptr):      (DEREF([v]) : int) = 8
+//qualif RES_COOKIE(v:ptr):      (DEREF([v]) : int) = 12
+//qualif K2C_SET_COOKIE(v:ptr):  (DEREF([v]) : int) = 13
+//qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 14
+//qualif K2C_GET_COOKIE(v:ptr):  (DEREF([v]) : int) = 15
 
 qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
                                       DOMAIN([DEREF([v+4])])  = DOMAIN([v]); 
@@ -74,21 +66,23 @@ axiom: forall [d:int]. ? COOKIE_DOMAIN_GET([d;d])
 qualif SoupCookieDomain(v:ptr)             :           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
 qualif NNSoupCookieDomain(v:ptr)           : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v+8])])
 
-qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([DEREF([v])])])
 qualif NND1SubD2Get(v:ptr, d:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([v])])
-qualif D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([v])])
 qualif D1SubD2Get(v:ptr, d:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([v]);DOMAIN([d])])
-qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
-qualif ParseCookieDomain(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([DEREF([v])])
-qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
+//qualif ListSize(v:ptr, n:int): BLOCK_BEGIN([v]) + n*16 <= BLOCK_END([v])
+//qualif ParseCookieDomain(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([DEREF([v])])
+//qualif CookieString(v:ptr): DOMAIN([v]) = THE_STRING([DEREF([v])])
 qualif NullTermStringArray(v:ptr): v != 0 => ((VVADDR + 8) < BLOCK_END([VVADDR]))
 //qualif GettableList(v:ptr, s:ptr):
 //  v > 0 => ((DEREF([v]) > 0) => ? COOKIE_DOMAIN_GET([THE_STRING([s]);DOMAIN([DEREF([v])])]))
 
+qualif CookieMsgSourceOK(v:ptr): v != 0 => ?COOKIE_DOMAIN_GET([DOMAIN([SOURCE([DEREF([v+8])])]);DOMAIN([DEREF([v + 8])])])
+qualif CookieMsgSourceOK(v:ptr): v != 0 => ?COOKIE_DOMAIN_GET([DOMAIN([SOURCE([v])]);DOMAIN([v])])
+
 // Type of Messages that can be sent
 qualif OkMsg(v:ptr):
   ((DEREF([v]) : int) = 12) =>
-     ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) : int)]);DOMAIN([DEREF([v + 8])])])
+      && [? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([v + 4]) : int)]);DOMAIN([DEREF([v + 8])])]);
+          ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([DEREF([v+8])])]);DOMAIN([DEREF([v + 8])])])]
 
 qualif LinkedList(v:ptr, p:ptr): p > 0 => v > 0
 qualif NextMutable(v:ptr): ? MUTABLE([BLOCK_BEGIN([DEREF([v])])])

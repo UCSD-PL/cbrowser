@@ -4,46 +4,15 @@ constant SOURCE:     func(1, [@(0); int])
 constant DATA_AT:    func(1, [@(0); @(1); int])
 constant THE_STRING: func(1, [@(0); int])
 
-qualif TabIdx(v:int) : v >= 0
-qualif TabIdx(v:int) : v <= 10
-qualif TabIdx(v:int) : v < 10
-qualif NNTabs(v:ptr) : v != 0 => BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
-qualif Tabs(v:ptr) : BLOCK_BEGIN([v]) + 40 < BLOCK_END([v])
-
-qualif FldEq(v:ptr, a:int): (DEREF([v + 4]) : int) = a
-qualif FldEq(v:ptr, a:int): (DEREF([v + 8]) : int) = a
-
-//qualif StoredCookie(v:ptr): v != 0 => DOMAIN([v]) = DOMAIN([SOURCE([v])])
 qualif Gets_SourceDomainCond(v:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([v])]);DOMAIN([v])])
-qualif Gets_SourceDomain(v:ptr): ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([v])]);DOMAIN([v])])
-qualif SourceEqSource(v:ptr,w:ptr): v != 0 => SOURCE([v]) = SOURCE([w])
 
-qualif StringDomain1(v:int, p:ptr)          : v != 0 => DOMAIN([v]) = DOMAIN([p])
-qualif StringDomain2(v:ptr)                 : v != 0 => DOMAIN([v]) = THE_STRING([v])
-qualif StringDomain3a(v:ptr, p:ptr)          : v != 0 => DOMAIN([v]) = THE_STRING([p])
-qualif StringDomain3b(v:ptr, p:ptr)          : v != 0 => DOMAIN([v+4]) = THE_STRING([p])
-qualif StringDomain4(v:int, p:ptr)          : && [p >= BLOCK_BEGIN([p]); p < BLOCK_END([p])] => DOMAIN([v]) = DOMAIN([p])
-qualif SoupCookieDomain(v:ptr)             :           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
-qualif SoupCookieSource(v:ptr)             :           SOURCE([v]) = SOURCE([DEREF([v+8])])
-qualif SoupCookieSource(v:ptr)             :           v != 0 => SOURCE([v]) = SOURCE([DEREF([v+8])])
-qualif NNSoupCookieDomain(v:ptr)           : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v+8])])
-qualif DomainIsString(v:ptr, s:ptr)        : DOMAIN([v]) = THE_STRING([s])
-qualif StringEq(v:ptr, p:ptr)              : THE_STRING([v]) = THE_STRING([p])
-qualif NNStringEq(v:ptr, p:ptr)            : v != 0 => THE_STRING([v]) = THE_STRING([p])
-qualif NNStringEq(v:ptr, p:ptr)            : v != 0 => THE_STRING([DEREF([v])]) = THE_STRING([p])
-qualif NNDomainEqSelf(v:ptr)               : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([v])])
-qualif NNDomainEqString(v:ptr, p:ptr)      : v != 0 => DOMAIN([v]) = THE_STRING([DEREF([p])])
+qualif StringDomain1(v:int, p:ptr): v != 0 => DOMAIN([v]) = DOMAIN([p])
+qualif SoupCookieDomain(v:ptr):           DOMAIN([v]) = THE_STRING([DEREF([v+8])])
+qualif SoupCookieSource(v:ptr):           v != 0 => SOURCE([v]) = SOURCE([DEREF([v+8])])
 qualif NNDomainCookieEqString(v:ptr, p:ptr): v != 0 => DOMAIN([DEREF([v + 4])]) = THE_STRING([p])
-qualif DomainEqPtrs(v:int, p:ptr)          : DOMAIN([v]) = DOMAIN([p])
-qualif DomainEqFd(v:ptr, i:int)          : DOMAIN([i]) = DOMAIN([DEREF([v + 4])])
-qualif DomainEqNext(v:ptr): DOMAIN([v]) = DOMAIN([DEREF([v + 4])])
-qualif DomainEqWitness(v:int): DOMAIN([@n]) = DOMAIN([@d])
 
 qualif CookieStringEq(v:ptr, c:ptr): THE_STRING([DEREF([v])]) = THE_STRING([DEREF([c])])
 qualif StringEqDerefCookieString(v:ptr, c:ptr): THE_STRING([v]) = THE_STRING([DEREF([c])])
-
-qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 4]) : int)
-qualif DerefFd(v:int, p:ptr): v = (DEREF([p + 8]) : int)
 
 //Cookie Domain Policy
 constant COOKIE_DOMAIN_SET: func(1, [int; int; bool])
@@ -51,7 +20,6 @@ constant COOKIE_DOMAIN_GET: func(1, [int; int; bool])
 axiom: forall [d:int]. ? COOKIE_DOMAIN_GET([d;d])
 
 qualif CookieListDomain(v:ptr, s:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([v])])
-qualif CookieListDomain(v:ptr, s:ptr): v != 0 => ? COOKIE_DOMAIN_GET([DOMAIN([s]);DOMAIN([DEREF([v+4])])])
 
 qualif HashIdx(v:int): v < 53
 qualif TableSize(v:ptr): v != 0 => BLOCK_BEGIN([v]) + 212 <= BLOCK_END([v])
@@ -62,28 +30,8 @@ qualif StructDom(v:ptr): v != 0 => &&[DOMAIN([DEREF([v])])    = DOMAIN([v]);
                                       DOMAIN([DEREF([v+8])])  = DOMAIN([v]); 
                                       DOMAIN([DEREF([v+12])]) = DOMAIN([v])] 
 
-qualif StringEq(v:ptr,s:ptr): THE_STRING([v]) = THE_STRING([s])
-qualif StringEqWitness(v:int, p:ptr, q:ptr):
-      &&[v = 0;
-         ? MUTABLE([BLOCK_BEGIN([p])]) => (0 = 1);
-         ? MUTABLE([BLOCK_BEGIN([q])]) => (0 = 1)] =>
-      (THE_STRING([p]) = THE_STRING([q]))
-
 qualif CookieList_Eq_Cookie(v:ptr,c:ptr): DEREF([v+4]) = c
-qualif CLDomain(v:ptr,p:ptr): DOMAIN([v]) = DOMAIN([DEREF([p+4])])
-qualif CLString(v:ptr,p:ptr): THE_STRING([v]) = DOMAIN([DEREF([p+4])])
-
-qualif NextIsNull(v:ptr): DEREF([v]) = 0
-qualif NextIsNotNull(v:ptr): DEREF([v]) != 0
-qualif CookieDom_Eq_CookieDom(v:ptr,c:ptr): v != 0 => (DOMAIN([DEREF([v+8])]) = DOMAIN([DEREF([c+8])]))
-qualif CookieDom_Eq_Dom(v:ptr,s:ptr): v != 0 => DOMAIN([DEREF([v + 8])]) = DOMAIN([s])
-qualif CookieDom_Eq_Dom(v:ptr,s:ptr):           DOMAIN([DEREF([v + 8])]) = DOMAIN([s])
-
 qualif CookieDomString_Eq_String(v:ptr,s:ptr): v != 0 => THE_STRING([DEREF([v + 8])]) = THE_STRING([s])
 qualif CookieDomString_Eq_String(v:ptr,s:ptr):           THE_STRING([DEREF([v + 8])]) = THE_STRING([s])
 
-// qualif CookieHeaderResultDOM(v:ptr,c1:ptr,c2:ptr):
-//   || [DOMAIN([v]) = DOMAIN([c1]); DOMAIN([v]) = DOMAIN([c2])]
-
-// qualif CookieHeaderResultSRC(v:ptr,c1:ptr,c2:ptr):
-//   || [SOURCE([v]) = SOURCE([c1]); SOURCE([v]) = SOURCE([c2])]
+axiom: forall [d:int]. ? COOKIE_DOMAIN_GET([d;d])

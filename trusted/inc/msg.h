@@ -97,8 +97,8 @@ typedef struct {
 /*           MsgContentSrc = (DEREF([soc]):int)]) */
 #define WriteMsgPolicy(soc)                                             \
   REF(MSG_TYPE(12) =>                                               \
-       ? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]))
-
+      &&[? COOKIE_DOMAIN_GET([DOMAIN([(DEREF([soc]) : int)]);MsgContentDomain]); \
+         ? COOKIE_DOMAIN_GET([DOMAIN([SOURCE([DEREF([V+8])])]);DOMAIN([DEREF([V+8])])])])
 
 #define WriteMsgPtr(s)       MemSafe WriteMsgPolicy(s)
 
@@ -113,7 +113,9 @@ NNREF(DOMAIN([V]) = DOMAIN([DEREF([V])]))
 message* ReadMsgPtrFrom(soc) 
 read_message_soc(int soc) OKEXTERN;
 
-char NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([d])) REF(?COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])]))
+char NULLTERMSTR * I START STRINGPTR REF(DOMAIN([V]) = DOMAIN([d]))
+REF(?COOKIE_DOMAIN_GET([DOMAIN([d]);DOMAIN([V])])) 
+REF(?COOKIE_DOMAIN_GET([DOMAIN([SOURCE([V])]);DOMAIN([V])]))
 empty_string(char FINAL NULLTERMSTR * STRINGPTR d) OKEXTERN;
 
 void
